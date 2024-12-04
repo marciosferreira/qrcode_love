@@ -39,7 +39,13 @@ mp = mercadopago.SDK("APP_USR-6523172338846242-100514-afc9490970db73cf999cadf640
 #mp = mercadopago.SDK("APP_USR-7788212792459286-100515-877d8d26d1cb62eb816d39854668fa8b-2022910974")  # teste
 
 # Configuração do DynamoDB
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+#dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+dynamodb = boto3.resource(
+    'dynamodb',
+    region_name='us-east-1',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+)
 
 # Tabela DynamoDB
 table_name = 'CoupleTable'
