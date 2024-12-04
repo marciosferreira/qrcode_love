@@ -13,7 +13,8 @@ import qrcode
 import stripe
 import boto3
 import time
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, abort
+
 import mercadopago
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
@@ -50,12 +51,9 @@ dynamodb = boto3.resource(
 region_name='us-east-1',
 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+# Verificar as credenciais
 if not aws_access_key_id or not aws_secret_access_key:
-    print("As variáveis de ambiente AWS_ACCESS_KEY_ID ou AWS_SECRET_ACCESS_KEY não estão definidas.")
-else:
-    print(f"AWS_ACCESS_KEY_ID: {aws_access_key_id[:4]}... (ocultado por segurança)")
-    print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key[:4]}... (ocultado por segurança)")
-    print(f"AWS_DEFAULT_REGION: {region_name}")
+    return jsonify({"error": "AWS credentials are missing"}), 400
 
 
 # Tabela DynamoDB
