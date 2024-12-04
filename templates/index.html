@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+ <!-- Precarrega a imagem WebP -->
+    <link rel="preload" href="/static/images/background.webp" as="image" type="image/webp">
+ <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-23RSZ1SMRX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-23RSZ1SMRX');
+</script>
+
+
+
+      <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/jquery.countdown.min.js') }}"></script>
+ 
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crie grátis uma página com fotos, música, contador de tempo e um QRCode compartilhável</title>
+    <meta name="description" content="Crie gratuitamente um QRCode personalizado para celebrar e compartilhar momentos especiais com quem você ama.">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+
+
+<div class="container-fluid">
+
+
+<div class="header-container">
+    <div class="logo-container">
+        <img src="static/images/logo_qrcode_heart_transparent.png" alt="Logo" class="logo-img">
+    </div>
+
+    <div class="contact-container">
+        <span class="contact-link">contato@qrcodelove.me</span> | 
+        <a href="/deletar" class="remove-link">Remover uma página</a>
+    </div>
+</div>
+
+
+
+    <h2>Crie grátis uma página com fotos e contador de tempo desde um evento especial!</h2>
+    <h4>Você recebe um QR Code e uma url para compartilhar sua página.</h4>
+
+    <!-- Início do Formulário -->
+
+<!-- Início do Formulário -->
+<form action="/create" method="POST" enctype="multipart/form-data" id="createForm" class="form-container">
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="name1">Nome 1:</label>
+            <input type="text" id="name1" name="name1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="name2">Nome 2:</label>
+            <input type="text" id="name2" name="name2" required>
+        </div>
+
+
+<div class="form-group half-width">
+        <label for="event_date">Data do Evento:</label>
+        <input type="date" id="event_date" name="event_date" required>
+    </div>
+
+    <div class="form-group half-width">
+        <label for="event_time">Hora do Evento:</label>
+        <input type="time" id="event_time" name="event_time" required>
+    </div>
+
+
+
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="event_description">Qual o evento especial desta data?</label>
+            <select id="event_description" name="event_description" required>
+                <option value="se casaram">se casaram</option>
+                <option value="se conheceram">se conheceram</option>
+                <option value="começaram a namorar">começaram a namorar</option>
+                <option value="noivaram">noivaram</option>
+                <option value="são amigos">são amigos</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="youtubeLink">YouTube Video URL (opcional):</label>
+            <input type="text" id="youtubeLink" name="youtubeLink" placeholder="Cole o link do YouTube aqui">
+        </div>
+
+        <div class="form-group">
+            <label for="images">Anexar até 3 imagens:</label>
+            <input type="file" id="images" name="images" accept="image/png, image/jpeg" multiple>
+        </div>
+    </div>
+
+
+<div class="form-row">
+    <div class="form-group half-width">
+        <label for="email">Seu e-mail <small>(enviaremos link e o QR Code)</small>:</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+
+    <div class="form-group half-width">
+        <label for="message">Sua mensagem (opcional):</label>
+        <textarea id="message" name="optional_message" maxlength="1000"></textarea>
+    </div>
+</div>
+
+
+<!-- Linha separada para o botão -->
+<div class="form-row">
+    <div class="form-group full-width">
+        <button type="submit" class="btn btn-primary">Criar Página</button>
+    </div>
+</div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">  <!-- Aplica o estilo para remover a bolinha -->
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Mensagem de erro -->
+    <div id="error-message" class="error-message"></div>
+</form>
+
+
+    <!-- Fim do Formulário -->
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- javascript para envio de imagens -->
+    <script>
+        document.getElementById('createForm').addEventListener('submit', function (event) {
+            const imagesInput = document.getElementById('images');
+            const errorMessage = document.getElementById('error-message');
+            const maxFiles = 3;
+            const maxSize = 5 * 1024 * 1024; // 2MB
+
+            // Resetando mensagem de erro
+            errorMessage.style.display = 'none';
+            errorMessage.innerHTML = '';
+
+            // Validando número de arquivos
+            if (imagesInput.files.length > maxFiles) {
+                errorMessage.innerHTML = 'Você pode enviar no máximo 3 imagens.';
+                errorMessage.style.display = 'block';
+                event.preventDefault();
+                return;
+            }
+
+            // Validando tamanho das imagens
+            for (let i = 0; i < imagesInput.files.length; i++) {
+                if (imagesInput.files[i].size > maxSize) {
+                    errorMessage.innerHTML = 'Cada imagem deve ter no máximo 2MB.';
+                    errorMessage.style.display = 'block';
+                    event.preventDefault();
+                    return;
+                }
+            }
+        });
+    </script>
+
+
+
+<div class="centered-text">
+<br>
+<br>
+<br>
+<br>
+        <span>preencha acima e veja como vai ficar </span>
+        <img src="/static/images/seta.png" alt="seta para baixo">
+    </div>
+
+
+    <div style="text-align: center; margin-top: 40px;">
+        
+<div class="special-text-title">Página de</div>
+    </div>
+
+<br>
+
+
+            <!-- Nomes das pessoas -->
+            <h3 class="special-text" id="couple_name1">Nome 1</h3>
+            <h3 class="special-text">&amp;</h3>
+            <h3 class="special-text" id="couple_name2">Nome 2</h3>
+
+<br>
+<br>
+
+<div id="carousel" class="carousel-container">
+    <img src="/static/images/1.png" class="carousel-image active" alt="Imagem 1">
+</div>
+
+
+
+    <!-- Container Principal com Fundo Branco -->
+    <!-- <div class="container"> -->
+        <!-- Contador do evento com Fundo Amarelo -->
+	<div class="container counter-container">
+	    <div id="meu-contador-container">
+	        <div id="meu-contador"></div>
+	    </div>
+	</div>
+
+
+
+
+
+
+<br>
+        <!-- Conteúdo Principal da Página Interna -->
+        <!-- <div class="container" style="background: #b3e5fc;"> -->
+            <!-- Frase sobre tempo passado desde o evento -->
+            <h3 class="special-text">Já se passaram desde que</h3>
+
+            <!-- Evento ocorrido -->
+            <h3 class="special-text" id="event_description_text">são amigos</h3>
+<br>
+<br>
+            <!-- Mensagem opcional -->
+            <h3 class="optional-message" id="optional_message_text">Mensagem opcional, um poema, etc., será exibida aqui</h3>
+
+<br>
+
+<!-- GIF para abrir o vídeo -->
+<img id="previewGif" src="/static/images/giphy.png" alt="Assista ao vídeo" onclick="showVideo(event)">
+    <p id="videoHint" style="font-size: 16px; color: gray; margin-top: 8px;">Video homenagem (com som)</p>
+<!-- Container do vídeo -->
+<div id="videoContainer" style="display: none;"> <!-- O vídeo começa escondido -->
+    <div class="video-wrapper">
+        <!-- O iframe é inicialmente sem src para não carregar automaticamente -->
+        <iframe id="youtubePlayer" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+</div>
+
+
+
+
+
+
+<script>
+    function showVideo(event) {
+        event.preventDefault();
+
+        const videoContainer = document.getElementById('videoContainer');
+        const previewGif = document.getElementById('previewGif');
+        const youtubePlayer = document.getElementById('youtubePlayer');
+        const youtubeLinkInput = document.getElementById('youtubeLink');
+
+        // Remove o GIF e exibe o vídeo
+        previewGif.style.display = 'none';
+        videoContainer.style.display = 'block';
+
+        // Obtém a URL inserida pelo usuário
+        const url = youtubeLinkInput.value;
+
+        let videoId;
+
+        // Tenta criar um objeto URL e obter o valor do parâmetro "v" se houver uma URL inserida
+        if (url) {
+            try {
+                const urlObject = new URL(url);
+                videoId = urlObject.searchParams.get("v");
+            } catch (e) {
+                console.error("URL inválida. Usando vídeo padrão.");
+            }
+        }
+
+        // Se não houver um vídeo válido, define um vídeo padrão
+        if (!videoId) {
+            videoId = "hAh7C5VSLrg"; // Coloque aqui o ID do vídeo padrão
+        }
+
+        // Define o src do iframe com o vídeo correto
+        youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+
+        // Rolagem suave para o vídeo
+        videoContainer.scrollIntoView({ behavior: 'smooth' });
+
+        return false;
+    }
+</script>
+
+
+
+
+
+<!-- javascript do carrossel para fazer as imagens mudarem -->
+ <script>
+$(document).ready(function () {
+    // Código existente...
+
+    // Configuração do carrossel para trocar automaticamente
+    let currentIndex = 0;
+    const carouselImages = $('#carousel .carousel-image');
+    const totalImages = carouselImages.length;
+
+    function changeImage() {
+        carouselImages.removeClass('active');
+        currentIndex = (currentIndex + 1) % totalImages;
+        carouselImages.eq(currentIndex).addClass('active');
+    }
+
+    setInterval(changeImage, 3000); // Troca a cada 3 segundos
+});
+
+</script>
+
+
+
+
+
+
+
+
+
+ <script>
+
+document.getElementById('images').addEventListener('change', function () {
+    const imagesInput = document.getElementById('images');
+    const carousel = document.getElementById('carousel');
+
+    // Remove todas as imagens do carrossel primeiro
+    carousel.innerHTML = '';
+
+    // Adiciona as novas imagens selecionadas ao carrossel
+    if (imagesInput.files.length > 0) {
+        for (let i = 0; i < imagesInput.files.length; i++) {
+            const file = imagesInput.files[i];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    // Cria um novo elemento de imagem
+                    const newImage = document.createElement('img');
+                    newImage.src = e.target.result;
+                    newImage.className = 'carousel-image';
+                    if (i === 0) {
+                        newImage.classList.add('active'); // A primeira imagem será ativa inicialmente
+                    }
+
+                    // Adiciona a nova imagem ao carrossel
+                    carousel.appendChild(newImage);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+});
+
+// Script para rodar o carrossel automaticamente
+$(document).ready(function () {
+    let currentIndex = 0;
+    setInterval(function () {
+        const carouselImages = $('#carousel .carousel-image');
+        const totalImages = carouselImages.length;
+
+        if (totalImages > 0) {
+            carouselImages.removeClass('active');
+            currentIndex = (currentIndex + 1) % totalImages;
+            carouselImages.eq(currentIndex).addClass('active');
+        }
+    }, 3000); // Troca a cada 3 segundos
+});
+
+ </script>
+
+
+
+
+
+
+
+
+
+            
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+        $('#name1').on('input', function () {
+            $('#couple_name1').text($(this).val() || 'Nome 1');
+        });
+
+        $('#name2').on('input', function () {
+            $('#couple_name2').text($(this).val() || 'Nome 2');
+        });
+
+        $('#event_description').on('change', function () {
+            $('#event_description_text').text($(this).val() || 'Evento Especial');
+        });
+
+        $('#message').on('input', function () {
+            $('#optional_message_text').text($(this).val() || 'Mensagem opcional será exibida aqui');
+        });
+
+        // Definir uma data padrão (pode ser qualquer data que desejar)
+        let eventDate = new Date("2023-01-01T00:00:00");
+
+        // Função para obter a data e hora atual no fuso horário de Manaus
+        function getManausTime() {
+            let now = new Date();
+            let options = {
+                timeZone: 'America/Manaus',
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
+            };
+            let formatter = new Intl.DateTimeFormat('en-US', options);
+            let parts = formatter.formatToParts(now);
+            
+            // Extrair partes da data formatada
+            let year = parts.find(part => part.type === 'year').value;
+            let month = parts.find(part => part.type === 'month').value - 1;  // Mês em JavaScript é 0-11
+            let day = parts.find(part => part.type === 'day').value;
+            let hour = parts.find(part => part.type === 'hour').value;
+            let minute = parts.find(part => part.type === 'minute').value;
+            let second = parts.find(part => part.type === 'second').value;
+
+            return new Date(year, month, day, hour, minute, second);
+        }
+
+        function updateCounter() {
+            var currentDate = getManausTime(); // Hora atual de Manaus
+            var timeDiff = currentDate.getTime() - eventDate.getTime();
+
+            var seconds = Math.floor(timeDiff / 1000);
+            var minutes = Math.floor(seconds / 60);
+            var hours = Math.floor(minutes / 60);
+            var days = Math.floor(hours / 24);
+            var months = Math.floor(days / 30);
+            var years = Math.floor(months / 12);
+
+            months %= 12;
+            days %= 30;
+            hours %= 24;
+            minutes %= 60;
+            seconds %= 60;
+
+            var result = "";
+
+            if (years > 0) {
+                result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${years == 1 ? 'ano' : 'anos'}</div></div>`;
+            }
+            if (months > 0) {
+                result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${months == 1 ? 'mês' : 'meses'}</div></div>`;
+            }
+            if (days > 0) {
+                result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${days == 1 ? 'dia' : 'dias'}</div></div>`;
+            }
+            if (hours > 0) {
+                result += `<div class="time-unit-container"><div class="time-unit">${hours}</div><div class="label">${hours == 1 ? 'hora' : 'horas'}</div></div>`;
+            }
+            if (minutes > 0) {
+                result += `<div class="time-unit-container"><div class="time-unit">${minutes}</div><div class="label">${minutes == 1 ? 'minuto' : 'minutos'}</div></div>`;
+            }
+            result += `<div class="time-unit-container"><div class="time-unit">${seconds}</div><div class="label">${seconds == 1 ? 'segundo' : 'segundos'}</div></div>`;
+
+            document.getElementById("meu-contador").innerHTML = result;
+        }
+
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        // Atualiza a data do evento quando o usuário escolhe uma nova data e hora
+        $('#event_date').on('change', function () {
+            let selectedDate = $(this).val();
+            let selectedTime = $('#event_time').val() || "00:00"; // Hora padrão se não houver hora selecionada
+            if (selectedDate) {
+                eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
+                updateCounter(); // Atualiza o contador imediatamente após a mudança
+            }
+        });
+
+        // Atualiza a hora do evento quando o usuário altera o campo de hora
+        $('#event_time').on('change', function () {
+            let selectedTime = $(this).val();
+            let selectedDate = $('#event_date').val() || "2023-01-01"; // Data padrão se não houver data selecionada
+            if (selectedTime) {
+                eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
+                updateCounter(); // Atualiza o contador imediatamente após a mudança
+            }
+        });
+    });
+</script>
+
+
+
+
+
+
+
+</body>
+</html>

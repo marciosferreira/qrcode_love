@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-23RSZ1SMRX"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-23RSZ1SMRX");
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Página Inicial - Crie grátis um QRCode para celebrar momentos especiais!
+    </title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Qwitcher+Grypen:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script
+      src="{{ url_for('static', filename='js/script.js') }}"
+      defer
+    ></script>
+  </head>
+
+  <body>
+    <!-- Conteúdo da página inicial padrão -->
+    <div class="container">
+      <h1>Crie grátis um QRCode para celebrar momentos especiais!</h1>
+      <h4>
+        Gere uma página personalizada com um contador de tempo dinâmico desde
+        seu evento especial, como casamento, namoro, amizade, noivado, etc., e
+        compartilhe seu QR Code exclusivo!
+      </h4>
+      <form
+        action="/create"
+        method="POST"
+        enctype="multipart/form-data"
+        id="createForm"
+      >
+        <label for="name1">Nome 1:</label>
+        <input type="text" id="name1" name="name1" required /><br />
+
+        <label for="name2">Nome 2:</label>
+        <input type="text" id="name2" name="name2" required /><br />
+
+        <label for="event_date">Data do Evento:</label>
+        <input type="date" id="event_date" name="event_date" required /><br />
+
+        <label for="event_description"
+          >Qual o evento especial desta data?</label
+        >
+        <select id="event_description" name="event_description" required>
+          <option value="se casaram">se casaram</option>
+          <option value="se conheceram">se conheceram</option>
+          <option value="começaram a namorar">começaram a namorar</option>
+          <option value="noivaram">noivaram</option>
+          <option value="começaram uma amizade">
+            começaram uma amizade
+          </option></select
+        ><br />
+
+        <label for="message">Mensagem (opcional):</label>
+        <textarea
+          id="message"
+          name="optional_message"
+          maxlength="1000"
+        ></textarea
+        ><br />
+
+        <!-- Novo campo de upload de imagens -->
+        <label for="images">Anexar até 3 imagens:</label>
+        <input
+          type="file"
+          id="images"
+          name="images"
+          accept="image/png, image/jpeg"
+          multiple
+        /><br />
+
+        <!-- Mensagem de erro -->
+        <div id="error-message" style="color: red; display: none"></div>
+
+        <label for="email"
+          >Seu e-mail (enviaremos um link para seu contador):</label
+        >
+        <input type="email" id="email" name="email" required /><br />
+
+        <button type="submit">Criar Página</button>
+      </form>
+
+      <!-- javascript para envio de imagens -->
+      <script>
+        document
+          .getElementById("createForm")
+          .addEventListener("submit", function (event) {
+            const imagesInput = document.getElementById("images");
+            const errorMessage = document.getElementById("error-message");
+            const maxFiles = 3;
+            const maxSize = 2 * 1024 * 1024; // 2MB
+
+            // Resetando mensagem de erro
+            errorMessage.style.display = "none";
+            errorMessage.innerHTML = "";
+
+            // Validando número de arquivos
+            if (imagesInput.files.length > maxFiles) {
+              errorMessage.innerHTML = "Você pode enviar no máximo 3 imagens.";
+              errorMessage.style.display = "block";
+              event.preventDefault();
+              return;
+            }
+
+            // Validando tamanho das imagens
+            for (let i = 0; i < imagesInput.files.length; i++) {
+              if (imagesInput.files[i].size > maxSize) {
+                errorMessage.innerHTML = "Cada imagem deve ter no máximo 2MB.";
+                errorMessage.style.display = "block";
+                event.preventDefault();
+                return;
+              }
+            }
+          });
+      </script>
+
+      <p class="footer-text">*sua página permanecerá ativa por 90 dias</p>
+      <p class="footer-text">
+        <a href="/deletar">Deletar uma página</a>
+      </p>
+      <p class="footer-text">entre em contato: contato@qrcodelove.me</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px">
+      <h3
+        style="
+          font-family: &quot;Montserrat&quot;, sans-serif;
+          color: #0077c2;
+          font-size: 2rem;
+          font-weight: 700;
+        "
+      >
+        Preencha acima e veja o resultado abaixo
+      </h3>
+    </div>
+
+    <!-- Container Principal com Fundo Branco -->
+    <div class="container">
+      <!-- Contador do evento com Fundo Amarelo -->
+      <div
+        class="container"
+        style="
+          background: rgba(255, 255, 0, 0.5);
+          border: none;
+          box-shadow: none;
+        "
+      >
+        <div id="meu-contador-container">
+          <div id="meu-contador"></div>
+        </div>
+      </div>
+
+      <!-- Conteúdo Principal da Página Interna -->
+      <div class="container" style="background: #b3e5fc">
+        <!-- Aplicando fundo azul apenas aqui -->
+        <!-- Frase sobre tempo passado desde o evento -->
+        <h2 class="special-text">Já se passaram desde que:</h2>
+
+        <!-- Nomes das pessoas -->
+        <h2 class="special-text" id="couple_name1">Nome 1</h2>
+        <h2 class="special-text">&amp;</h2>
+        <h2 class="special-text" id="couple_name2">Nome 2</h2>
+
+        <!-- Evento ocorrido -->
+        <h2 class="special-text" id="event_description_text">se casaram</h2>
+
+        <!-- Mensagem opcional -->
+        <h3 class="optional-message" id="optional_message_text">
+          Mensagem opcional será exibida aqui
+        </h3>
+
+        <!-- Verifica se há imagens e exibe o carrossel -->
+        {% if image_exists %}
+        <div
+          class="image-carousel-container"
+          style="text-align: center; margin-top: 20px"
+        >
+          <!-- Contêiner para as imagens -->
+          <div id="carousel" class="carousel-container">
+            {% for image in images %}
+            <img
+              src="https://s3.amazonaws.com/qrcodelove-pictures/{{ image }}"
+              alt="Imagem {{ loop.index }}"
+              class="carousel-image {% if loop.first %}active{% endif %}"
+            />
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            const images = document.querySelectorAll(
+              "#carousel .carousel-image",
+            );
+            let currentImageIndex = 0;
+            const totalImages = images.length;
+
+            // Função para trocar a imagem
+            function showNextImage() {
+              images[currentImageIndex].classList.remove("active"); // Remove a classe ativa da imagem atual
+              currentImageIndex = (currentImageIndex + 1) % totalImages; // Incrementa o índice da imagem
+              images[currentImageIndex].classList.add("active"); // Adiciona a classe ativa à próxima imagem
+            }
+
+            // Troca de imagem a cada 3 segundos
+            setInterval(showNextImage, 3000);
+          });
+        </script>
+
+        <!-- QR Code -->
+        <div class="qr-code">
+          <img
+            src="{{ url_for('static', filename='images/joao_maria.png') }}"
+            alt="QR Code"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        // Atualizar o texto da página de exemplo automaticamente conforme os campos são preenchidos
+        $("#name1").on("input", function () {
+          $("#couple_name1").text($(this).val() || "Nome 1");
+        });
+
+        $("#name2").on("input", function () {
+          $("#couple_name2").text($(this).val() || "Nome 2");
+        });
+
+        $("#event_description").on("change", function () {
+          $("#event_description_text").text($(this).val() || "Evento Especial");
+        });
+
+        $("#message").on("input", function () {
+          $("#optional_message_text").text(
+            $(this).val() || "Mensagem opcional será exibida aqui",
+          );
+        });
+
+        // Contador dinâmico com data inicial padrão
+        let eventDate = new Date("2023-01-01");
+
+        function updateCounter() {
+          var currentDate = new Date();
+          var timeDiff = currentDate.getTime() - eventDate.getTime();
+
+          var seconds = Math.floor(timeDiff / 1000);
+          var minutes = Math.floor(seconds / 60);
+          var hours = Math.floor(minutes / 60);
+          var days = Math.floor(hours / 24);
+          var months = Math.floor(days / 30);
+          var years = Math.floor(months / 12);
+
+          months %= 12;
+          days %= 30;
+          hours %= 24;
+          minutes %= 60;
+          seconds %= 60;
+
+          // Adicionar zero à esquerda para valores menores que 10
+          seconds = seconds < 10 ? "0" + seconds : seconds;
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          hours = hours < 10 ? "0" + hours : hours;
+
+          var result = "";
+
+          // Verifica o valor de cada unidade de tempo e ajusta para singular ou plural
+          if (years > 0) {
+            result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${years == 1 ? "ano" : "anos"}</div></div>`;
+          }
+          if (months > 0) {
+            result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${months == 1 ? "mês" : "meses"}</div></div>`;
+          }
+          if (days > 0) {
+            result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${days == 1 ? "dia" : "dias"}</div></div>`;
+          }
+          if (hours > 0) {
+            result += `<div class="time-unit-container"><div class="time-unit">${hours}</div><div class="label">${hours == 1 ? "hora" : "horas"}</div></div>`;
+          }
+          if (minutes > 0) {
+            result += `<div class="time-unit-container"><div class="time-unit">${minutes}</div><div class="label">${minutes == 1 ? "minuto" : "minutos"}</div></div>`;
+          }
+          result += `<div class="time-unit-container"><div class="time-unit">${seconds}</div><div class="label">${seconds == 1 ? "segundo" : "segundos"}</div></div>`;
+
+          document.getElementById("meu-contador").innerHTML = result;
+        }
+
+        // Atualiza o contador a cada segundo
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        // Atualizar o contador quando a data do evento é alterada
+        $("#event_date").on("change", function () {
+          let selectedDate = $(this).val();
+          if (selectedDate) {
+            eventDate = new Date(selectedDate);
+            updateCounter(); // Atualiza o contador imediatamente após a mudança
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagamento Pendente</title>
+  </head>
+  <body>
+    <h1>O pagamento para a página do casal ainda está pendente.</h1>
+    <p>Por favor, complete o pagamento para acessar a página completa.</p>
+    <p>
+      <a href="{{ url_for('pay', id=couple.id) }}">Clique aqui para pagar</a>
+    </p>
+  </body>
+</html>

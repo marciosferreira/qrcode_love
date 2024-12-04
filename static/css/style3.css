@@ -1,0 +1,426 @@
+
+/* Estilização do container youtube*/
+    /* Estilização do container do vídeo */
+        #videoContainer {
+            display: none;          /* O vídeo fica completamente escondido inicialmente */
+            margin-top: 20px;       /* Espaçamento entre o GIF e o vídeo */
+        }
+
+        /* Estilização do contêiner do vídeo para manter a proporção */
+        .video-wrapper {
+            width: 100%;
+            max-width: 1000px;      /* Limita a largura do vídeo a no máximo 1000px */
+            margin-left: auto;
+            margin-right: auto;     /* Centraliza o vídeo horizontalmente */
+            aspect-ratio: 16 / 9;   /* Mantém a proporção de 16:9 (landscape) */
+        }
+
+        /* Estilização do iframe para preencher o contêiner */
+        .video-wrapper iframe {
+            width: 100%;            /* O iframe ocupará toda a largura do contêiner */
+            height: 100%;           /* O iframe ocupará toda a altura proporcional */
+            border: 0;
+        }
+
+        /* Estilização da imagem do GIF para que seja responsiva */
+        #previewGif {
+            cursor: pointer;        /* Muda o cursor para indicar que é clicável */
+            max-width: 300px;       /* Limita o tamanho máximo do GIF */
+            width: auto;            /* Garante que o GIF mantenha a proporção */
+            height: auto;           /* Mantém a proporção original da imagem */
+            margin-left: auto;
+            margin-right: auto;     /* Centraliza o GIF horizontalmente */
+            display: block;
+        }
+
+        /* Estilo para o campo de entrada do formulário, mantendo o padrão */
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            border: 2px solid #0077c2;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilo padrão para o carrossel - Ideal para telas maiores (desktops e tablets) */
+.carousel-container {
+    position: relative;
+    width: 800px;  /* Aumentei o tamanho para telas maiores */
+    height: 500px; /* Ajustei a altura proporcional à largura */
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    border: 10px solid #FFD700;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    border-radius: 15px;
+}
+
+.carousel-image.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+/* Media Query para telas muito grandes (telas acima de 1440px de largura) */
+@media (min-width: 1440px) {
+    .carousel-container {
+        width: 1000px;  /* Aumentei a largura para telas muito grandes */
+        height: 600px;  /* Ajustei a altura para manter a proporção */
+    }
+}
+
+/* Media Query para tablets */
+@media (max-width: 1024px) {
+    .carousel-container {
+        width: 600px;  /* Ajusta o tamanho para tablets */
+        height: 400px;
+    }
+}
+
+/* Media Query para dispositivos móveis (celulares) */
+@media (max-width: 768px) {
+    .carousel-container {
+        width: calc(100% - 20px);  /* Garante que não ultrapasse as bordas da tela, com leve espaço nas laterais */
+        max-width: 500px; /* Define um limite máximo para manter proporção */
+        height: auto; /* A altura será ajustada proporcionalmente */
+        aspect-ratio: 4 / 3; /* Mantém uma proporção fixa para largura e altura */
+        max-height: 300px;  /* Define um limite máximo para evitar imagens muito altas */
+        min-height: 200px;  /* Define uma altura mínima para evitar o colapso */
+        margin: 0 auto; /* Centraliza o carrossel */
+    }
+
+    .carousel-image {
+        border-radius: 10px;  /* Reduz o arredondamento em telas menores */
+    }
+}
+
+/* Media Query para telas muito estreitas (telas pequenas ou celulares na vertical) */
+@media (max-width: 480px) {
+    .carousel-container {
+        width: calc(100% - 20px); /* Garante que não ultrapasse a tela, deixando uma margem de segurança */
+        height: auto;
+        aspect-ratio: 4 / 3; /* Mantém uma proporção adequada para evitar colapso */
+        max-height: 250px; /* Limite máximo da altura */
+        min-height: 200px; /* Limite mínimo da altura para evitar faixa fina */
+        margin: 0 auto; /* Centraliza o carrossel */
+    }
+
+    .carousel-image {
+        border-radius: 8px;  /* Reduz mais ainda o arredondamento em telas muito pequenas */
+    }
+}
+
+
+
+.container, .counter-container {
+    background: #ffffff; /* Fundo branco */
+    border: 1px solid #ddd;
+    padding: 40px;
+    max-width: 90%; /* Mesma largura para ambos */
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.counter-container {
+    background: rgba(255, 255, 0, 0.5); /* Mantém o fundo amarelo para o contador */
+    border: none; /* Remove a borda para evitar a moldura azul */
+    box-shadow: none; /* Remove a sombra */
+}
+
+
+
+
+
+
+.custom-image {
+    width: 80%; /* Define a largura da imagem como 80% do container pai */
+    max-width: 500px; /* Define um valor máximo para a largura */
+    height: auto; /* Mantém a proporção da imagem */
+    display: block; /* Torna a imagem um elemento de bloco para facilitar a centralização */
+    margin: 20px auto; /* Centraliza a imagem horizontalmente e adiciona um espaço acima e abaixo */
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    background-size: cover;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box; /* Inclui padding e border na largura total do elemento */
+}
+
+.container {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    padding: 40px;
+    max-width: 95%;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.wide-container {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    padding: 40px;
+    max-width: 95%; /* Utiliza quase toda a largura da página */
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box; /* Inclui padding e border na largura total do elemento */
+}
+
+/* Regras de mídia para dispositivos móveis */
+@media (max-width: 768px) {
+    .wide-container {
+        padding: 20px; /* Reduz o padding em dispositivos móveis */
+        max-width: 95%; /* Mantém um espaço nas laterais para dispositivos móveis */
+        margin: 10px auto;
+    }
+
+    .container {
+        padding: 20px; /* Reduz o padding em dispositivos móveis */
+    }
+}
+
+
+/* Regras adicionais para containers internos */
+.container .container {
+    background: #b3e5fc;
+    padding: 10px;
+    max-width: 100%;
+    margin: 10px auto;
+    border-radius: 15px;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #0077c2;
+    font-weight: 700;
+    font-size: 2.5rem; /* Altera o tamanho da fonte */
+}
+
+h4 {
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 20px;
+}
+
+h2.special-text {
+    color: #ff4081;
+    font-weight: 700;
+    font-family: 'Qwitcher Grypen', cursive;
+    font-size: 5rem;
+}
+
+h3 {
+    color: #0288d1;
+    font-family: 'Qwitcher Grypen', cursive;
+    font-size: 5rem;
+}
+
+h5 {
+    color: #333;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+label {
+    color: #0077c2;
+    font-weight: 700;
+    display: block;
+    text-align: left;
+    margin: 10px 0 5px 10%;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+    width: 80%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 80px;
+}
+
+button {
+    background-color: #0077c2;
+    color: #ffffff;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #005fa3;
+}
+
+button.pay-button {
+    background-color: #0077c2;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    margin: 5px 0;
+}
+
+button.pay-button:hover {
+    background-color: #005fa3;
+}
+
+.payment-container {
+    background: rgba(255, 0, 0, 0.05);
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    font-size: 1.3rem;
+    font-family: Arial, sans-serif;
+}
+
+.optional-message {
+    width: 70%;
+    margin: 0 auto; /* Centraliza a mensagem na div pai */
+    word-wrap: break-word; /* Alternativa ao overflow-wrap para compatibilidade */
+    overflow-wrap: break-word; /* Garante que o texto seja quebrado de maneira adequada */
+    hyphens: auto; /* Hifeniza automaticamente as palavras quando possível */
+    white-space: normal; /* Permite quebras de linha e uso eficiente do espaço */
+    margin-bottom: 40px;
+}
+
+.omit-link {
+    color: #ff4081;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.5rem;
+    transition: color 0.3s;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.omit-link:hover {
+    color: #e63973;
+}
+
+.qr-code {
+    margin-top: 10px;
+}
+
+.qr-code img {
+    width: 370px;
+    height: auto;
+    max-width: 100%;
+}
+
+#meu-contador-container {
+    background: rgba(255, 255, 0, 0.5);
+    background-image: url('https://www.transparenttextures.com/patterns/gray-floral.png');
+    padding: 15px;
+    border-radius: 10px;
+    display: block;
+    box-sizing: border-box;
+}
+
+.time-unit-container {
+    margin: 0px 0; /* Reduzir o espaço entre unidades de tempo */
+    text-align: center;
+}
+
+.time-unit {
+    font-family: 'Qwitcher Grypen', cursive;
+    font-size: 20rem;
+    color: #ff4081;
+    font-weight: bold;
+    margin: -20px 0 0 0; /* Aplicar margem negativa para mover o texto para cima */
+    padding: 0;
+    line-height: 0.5; /* Reduzir o line-height para aproximar os elementos */
+}
+
+.label {
+    font-size: 8rem;
+    color: #0288d1;
+    font-weight: bold;
+    font-family: 'Qwitcher Grypen', cursive;
+    margin: 0;
+    padding: 0;
+}
+
+.qr-code h5 {
+    font-family: Arial, sans-serif;
+    font-size: 1.2rem;
+    color: #0288d1;
+    margin: 5px 0;
+}
+
+.footer-text {
+    color: #333;
+    font-size: 0.8rem;
+    margin-top: 20px;
+}
+
+a {
+    color: #0077c2;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+form {
+    background-color: #e6f7ff; /* Azul bem clarinho */
+    padding: 20px; /* Espaçamento interno para dar mais "respiro" ao conteúdo */
+    border-radius: 10px; /* Bordas arredondadas para um visual mais suave */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra suave para destacar o formulário */
+    max-width: 400px; /* Limita a largura máxima do formulário */
+    margin: 20px auto; /* Centraliza o formulário e adiciona um espaçamento vertical */
+}
