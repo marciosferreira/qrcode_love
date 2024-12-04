@@ -55,7 +55,7 @@ if not aws_access_key_id or not aws_secret_access_key:
 else:
     print(f"AWS_ACCESS_KEY_ID: {aws_access_key_id[:4]}... (ocultado por segurança)")
     print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key[:4]}... (ocultado por segurança)")
-    print(f"AWS_DEFAULT_REGION: {aws_region}")
+    print(f"AWS_DEFAULT_REGION: {region_name}")
 
 
 # Tabela DynamoDB
