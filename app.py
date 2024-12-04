@@ -526,9 +526,9 @@ def create_couple_page():
         unique_code = generate_unique_code()
 
         # Criar a pasta se não existir para guardar imagens de perfil
-        upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], unique_code)
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
+        #upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], unique_code)
+        #if not os.path.exists(upload_folder):
+            #os.makedirs(upload_folder)
 
         # Processa o URL do YouTube para guardar apenas o código do vídeo
         if youtubelink:
