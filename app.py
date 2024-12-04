@@ -14,6 +14,7 @@ import stripe
 import boto3
 import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, abort
+import sys
 
 import mercadopago
 from datetime import datetime, timedelta
@@ -51,10 +52,11 @@ dynamodb = boto3.resource(
 region_name='us-east-1',
 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+
 # Verificar as credenciais
 if not aws_access_key_id or not aws_secret_access_key:
-    return jsonify({"error": "AWS credentials are missing"}), 400
-
+    print("Erro: AWS credentials are missing")
+    sys.exit(1)  # Sair do programa com um erro
 
 # Tabela DynamoDB
 table_name = 'CoupleTable'
