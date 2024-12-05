@@ -32,6 +32,13 @@ timezone = pytz.timezone('America/Manaus')
 # Configurações iniciais
 app = Flask(__name__)
 
+region_name='us-east-1',
+aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+print(aws_access_key_id)
+print(aws_secret_access_key)
+sys.exit(1)  # Sair do programa com um erro
+
 #app.secret_key = 'sua_chave_seHGcreta_aqui'  # Troque por uma string aleatória e segura
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'uma_fchave_secreta_fixa')
 
@@ -49,15 +56,10 @@ dynamodb = boto3.resource(
     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 )
 
-region_name='us-east-1',
-aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 
-# Verificar as credenciais
-if aws_access_key_id and aws_secret_access_key:
-    print(aws_access_key_id)
-    print(aws_secret_access_key)
-    sys.exit(1)  # Sair do programa com um erro
+
+
+    
 
 # Tabela DynamoDB
 table_name = 'CoupleTable'
