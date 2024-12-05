@@ -55,7 +55,8 @@ aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 
 # Verificar as credenciais
 if aws_access_key_id and aws_secret_access_key:
-    print(f"Erro: {aws_access_key_id}, {aws_secret_access_key}")
+    print(aws_access_key_id)
+    print(aws_secret_access_key)
     sys.exit(1)  # Sair do programa com um erro
 
 # Tabela DynamoDB
