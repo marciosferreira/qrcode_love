@@ -498,13 +498,13 @@ def allowed_file(filename):
 # Configurações do S3
 S3_BUCKET = 'qrcodelove-pictures'
 S3_REGION = 'us-east-1'
-AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
-AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY')
+aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 
 # Inicializando o cliente S3
 s3_client = boto3.client('s3', region_name=S3_REGION,
-                         aws_access_key_id=AWS_ACCESS_KEY,
-                         aws_secret_access_key=AWS_SECRET_KEY)
+                         aws_access_key_id=aws_access_key_id,
+                         aws_secret_access_key=aws_secret_access_key)
 
 
 
