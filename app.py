@@ -51,20 +51,23 @@ mp = mercadopago.SDK("APP_USR-6523172338846242-100514-afc9490970db73cf999cadf640
 dynamodb = boto3.resource(
     'dynamodb',
     region_name='us-east-1',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
 )
-
-
-
-
-    
-
 # Tabela DynamoDB
 table_name = 'CoupleTable'
 table = dynamodb.Table(table_name)
 
+# Configurações do S3
+S3_BUCKET = 'qrcodelove-pictures'
+S3_REGION = 'us-east-1'
+#aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+#aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 
+# Inicializando o cliente S3
+s3_client = boto3.client('s3', region_name=S3_REGION,
+                         aws_access_key_id=aws_access_key_id,
+                         aws_secret_access_key=aws_secret_access_key)
 
 
 # Configuração do Flask-Login
@@ -494,16 +497,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Configurações do S3
-S3_BUCKET = 'qrcodelove-pictures'
-S3_REGION = 'us-east-1'
-aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
 
-# Inicializando o cliente S3
-s3_client = boto3.client('s3', region_name=S3_REGION,
-                         aws_access_key_id=aws_access_key_id,
-                         aws_secret_access_key=aws_secret_access_key)
 
 
 
@@ -743,7 +737,7 @@ def couple_page(page_url):
         images = []
 
     # Gera o caminho do QR code
-    qr_code_path = f'static/qrcodes/{couple["page_url"]}.png'
+    #qr_code_path = f'static/qrcodes/{couple["page_url"]}.png'
 
     print("payment")
     print(couple['paid'])
@@ -759,7 +753,7 @@ def couple_page(page_url):
                            hours=hours,
                            minutes=minutes,
                            seconds=seconds,
-                           qr_code_path=qr_code_path,
+                           #qr_code_path=qr_code_path,
                            images=images,
                            image_exists=image_exists,
                            show_payment_link=show_payment_link)

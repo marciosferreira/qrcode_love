@@ -126,11 +126,9 @@
 <br>
 <div id="carousel" class="carousel-container">
     {% for image in images %}
-    <img src="https://d3dh2hcvx4tmgf.cloudfront.net/{{ image }}" class="carousel-image {% if loop.first %}active{% endif %}" alt="Imagem {{ loop.index }}">
+    <img src="https://qrcodelove-pictures.s3.us-east-1.amazonaws.com/{{ image }}" class="carousel-image {% if loop.first %}active{% endif %}" alt="Imagem {{ loop.index }}">
     {% endfor %}
 </div>
-
-
 {% endif %}
 
 
