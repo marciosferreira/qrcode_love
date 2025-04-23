@@ -545,8 +545,44 @@ $(document).ready(function () {
 </script>
 
 
-
-
+<script>
+    function adjustCarouselSize() {
+      const container = document.querySelector('.carousel-container');
+      const activeImage = container.querySelector('.carousel-image.active');
+      
+      if (activeImage) {
+        // Aguarda a imagem carregar totalmente antes de ajustar
+        if (!activeImage.complete) {
+          activeImage.onload = () => adjustCarouselSize();
+          return;
+        }
+    
+        const imageRatio = activeImage.naturalWidth / activeImage.naturalHeight;
+        const screenRatio = window.innerWidth / window.innerHeight;
+    
+        // Adapta com base na proporção da imagem e da tela
+        if (imageRatio > screenRatio) {
+          activeImage.style.width = '100%';
+          activeImage.style.height = 'auto';
+        } else {
+          activeImage.style.height = '90vh';
+          activeImage.style.width = 'auto';
+        }
+    
+        container.style.height = activeImage.offsetHeight + 'px';
+      }
+    }
+    
+    // Roda ao carregar a página
+    window.addEventListener('load', adjustCarouselSize);
+    
+    // Roda a cada troca de imagem
+    setInterval(() => {
+      adjustCarouselSize();
+    }, 1000);
+    </script>
+    
+    
 
 
 

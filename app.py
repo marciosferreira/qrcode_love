@@ -652,8 +652,8 @@ def create_couple_page():
         email_subject = "Sua página foi criada!"
         email_body = f"""
         Olá {name1} e {name2},<br><br>
-        Sua página foi criada com sucesso e estará ativa por 24 horas! Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
-        Para estender para 3 meses, acesse o link abaixo e clique no botão de renovação no rodapé da página. <br>
+        Sua página foi criada com sucesso e estará ativa por 1 hora para você testar ä vontade. Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
+        Para estender para 1 mes, e você pode s eplanejar à vontade para sua surpresa. Acesse o link abaixo e clique no botão de renovação no rodapé da página. <br>
         <a href='{url}?pagar'>{url}?pagar</a>.<br><br>
         Seu QR Code está anexado neste e-mail.<br><br>
         Se quiser deletar sua página, acesse o link abaixo e insira seu e-mail e o código da página: {unique_code}<br>
@@ -839,7 +839,7 @@ def pay(id):
                 "title": "Página contador sem anúncios (90 dias)",
                 "quantity": 1,
                 "currency_id": "BRL",  # Moeda BRL para real brasileiro
-                "unit_price": 15.99,  # Valor do pagamento
+                "unit_price": 9.90,  # Valor do pagamento
             }
         ],
         "payer": {"email": email},

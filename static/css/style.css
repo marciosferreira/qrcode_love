@@ -1,710 +1,634 @@
 /* Montserrat Regular (400) */
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../webfonts/montserrat-latin-400-normal.woff2') format('woff2'),
-         url('../webfonts/montserrat-latin-400-normal.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
+  font-family: "Montserrat";
+  src: url("../webfonts/montserrat-latin-400-normal.woff2") format("woff2"),
+    url("../webfonts/montserrat-latin-400-normal.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Montserrat Bold (700) */
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../webfonts/montserrat-latin-700-normal.woff2') format('woff2'),
-         url('../webfonts/montserrat-latin-700-normal.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
+  font-family: "Montserrat";
+  src: url("../webfonts/montserrat-latin-700-normal.woff2") format("woff2"),
+    url("../webfonts/montserrat-latin-700-normal.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
 }
 
 /* Montserrat Italic Regular (400) */
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../webfonts/montserrat-latin-400-italic.woff2') format('woff2'),
-         url('../webfonts/montserrat-latin-400-italic.woff') format('woff');
-    font-weight: 400;
-    font-style: italic;
+  font-family: "Montserrat";
+  src: url("../webfonts/montserrat-latin-400-italic.woff2") format("woff2"),
+    url("../webfonts/montserrat-latin-400-italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
 }
 
 /* Montserrat Italic Bold (700) */
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../webfonts/montserrat-latin-700-italic.woff2') format('woff2'),
-         url('../webfonts/montserrat-latin-700-italic.woff') format('woff');
-    font-weight: 700;
-    font-style: italic;
+  font-family: "Montserrat";
+  src: url("../webfonts/montserrat-latin-700-italic.woff2") format("woff2"),
+    url("../webfonts/montserrat-latin-700-italic.woff") format("woff");
+  font-weight: 700;
+  font-style: italic;
 }
-
-
 
 /* Qwitcher Grypen Regular (400) */
 @font-face {
-    font-family: 'Qwitcher Grypen';
-    src: url('../webfonts/qwitcher-grypen-latin-400-normal.woff2') format('woff2'),
-         url('../webfonts/qwitcher-grypen-latin-400-normal.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
+  font-family: "Qwitcher Grypen";
+  src: url("../webfonts/qwitcher-grypen-latin-400-normal.woff2") format("woff2"),
+    url("../webfonts/qwitcher-grypen-latin-400-normal.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Qwitcher Grypen Bold (700) */
 @font-face {
-    font-family: 'Qwitcher Grypen';
-    src: url('../webfonts/qwitcher-grypen-latin-700-normal.woff2') format('woff2'),
-         url('../webfonts/qwitcher-grypen-latin-700-normal.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
+  font-family: "Qwitcher Grypen";
+  src: url("../webfonts/qwitcher-grypen-latin-700-normal.woff2") format("woff2"),
+    url("../webfonts/qwitcher-grypen-latin-700-normal.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
 }
-
-
 
 body {
-    font-family: 'Montserrat', sans-serif;
-    /* Usa image-set para definir WebP como principal e JPG como fallback */
-    background-image: image-set(
-        url('../images/background.webp') type('image/webp'),
-        url('../images/background.jpg') type('image/jpeg')
-    );
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-    background-size: cover;
-    color: #333;
-    text-align: center;
-    padding: 0px 20px 20px 20px;
-    box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+  /* Usa image-set para definir WebP como principal e JPG como fallback */
+  background-image: image-set(
+    url("../images/background.webp") type("image/webp"),
+    url("../images/background.jpg") type("image/jpeg")
+  );
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;
+  color: #333;
+  text-align: center;
+  padding: 0px 20px 20px 20px;
+  box-sizing: border-box;
 }
 
-
-
 .centered-text {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: small;
-    color: #000000; /* Preto forte */
-    font-weight: bold; /* Adiciona espessura à fonte para melhor visibilidade */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: small;
+  color: #000000; /* Preto forte */
+  font-weight: bold; /* Adiciona espessura à fonte para melhor visibilidade */
 }
 
 .centered-text img {
-    height: 2em; /* Ajusta a altura da imagem ao tamanho da fonte */
-    margin-left: 5px; /* Adiciona um espaço entre a frase e a imagem */
+  height: 2em; /* Ajusta a altura da imagem ao tamanho da fonte */
+  margin-left: 5px; /* Adiciona um espaço entre a frase e a imagem */
 }
 
+.flashes {
+  list-style-type: none; /* Remove os marcadores (bolinhas) */
+  padding: 0; /* Remove o espaçamento à esquerda */
+}
 
-
- .flashes {
-        list-style-type: none;  /* Remove os marcadores (bolinhas) */
-        padding: 0;  /* Remove o espaçamento à esquerda */
-    }
-
-    .flashes li {
-        color: red;  /* Cor do texto em vermelho */
-        background-color: #f8d7da;  /* Fundo vermelho claro */
-        border: 1px solid red;  /* Borda vermelha */
-        padding: 10px;  /* Espaçamento interno */
-        margin-bottom: 10px;  /* Espaçamento entre mensagens */
-        border-radius: 5px;  /* Bordas arredondadas */
-    }
-
+.flashes li {
+  color: red; /* Cor do texto em vermelho */
+  background-color: #f8d7da; /* Fundo vermelho claro */
+  border: 1px solid red; /* Borda vermelha */
+  padding: 10px; /* Espaçamento interno */
+  margin-bottom: 10px; /* Espaçamento entre mensagens */
+  border-radius: 5px; /* Bordas arredondadas */
+}
 
 .top-bar {
-    width: 100%;
-    text-align: right;
-    padding: 10px 20px;
-    background-color: #f0f0f0; /* Escolha a cor que desejar */
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1000;
+  width: 100%;
+  text-align: right;
+  padding: 10px 20px;
+  background-color: #f0f0f0; /* Escolha a cor que desejar */
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
-.contact-link, .remove-link {
-    color: #333; /* Escolha a cor que desejar */
-    text-decoration: none;
-    font-size: 14px;
-    margin-left: 10px;
+.contact-link,
+.remove-link {
+  color: #333; /* Escolha a cor que desejar */
+  text-decoration: none;
+  font-size: 14px;
+  margin-left: 10px;
 }
 
-.contact-link:hover, .remove-link:hover {
-    text-decoration: underline;
+.contact-link:hover,
+.remove-link:hover {
+  text-decoration: underline;
 }
 
 .logo-container {
-    text-align: center;
-    margin-top: 0px; /* Espaço para evitar sobreposição com o top bar */
+  text-align: center;
+  margin-top: 0px; /* Espaço para evitar sobreposição com o top bar */
 }
 
 .logo-img {
-    max-width: 200px;
-    height: auto;
+  max-width: 200px;
+  height: auto;
 }
 
 @media (max-width: 768px) {
-    .top-bar {
-        text-align: center;
-        padding: 10px;
-    }
+  .top-bar {
+    text-align: center;
+    padding: 10px;
+  }
 
-    .logo-container {
-        margin-top: 40px; /* Ajustar margem conforme necessário */
-    }
+  .logo-container {
+    margin-top: 40px; /* Ajustar margem conforme necessário */
+  }
 }
-
 
 .container .container {
-    padding: 10px;
-    max-width: 100%;
-    margin: 10px auto;
-    border-radius: 15px;
-    box-sizing: border-box;
+  padding: 10px;
+  max-width: 100%;
+  margin: 10px auto;
+  border-radius: 15px;
+  box-sizing: border-box;
 }
-
-
-
 
 /* Estilo para a logo */
 .logo-container {
-    text-align: left; /* Posiciona o logo à esquerda */
-    margin-bottom: 20px; /* Espaçamento entre o logo e o formulário */
+  text-align: left; /* Posiciona o logo à esquerda */
+  margin-bottom: 20px; /* Espaçamento entre o logo e o formulário */
 }
 
 .logo-img {
-    width: 150px; /* Define um tamanho fixo para o logo */
-    height: auto; /* Mantém a proporção da imagem */
+  width: 150px; /* Define um tamanho fixo para o logo */
+  height: auto; /* Mantém a proporção da imagem */
 }
 
 /* Centralizar logo em dispositivos menores */
 @media (max-width: 768px) {
-    .logo-container {
-        text-align: center; /* Centraliza o logo em telas pequenas */
-    }
+  .logo-container {
+    text-align: center; /* Centraliza o logo em telas pequenas */
+  }
 
-    .logo-img {
-        width: 150px; /* Mantém o tamanho do logo, sem diminuir */
-    }
+  .logo-img {
+    width: 150px; /* Mantém o tamanho do logo, sem diminuir */
+  }
 }
-
-
-
-
-
 
 /* Estilização do container youtube */
 /* Estilização do container do vídeo */
 #videoContainer {
-    display: none;          /* O vídeo fica completamente escondido inicialmente */
-    margin-top: 20px;       /* Espaçamento entre o GIF e o vídeo */
+  display: none; /* O vídeo fica completamente escondido inicialmente */
+  margin-top: 20px; /* Espaçamento entre o GIF e o vídeo */
 }
 
 /* Estilização do contêiner do vídeo para manter a proporção */
 .video-wrapper {
-    width: 100%;
-    max-width: 1000px;      /* Limita a largura do vídeo a no máximo 1000px */
-    margin-left: auto;
-    margin-right: auto;     /* Centraliza o vídeo horizontalmente */
-    aspect-ratio: 16 / 9;   /* Mantém a proporção de 16:9 (landscape) */
+  width: 100%;
+  max-width: 1000px; /* Limita a largura do vídeo a no máximo 1000px */
+  margin-left: auto;
+  margin-right: auto; /* Centraliza o vídeo horizontalmente */
+  aspect-ratio: 16 / 9; /* Mantém a proporção de 16:9 (landscape) */
 }
 
 /* Estilização do iframe para preencher o contêiner */
 .video-wrapper iframe {
-    width: 100%;            /* O iframe ocupará toda a largura do contêiner */
-    height: 100%;           /* O iframe ocupará toda a altura proporcional */
-    border: 0;
+  width: 100%; /* O iframe ocupará toda a largura do contêiner */
+  height: 100%; /* O iframe ocupará toda a altura proporcional */
+  border: 0;
 }
 
 /* Estilização da imagem do GIF para que seja responsiva */
 /* Estilização da imagem do GIF para que seja bem pequeno e responsivo */
 #previewGif {
-    cursor: pointer;        /* Muda o cursor para indicar que é clicável */
-    max-width: 100px;       /* Define o tamanho máximo do GIF para 100px de largura */
-    width: 100%;            /* Garante que o GIF seja responsivo */
-    height: auto;           /* Mantém a proporção original da imagem */
-    margin-left: auto;
-    margin-right: auto;     /* Centraliza o GIF horizontalmente */
-    display: block;
+  cursor: pointer; /* Muda o cursor para indicar que é clicável */
+  max-width: 100px; /* Define o tamanho máximo do GIF para 100px de largura */
+  width: 100%; /* Garante que o GIF seja responsivo */
+  height: auto; /* Mantém a proporção original da imagem */
+  margin-left: auto;
+  margin-right: auto; /* Centraliza o GIF horizontalmente */
+  display: block;
 }
 
-
-
-
-/* Estilo padrão para o carrossel */
 .carousel-container {
-    position: relative;
-    width: 800px;
-    height: 500px;
-    margin: 0 auto;
-    overflow: hidden;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Sombra ao redor do container */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  padding: 1rem 0;
 }
 
-/* Estilo para as imagens do carrossel com sombra muito visível */
 .carousel-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: 15px;
-    box-shadow: 0px 50px 80px rgba(0, 0, 0, 0.8); /* Sombra grande e bem escura */
-    transition: opacity 1s ease-in-out, box-shadow 0.5s ease;
+  max-width: 100%;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  display: none;
+  object-fit: contain;
+  transition: opacity 0.5s ease-in-out;
+  border-radius: 8px;
 }
 
-/* Imagem ativa no carrossel */
 .carousel-image.active {
-    opacity: 1;
-    z-index: 1;
+  display: block;
 }
-
 /* Sombra ainda mais intensa ao passar o mouse (efeito hover) */
 .carousel-image:hover {
-    box-shadow: 0px 70px 100px rgba(0, 0, 0, 1); /* Sombra muito mais visível ao passar o mouse */
+  box-shadow: 0px 70px 100px rgba(0, 0, 0, 1); /* Sombra muito mais visível ao passar o mouse */
 }
 
 /* Media Query para tablets */
 @media (max-width: 1024px) {
-    .carousel-container {
-        width: 600px;
-        height: 400px;
-    }
+  .carousel-container {
+    width: 600px;
+    height: 400px;
+  }
 }
 
 /* Media Query para dispositivos móveis */
 @media (max-width: 768px) {
-    .carousel-container {
-        width: calc(100% - 20px);
-        max-width: 500px;
-        height: auto;
-        aspect-ratio: 4 / 3;
-    }
+  .carousel-container {
+    width: calc(100% - 20px);
+    max-width: 500px;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
 
-    .carousel-image {
-        border-radius: 10px;
-        box-shadow: 0px 35px 60px rgba(0, 0, 0, 0.8); /* Sombra mais moderada em dispositivos móveis */
-    }
+  .carousel-image {
+    border-radius: 10px;
+    box-shadow: 0px 35px 60px rgba(0, 0, 0, 0.8); /* Sombra mais moderada em dispositivos móveis */
+  }
 }
 
-
-
-.container-fluid, .container, .counter-container {
-    padding: 0px;
-    /* background-color: #f0f8ff; /* Cor de fundo para container-fluid, ajuste conforme necessário */
-    max-width: 1200px; /* Largura máxima comum para todos */
-    margin: 0 auto; /* Centraliza todos os contêineres */
-    box-sizing: border-box; /* Garante que o padding seja incluído na largura */
+.container-fluid,
+.container,
+.counter-container {
+  padding: 0px;
+  /* background-color: #f0f8ff; /* Cor de fundo para container-fluid, ajuste conforme necessário */
+  max-width: 1200px; /* Largura máxima comum para todos */
+  margin: 0 auto; /* Centraliza todos os contêineres */
+  box-sizing: border-box; /* Garante que o padding seja incluído na largura */
 }
 
 /* Estilos adicionais específicos para .container e .counter-container */
 .container {
-    /* background: #ffffff; */
-    /* border: 1px solid #ddd; */
-    padding: 40px; /* Caso queira ajustar o padding de .container */
-    /* border-radius: 10px; */
-    /* box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); */
+  /* background: #ffffff; */
+  /* border: 1px solid #ddd; */
+  padding: 40px; /* Caso queira ajustar o padding de .container */
+  /* border-radius: 10px; */
+  /* box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .counter-container {
-    /* background-color: #F2F2F2; */
-    padding: 20px; /* Caso queira ajustar o padding de .counter-container */
-    /* border-radius: 10px; */
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
+  /* background-color: #F2F2F2; */
+  padding: 20px; /* Caso queira ajustar o padding de .counter-container */
+  /* border-radius: 10px; */
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
 }
-
-
 
 .custom-image {
-    width: 80%; /* Define a largura da imagem como 80% do container pai */
-    max-width: 500px; /* Define um valor máximo para a largura */
-    height: auto; /* Mantém a proporção da imagem */
-    display: block; /* Torna a imagem um elemento de bloco para facilitar a centralização */
-    margin: 20px auto; /* Centraliza a imagem horizontalmente e adiciona um espaço acima e abaixo */
+  width: 80%; /* Define a largura da imagem como 80% do container pai */
+  max-width: 500px; /* Define um valor máximo para a largura */
+  height: auto; /* Mantém a proporção da imagem */
+  display: block; /* Torna a imagem um elemento de bloco para facilitar a centralização */
+  margin: 20px auto; /* Centraliza a imagem horizontalmente e adiciona um espaço acima e abaixo */
 }
 
-
-
-
-
-
 h1 {
-    color: #0077c2;
-    font-weight: 700;
-    font-size: 2.5rem; /* Altera o tamanho da fonte */
+  color: #0077c2;
+  font-weight: 700;
+  font-size: 2.5rem; /* Altera o tamanho da fonte */
 }
 
 h4 {
-    color: #555;
-    font-weight: 400;
-    margin-bottom: 20px;
+  color: #555;
+  font-weight: 400;
+  margin-bottom: 20px;
 }
 
-
-
 .special-text {
-    color: #2E4053;
-    font-weight: 700;
-    font-family: 'Qwitcher Grypen', cursive;
-    font-size: 7rem; /* Tamanho grande para telas largas */
-    margin: 0;
-    padding: 0;
-    line-height: 1.0;
+  color: #2e4053;
+  font-weight: 700;
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: 7rem; /* Tamanho grande para telas largas */
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
 /* Diminuir a fonte para telas grandes, mas não tão grandes */
 @media (max-width: 1200px) {
-    .special-text {
-        font-size: 6rem; /* Fonte menor que a original */
-    }
+  .special-text {
+    font-size: 6rem; /* Fonte menor que a original */
+  }
 }
 
 /* Diminuir ainda mais para tablets e dispositivos com largura média */
 @media (max-width: 768px) {
-    .special-text {
-        font-size: 5rem; /* Fonte ainda menor */
-    }
+  .special-text {
+    font-size: 5rem; /* Fonte ainda menor */
+  }
 }
 
 /* Diminuir bastante em smartphones */
 @media (max-width: 480px) {
-    .special-text {
-        font-size: 4rem; /* Fonte menor para dispositivos móveis */
-    }
+  .special-text {
+    font-size: 4rem; /* Fonte menor para dispositivos móveis */
+  }
 }
-
-
-
-
 
 .special-text-title {
-	color: #8A2BE2;
-	font-weight: 700;
-	font-family: 'Qwitcher Grypen', cursive;
-	font-size: 7rem;
-	text-shadow: 2px 2px 2px rgba(46, 64, 83, 0.5); /* Sombra mais clara, dando um efeito de espessura */
+  color: #8a2be2;
+  font-weight: 700;
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: 7rem;
+  text-shadow: 2px 2px 2px rgba(46, 64, 83, 0.5); /* Sombra mais clara, dando um efeito de espessura */
 }
-
 
 /* Diminuir a fonte para telas intermediárias (como laptops) */
 @media (max-width: 1200px) {
-    .special-text-title {
-        font-size: 5rem;
-    }
+  .special-text-title {
+    font-size: 5rem;
+  }
 }
 
 /* Diminuir ainda mais para tablets */
 @media (max-width: 768px) {
-    .special-text-title {
-        font-size: 4rem;
-    }
+  .special-text-title {
+    font-size: 4rem;
+  }
 }
 
 /* Diminuir bastante para smartphones */
 @media (max-width: 480px) {
-    .special-text-title {
-        font-size: 3.5rem;
-    }
+  .special-text-title {
+    font-size: 3.5rem;
+  }
 }
 
-
-
 h3 {
-    color: #0288d1;
-    font-family: 'Qwitcher Grypen', cursive;
-    font-size: 5rem;
+  color: #0288d1;
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: 5rem;
 }
 
 h5 {
-    color: #333;
-    font-weight: 700;
-    font-size: 1.2rem;
+  color: #333;
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .footer-text {
-    color: #333;
-    font-size: 0.8rem;
-    margin-top: 20px;
+  color: #333;
+  font-size: 0.8rem;
+  margin-top: 20px;
 }
 
 a {
-    /* color: #2F80ED; Cor dos links */
-    text-decoration: none; /* Remove o sublinhado padrão */
+  /* color: #2F80ED; Cor dos links */
+  text-decoration: none; /* Remove o sublinhado padrão */
 }
 
 a:hover {
-    text-decoration: underline;
-    color: #1C6FB5;
+  text-decoration: underline;
+  color: #1c6fb5;
 }
 
-
-
-
-
-
 .optional-message {
-    width: 90%;
-    margin: 0 auto; /* Centraliza a mensagem na div pai */
-    word-wrap: break-word; /* Alternativa ao overflow-wrap para compatibilidade */
-    overflow-wrap: break-word; /* Garante que o texto seja quebrado de maneira adequada */
-    hyphens: auto; /* Hifeniza automaticamente as palavras quando possível */
-    white-space: normal; /* Permite quebras de linha e uso eficiente do espaço */
-    margin-bottom: 40px;
-    text-shadow: 2px 2px 2px rgba(46, 64, 83, 0.5); /* Sombra mais clara, dando um efeito de espessura */
-    font-size: 5rem; /* Tamanho padrão para telas grandes */
+  width: 90%;
+  margin: 0 auto; /* Centraliza a mensagem na div pai */
+  word-wrap: break-word; /* Alternativa ao overflow-wrap para compatibilidade */
+  overflow-wrap: break-word; /* Garante que o texto seja quebrado de maneira adequada */
+  hyphens: auto; /* Hifeniza automaticamente as palavras quando possível */
+  white-space: normal; /* Permite quebras de linha e uso eficiente do espaço */
+  margin-bottom: 40px;
+  text-shadow: 2px 2px 2px rgba(46, 64, 83, 0.5); /* Sombra mais clara, dando um efeito de espessura */
+  font-size: 5rem; /* Tamanho padrão para telas grandes */
 }
 
 /* Diminuir a fonte para telas intermediárias (como laptops) */
 @media (max-width: 1200px) {
-    .optional-message {
-        font-size: 4.5rem;
-    }
+  .optional-message {
+    font-size: 4.5rem;
+  }
 }
 
 /* Diminuir ainda mais para tablets */
 @media (max-width: 768px) {
-    .optional-message {
-        font-size: 4rem;
-    }
+  .optional-message {
+    font-size: 4rem;
+  }
 }
 
 /* Diminuir bastante para smartphones */
 @media (max-width: 480px) {
-    .optional-message {
-        font-size: 3.5rem;
-    }
+  .optional-message {
+    font-size: 3.5rem;
+  }
 }
 
-
 .omit-link {
-    color: #ff4081;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.5rem;
-    transition: color 0.3s;
-    margin-top: 5px;
-    margin-bottom: 5px;
+  color: #ff4081;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.5rem;
+  transition: color 0.3s;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .omit-link:hover {
-    color: #e63973;
+  color: #e63973;
 }
 
 .qr-code {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .qr-code img {
-    width: 370px;
-    height: auto;
-    max-width: 100%;
+  width: 370px;
+  height: auto;
+  max-width: 100%;
 }
 
 #meu-contador-container {
-    padding: 15px;
-    border-radius: 10px;
-    display: block;
-    box-sizing: border-box;
+  padding: 15px;
+  border-radius: 10px;
+  display: block;
+  box-sizing: border-box;
 }
 
 .time-unit-container {
-    margin: 0px 0; /* Reduzir o espaço entre unidades de tempo */
-    text-align: center;
+  margin: 0px 0; /* Reduzir o espaço entre unidades de tempo */
+  text-align: center;
 }
 
 .time-unit {
-    font-family: 'Qwitcher Grypen', cursive;
-    color: #8A2BE2;
-    font-weight: bold;
-    margin: -20px 0 0 0; /* Aplicar margem negativa para mover o texto para cima */
-    padding: 0;
-    line-height: 0.5; /* Reduzir o line-height para aproximar os elementos */
-    text-shadow: 4px 4px 10px rgba(46, 64, 83, 0.7), /* Primeira camada de sombra */
+  font-family: "Qwitcher Grypen", cursive;
+  color: #8a2be2;
+  font-weight: bold;
+  margin: -20px 0 0 0; /* Aplicar margem negativa para mover o texto para cima */
+  padding: 0;
+  line-height: 0.5; /* Reduzir o line-height para aproximar os elementos */
+  text-shadow: 4px 4px 10px rgba(46, 64, 83, 0.7); /* Primeira camada de sombra */
 }
 
-
 .label {
-    color: #FFD700; /* Amarelo */
-    font-family: 'Qwitcher Grypen', cursive;
-    margin: 0;
-    padding: 0;
+  color: #ffd700; /* Amarelo */
+  font-family: "Qwitcher Grypen", cursive;
+  margin: 0;
+  padding: 0;
 }
 
 .qr-code h5 {
-    font-family: Arial, sans-serif;
-    font-size: 1.2rem;
-    color: #0288d1;
-    margin: 5px 0;
+  font-family: Arial, sans-serif;
+  font-size: 1.2rem;
+  color: #0288d1;
+  margin: 5px 0;
 }
 
-
-
-
 .payment-container {
-    background: #800080; /* Roxo sólido */
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 10px;
-    font-size: 1.3rem;
-    font-family: Arial, sans-serif;
-    color: white; /* Define o texto dentro da payment-container como branco */
+  background: #800080; /* Roxo sólido */
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  font-family: Arial, sans-serif;
+  color: white; /* Define o texto dentro da payment-container como branco */
 }
 
 .payment-container h5 {
-    color: white; /* Define especificamente o h5 dentro da container como branco */
+  color: white; /* Define especificamente o h5 dentro da container como branco */
 }
 
 .pay-button {
-    background-color: #fff; /* Cor de fundo branca */
-    color: #800080; /* Cor do texto roxo (para combinar com o fundo) */
-    padding: 10px 20px; /* Tamanho do botão */
-    border: none;
-    border-radius: 5px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease; /* Animação suave no hover */
+  background-color: #fff; /* Cor de fundo branca */
+  color: #800080; /* Cor do texto roxo (para combinar com o fundo) */
+  padding: 10px 20px; /* Tamanho do botão */
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Animação suave no hover */
 }
 
 .pay-button:hover {
-    background-color: #ddd; /* Cor de fundo ao passar o mouse */
-    color: #800080; /* Cor do texto no hover */
+  background-color: #ddd; /* Cor de fundo ao passar o mouse */
+  color: #800080; /* Cor do texto no hover */
 }
-
 
 /* Estilos Gerais */
 body {
-    font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
-
-h1, h4 {
-    text-align: center;
-    color: #0077c2;
+h1,
+h4 {
+  text-align: center;
+  color: #0077c2;
 }
 
 h4 {
-    margin-bottom: 30px;
+  margin-bottom: 30px;
 }
-
-
-
 
 /* Estilos do Formulário */
 /* Estilos do Formulário */
 .form-container {
-    background-color: #BBDEFB;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    max-width: 1000px; /* Aumenta a largura máxima do formulário para 1000px */
-    margin: 0 auto; /* Centraliza o formulário na página */
+  background-color: #bbdefb;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 1000px; /* Aumenta a largura máxima do formulário para 1000px */
+  margin: 0 auto; /* Centraliza o formulário na página */
 }
 
 .form-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 15px;
 }
 
 .form-group {
-    flex: 1 1 calc(33.33% - 15px); /* Cada campo ocupa 33.33% em telas grandes */
-    display: flex;
-    flex-direction: column;
-    max-width: 100%; /* Garante que o campo não exceda a largura disponível */
+  flex: 1 1 calc(33.33% - 15px); /* Cada campo ocupa 33.33% em telas grandes */
+  display: flex;
+  flex-direction: column;
+  max-width: 100%; /* Garante que o campo não exceda a largura disponível */
 }
 
 .form-group.half-width {
-    flex: 1 1 calc(50% - 15px); /* Configura campos para ocupar 50% do espaço */
-    max-width: 400px; /* Define um limite de largura máxima para os campos em telas grandes */
+  flex: 1 1 calc(50% - 15px); /* Configura campos para ocupar 50% do espaço */
+  max-width: 400px; /* Define um limite de largura máxima para os campos em telas grandes */
 }
 
 .form-group.full-width {
-    flex: 1 1 100%;
-    max-width: 100%; /* Ocupa toda a largura da linha, sem ultrapassar */
+  flex: 1 1 100%;
+  max-width: 100%; /* Ocupa toda a largura da linha, sem ultrapassar */
 }
 
 .form-group.label {
-    font-weight: bold;
-    margin-bottom: 5px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
-.form-group input, .form-group select, .form-group textarea {
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 100%;
-    box-sizing: border-box;
-    max-width: 100%; /* Limita o campo a ocupar no máximo 100% da sua largura */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%; /* Limita o campo a ocupar no máximo 100% da sua largura */
 }
 
 textarea {
-    resize: vertical;
+  resize: vertical;
 }
-
-
-
-
-
-
 
 /* Estilo do botão estreito e alinhado à esquerda */
 .btn {
-    background-color: #2F80ED;
-    color: white;
-    padding: 10px 20px; /* Define o tamanho do botão */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: auto; /* O botão não ocupará toda a largura */
-    display: inline-block; /* Garante que o botão seja tratado como um elemento inline */
-    margin-top: 20px;
+  background-color: #2f80ed;
+  color: white;
+  padding: 10px 20px; /* Define o tamanho do botão */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: auto; /* O botão não ocupará toda a largura */
+  display: inline-block; /* Garante que o botão seja tratado como um elemento inline */
+  margin-top: 20px;
 }
 
 .btn:hover {
-    background-color: #005c99;
+  background-color: #005c99;
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .form-group {
-        flex: 1 1 100%; /* Campos ocupam 100% do espaço em telas pequenas */
-    }
+  .form-group {
+    flex: 1 1 100%; /* Campos ocupam 100% do espaço em telas pequenas */
+  }
 
-    .btn {
-        width: auto; /* Mantém o botão estreito mesmo em telas menores */
-        display: inline-block; /* Não deixa o botão expandir em telas pequenas */
-    }
+  .btn {
+    width: auto; /* Mantém o botão estreito mesmo em telas menores */
+    display: inline-block; /* Não deixa o botão expandir em telas pequenas */
+  }
 }
 
 /* Estilo para o botão ficar sempre numa linha separada */
 .form-row.full-width {
-    flex: 1 1 100%;
-    display: flex;
-    justify-content: flex-start; /* Alinha o botão à esquerda */
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: flex-start; /* Alinha o botão à esquerda */
 }
-
-
-
-
-
-
-
-
 
 /* Mensagem de erro */
 .error-message {
-    color: red;
-    display: none;
-    margin-top: 10px;
-    text-align: center;
+  color: red;
+  display: none;
+  margin-top: 10px;
+  text-align: center;
 }
-
-
-
-
-
-
-
-
 
 #meu-contador {
   display: flex;
@@ -724,7 +648,7 @@ textarea {
 .time-unit {
   font-size: 10em; /* Aumenta o tamanho do texto do número */
   font-weight: bold; /* Negrito para maior visibilidade */
-  color: #8A2BE2; /* Cor preta para mais contraste */
+  color: #8a2be2; /* Cor preta para mais contraste */
   line-height: 1.2; /* Ajuste do line-height para evitar corte */
   margin: 0; /* Remove qualquer margem que possa estar causando o corte */
 }
