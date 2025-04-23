@@ -1000,4 +1000,4 @@ def generate_qr_code(url, unique_code, box_size=20, border=4):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=True)
