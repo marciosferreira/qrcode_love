@@ -375,10 +375,10 @@ def delete_old_pages():
                 # Definir o tempo limite para deleção
                 if is_paid:
                     # Páginas pagas podem ser deletadas após 90 dias
-                    time_limit = created_at_date + timedelta(days=90)
+                    time_limit = created_at_date + timedelta(days=30)
                 else:
                     # Páginas não pagas podem ser deletadas após 24 horas
-                    time_limit = created_at_date + timedelta(hours=24)
+                    time_limit = created_at_date + timedelta(hours=2)
 
                 # Verifica se o tempo limite já passou
                 if datetime.now(timezone) > time_limit:
@@ -665,7 +665,7 @@ def create_couple_page():
         email_body = f"""
         Olá {name1} e {name2},<br><br>
         Sua página foi criada com sucesso e estará ativa por 1 hora pra você testar à vontade! Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
-        Para estender para 1 mês e ter mais tempo para programar seu evento esepcial, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
+        Para estender para 1 mês e ter tempo psuficiente para preparar sua surpesa, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
         Seu QR Code está anexado neste e-mail.<br><br>
         Se quiser deletar sua página, acesse o link abaixo e insira seu e-mail e o código da página: {unique_code}<br>
         <a href='https://qrcodelove.me/deletar'>https://qrcodelove.me/deletar</a> <br>
@@ -848,7 +848,7 @@ def pay(id):
                         "product_data": {
                             "name": "Página contador sem anúncios (30 dias)",
                         },
-                        "unit_amount": 100,  #
+                        "unit_amount": 990,  #
                     },
                     "quantity": 1,
                 },
