@@ -24,12 +24,6 @@ body {
   box-sizing: border-box;
 }
 
-.container-fluid {
-  max-width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
 .logo-container {
   text-align: center;
   margin-top: 1rem;
@@ -214,7 +208,7 @@ h5 {
 
 /* Contêiner interno para ajustar melhor o layout */
 #meu-contador-container {
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(137, 207, 240, 0.445);
   padding: 1rem 2rem;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -225,25 +219,14 @@ h5 {
 #meu-contador {
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
+  color: #242323;
   font-family: "Montserrat", sans-serif;
   letter-spacing: 1px;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
 }
 
 .label {
   font-size: clamp(1rem, 4vw, 2rem);
-  color: #ffd700;
+  color: #5c5c5a;
 }
 
 .flashes {
@@ -408,7 +391,7 @@ h5 {
   font-family: "Qwitcher Grypen", cursive;
   font-size: clamp(10rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
-  color: #8a2be2;
+  color: #e44d48;
   line-height: 1;
   margin: 0;
 }
@@ -481,4 +464,22 @@ h5 {
 .pay-button:hover {
   background-color: #ddd; /* Cor de fundo ao passar o mouse */
   color: #800080; /* Cor do texto no hover */
+}
+
+.background-overlay {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  min-height: 90%;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  z-index: 1;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Garante que o conteúdo fique por cima */
+.container-fluid {
+  position: relative;
+  z-index: 2;
 }
