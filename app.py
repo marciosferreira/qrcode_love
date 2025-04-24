@@ -652,13 +652,12 @@ def create_couple_page():
         email_subject = "Sua página foi criada!"
         email_body = f"""
         Olá {name1} e {name2},<br><br>
-        Sua página foi criada com sucesso e estará ativa por 1 hora para você testar ä vontade. Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
-        Para estender para 1 mes, e você pode s eplanejar à vontade para sua surpresa. Acesse o link abaixo e clique no botão de renovação no rodapé da página. <br>
-        <a href='{url}?pagar'>{url}?pagar</a>.<br><br>
+        Sua página foi criada com sucesso e estará ativa por 1 hora pra você testar à vontade! Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
+        Para estender para 1 mês e ter mais tempo para programar seu evento esepcial, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
         Seu QR Code está anexado neste e-mail.<br><br>
         Se quiser deletar sua página, acesse o link abaixo e insira seu e-mail e o código da página: {unique_code}<br>
         <a href='https://qrcodelove.me/deletar'>https://qrcodelove.me/deletar</a> <br>
-        Ou ela será deletada automaticamente em 24 horas (exceto se fizer upgrade para 90 dias).<br><br>
+        Ou ela será deletada automaticamente em 1 hora (exceto se fizer upgrade para 30 dias).<br><br>
         Atenciosamente,<br>
         Equipe de Suporte
         """
@@ -726,8 +725,8 @@ def couple_page(page_url):
     show_payment_link = False
 
     # Verifica se o marcador "pagar" está presente na URL
-    if "pagar" in request.args:
-        show_payment_link = True
+
+    show_payment_link = True
 
     response = table.scan(FilterExpression=Key("page_url").eq(page_url))
     items = response.get("Items", [])
@@ -839,7 +838,7 @@ def pay(id):
                 "title": "Página contador sem anúncios (90 dias)",
                 "quantity": 1,
                 "currency_id": "BRL",  # Moeda BRL para real brasileiro
-                "unit_price": 9.90,  # Valor do pagamento
+                "unit_price": 15.99,  # Valor do pagamento
             }
         ],
         "payer": {"email": email},
@@ -1000,4 +999,4 @@ def generate_qr_code(url, unique_code, box_size=20, border=4):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000)

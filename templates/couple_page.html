@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
   <head>
-    <!-- Precarrega a imagem WebP -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Página de Evento Personalizada</title>
+    <meta
+      name="description"
+      content="Celebre momentos especiais com fotos, contadores, música e QRCode."
+    />
+
+    <!-- Precarrega a imagem de fundo -->
     <link
       rel="preload"
       href="/static/images/background.webp"
       as="image"
       type="image/webp"
     />
-
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon" />
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Tag -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-23RSZ1SMRX"
@@ -22,235 +30,151 @@
         dataLayer.push(arguments);
       }
       gtag("js", new Date());
-
       gtag("config", "G-23RSZ1SMRX");
     </script>
 
-    <script defer>
-      document.addEventListener("DOMContentLoaded", function () {
-        const images = document.querySelectorAll("#carousel .carousel-image");
-        let currentImageIndex = 0;
-        const totalImages = images.length;
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="presentation">
+        <h2 class="special-text-title">Página de</h2>
+        <h3 class="special-text_1" id="couple_name1">{{ couple.name1 }}</h3>
+        <h3 class="special-text_1">&amp;</h3>
+        <h3 class="special-text_1" id="couple_name2">{{ couple.name2 }}</h3>
 
-        // Função para trocar a imagem
-        function showNextImage() {
-          images[currentImageIndex].classList.remove("active"); // Remove a classe ativa da imagem atual
-          currentImageIndex = (currentImageIndex + 1) % totalImages; // Incrementa o índice da imagem
-          images[currentImageIndex].classList.add("active"); // Adiciona a classe ativa à próxima imagem
-        }
+        {% if image_exists %}
+        <div id="carousel" class="carousel-container">
+          {% for image in images %}
+          <img
+            src="https://qrcodelove-pictures.s3.us-east-1.amazonaws.com/{{ image }}"
+            class="carousel-image {% if loop.first %}active{% endif %}"
+            alt="Imagem {{ loop.index }}"
+          />
+          {% endfor %}
+        </div>
+        {% endif %}
 
-        // Troca de imagem a cada 3 segundos
-        setInterval(showNextImage, 3000);
-      });
-    </script>
+        <h3 class="special-text_2_a">Já se passaram:</h3>
 
-    <script defer>
+        <div class="container counter-container">
+          <div id="meu-contador-container">
+            <div id="meu-contador"></div>
+          </div>
+        </div>
+
+        <h3 class="special-text_2_b">desde que</h3>
+        <h3 class="special-text_2_b" id="event_description_text">
+          {{ couple.event_description }}
+        </h3>
+
+        {% if couple.optional_message %}
+        <h3 class="optional-message" id="optional_message_text">
+          {{ couple.optional_message.replace('\n', '<br />')|safe }}
+        </h3>
+        {% endif %} {% if has_video %}
+        <img
+          id="previewGif"
+          src="/static/images/giphy.png"
+          alt="Assista ao vídeo"
+          onclick="showVideo(event)"
+        />
+        <p id="videoHint">Vídeo homenagem (com som)</p>
+        <div id="videoContainer" style="display: none">
+          <div class="video-wrapper">
+            <iframe
+              id="youtubePlayer"
+              frameborder="0"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+        {% endif %} {{payment_pending}} {{show_payment_link}}
+        <!-- Se o pagamento estiver pendente, exibir aviso -->
+        {% if payment_pending == False and show_payment_link%}
+        <br />
+        <br />
+        <div class="payment-container">
+          <h5>Esta página ficará ativa por 1 hora</h5>
+          <form
+            action="{{ url_for('pay', id=couple['page_url']) }}"
+            method="POST"
+          >
+            <button type="submit" class="pay-button omit-link">
+              Estender para 30 dias e esconder este aviso
+            </button>
+          </form>
+        </div>
+        <br />
+        <br />
+        {% endif %} {% if payment_pending and show_payment_link %}
+        <!-- Event snippet for Purchase conversion page -->
+        <script>
+          gtag("event", "conversion", {
+            send_to: "AW-16746008535/epKyCK6IjN8ZENefj7E-",
+            value: 1.0,
+            currency: "BRL",
+            transaction_id: "",
+          });
+        </script>
+        {% endif %}
+      </div>
+    </div>
+
+    <script>
       function showVideo(event) {
         event.preventDefault();
-
-        const videoContainer = document.getElementById("videoContainer");
-        const previewGif = document.getElementById("previewGif");
-        const youtubePlayer = document.getElementById("youtubePlayer");
-
-        // Remove o GIF e exibe o vídeo
-        previewGif.style.display = "none";
-        videoContainer.style.display = "block";
-
-        // Define a URL do vídeo com autoplay e som habilitado
-        youtubePlayer.src =
+        document.getElementById("previewGif").style.display = "none";
+        document.getElementById("videoContainer").style.display = "block";
+        document.getElementById("youtubePlayer").src =
           "https://www.youtube.com/embed/{{ couple.video_id }}?autoplay=1&rel=0";
-
-        // Rolagem suave para o vídeo
-        videoContainer.scrollIntoView({ behavior: "smooth" });
-
-        return false;
+        document
+          .getElementById("videoContainer")
+          .scrollIntoView({ behavior: "smooth" });
       }
     </script>
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contador de Tempo de Evento Especial</title>
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='js/jquery.countdown.min.js') }}"></script>
-  </head>
-
-  <body>
-    <!-- Centraliza e dá margem superior -->
-    <div style="text-align: center; margin-top: 0px">
-      <div class="special-text-title">Página de</div>
-    </div>
-
-    <!-- Nomes das pessoas (com os mesmos IDs e classes) -->
-    <h3 class="special-text" id="couple_name1">{{ couple.name1 }}</h3>
-    <h3 class="special-text">&amp;</h3>
-    <h3 class="special-text" id="couple_name2">{{ couple.name2 }}</h3>
-
-    <br />
-
-    <!-- Verifica se há imagens e exibe o carrossel -->
-    {% if image_exists %}
-    <br />
-    <br />
-    <div id="carousel" class="carousel-container">
-      {% for image in images %}
-      <img
-        src="https://qrcodelove-pictures.s3.us-east-1.amazonaws.com/{{ image }}"
-        class="carousel-image {% if loop.first %}active{% endif %}"
-        alt="Imagem {{ loop.index }}"
-      />
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Contador do evento com Fundo Amarelo e mesmas classes -->
-    <div class="container counter-container">
-      <div id="meu-contador-container">
-        <div id="meu-contador"></div>
-      </div>
-    </div>
-
-    <!-- Frase sobre o tempo passado desde o evento -->
-    <h3 class="special-text">Já se passaram desde que</h3>
-
-    <!-- Evento ocorrido (mantendo o mesmo ID) -->
-    <h3 class="special-text" id="event_description_text">
-      {{ couple.event_description }}
-    </h3>
-
-    <br />
-    <br />
-
-    <!-- Mensagem opcional -->
-    {% if couple.optional_message %}
-    <h3 class="optional-message" id="optional_message_text">
-      {{ couple.optional_message.replace('\n', '<br />')|safe }}
-    </h3>
-    {% endif %} {% if has_video %}
-
-    <!-- GIF para abrir o vídeo (mantendo o mesmo estilo e IDs) -->
-    <img
-      id="previewGif"
-      src="/static/images/giphy.png"
-      alt="Assista ao vídeo"
-      onclick="showVideo(event)"
-    />
-    <p id="videoHint" style="font-size: 16px; color: gray; margin-top: 8px">
-      Video homenagem (com som)
-    </p>
-
-    <!-- Container do vídeo -->
-    <div id="videoContainer" style="display: none">
-      <div class="video-wrapper">
-        <iframe
-          id="youtubePlayer"
-          frameborder="0"
-          allow="autoplay; encrypted-media"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-    <br />
-    <br />
-    {% endif %}
-
-    <!-- Se o pagamento estiver pendente, exibir aviso -->
-    {% if payment_pending == False and show_payment_link%}
-    <br />
-    <br />
-    <div class="payment-container">
-      <h5>Esta página ficará ativa por 1 hora pra você testar à vontade!</h5>
-      <form action="{{ url_for('pay', id=couple['page_url']) }}" method="POST">
-        <button type="submit" class="pay-button omit-link">
-          Estender para 30 dias por R$ 9,90.
-        </button>
-      </form>
-    </div>
-    <br />
-    <br />
-    {% endif %} {% if payment_pending and show_payment_link %}
-    <!-- Event snippet for Purchase conversion page -->
     <script>
-      gtag("event", "conversion", {
-        send_to: "AW-16746008535/epKyCK6IjN8ZENefj7E-",
-        value: 1.0,
-        currency: "BRL",
-        transaction_id: "",
+      $(document).ready(function () {
+        const images = $("#carousel .carousel-image");
+        let currentIndex = 0;
+        const totalImages = images.length;
+        setInterval(() => {
+          images.removeClass("active");
+          currentIndex = (currentIndex + 1) % totalImages;
+          images.eq(currentIndex).addClass("active");
+        }, 3000);
       });
     </script>
-    {% endif %}
 
-    <script defer>
+    <script>
       $(document).ready(function () {
-        // Obter valores calculados do backend
         let years = {{ years }};
         let months = {{ months }};
         let days = {{ days }};
         let hours = {{ hours }};
         let minutes = {{ minutes }};
         let seconds = {{ seconds }};
-
-        // Função para atualizar o contador
         function updateCounter() {
-          // Atualizar o tempo
           seconds++;
-          if (seconds >= 60) {
-            seconds = 0;
-            minutes++;
-          }
-          if (minutes >= 60) {
-            minutes = 0;
-            hours++;
-          }
-          if (hours >= 24) {
-            hours = 0;
-            days++;
-          }
-          if (days >= 30) {
-            days = 0;
-            months++;
-          }
-          if (months >= 12) {
-            months = 0;
-            years++;
-          }
-
-          // Adicionar zero à esquerda para valores menores que 10
-          let seconds_str = seconds < 10 ? "0" + seconds : seconds;
-          let minutes_str = minutes < 10 ? "0" + minutes : minutes;
-          let hours_str = hours < 10 ? "0" + hours : hours;
+          if (seconds >= 60) { seconds = 0; minutes++; }
+          if (minutes >= 60) { minutes = 0; hours++; }
+          if (hours >= 24) { hours = 0; days++; }
+          if (days >= 30) { days = 0; months++; }
+          if (months >= 12) { months = 0; years++; }
 
           let result = "";
-
-          // Atualiza o contador com os valores calculados pelo backend e incrementados
-          if (years > 0) {
-            result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${years == 1 ? "ano" : "anos"}</div></div>`;
-          }
-          if (months > 0) {
-            result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${months == 1 ? "mês" : "meses"}</div></div>`;
-          }
-          if (days > 0) {
-            result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${days == 1 ? "dia" : "dias"}</div></div>`;
-          }
-          if (hours > 0) {
-            result += `<div class="time-unit-container"><div class="time-unit">${hours_str}</div><div class="label">${hours == 1 ? "hora" : "horas"}</div></div>`;
-          }
-          if (minutes > 0) {
-            result += `<div class="time-unit-container"><div class="time-unit">${minutes_str}</div><div class="label">${minutes == 1 ? "minuto" : "minutos"}</div></div>`;
-          }
-          result += `<div class="time-unit-container"><div class="time-unit">${seconds_str}</div><div class="label">${seconds == 1 ? "segundo" : "segundos"}</div></div>`;
+          if (years > 0) result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${years == 1 ? 'ano' : 'anos'}</div></div>`;
+          if (months > 0) result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${months == 1 ? 'mês' : 'meses'}</div></div>`;
+          if (days > 0) result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${days == 1 ? 'dia' : 'dias'}</div></div>`;
+          if (hours > 0) result += `<div class="time-unit-container"><div class="time-unit">${hours}</div><div class="label">${hours == 1 ? 'hora' : 'horas'}</div></div>`;
+          if (minutes > 0) result += `<div class="time-unit-container"><div class="time-unit">${minutes}</div><div class="label">${minutes == 1 ? 'minuto' : 'minutos'}</div></div>`;
+          result += `<div class="time-unit-container"><div class="time-unit">${seconds}</div><div class="label">${seconds == 1 ? 'segundo' : 'segundos'}</div></div>`;
 
           document.getElementById("meu-contador").innerHTML = result;
         }
-
-        // Atualiza o contador a cada segundo
         setInterval(updateCounter, 1000);
         updateCounter();
       });

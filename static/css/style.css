@@ -59,14 +59,14 @@ body {
   height: auto;
   margin-top: 0.5rem;
 }
-
 #previewGif {
   cursor: pointer;
-  max-width: 80px;
+  max-width: 180px; /* estava 80px */
   width: 100%;
   height: auto;
-  margin: 20px auto 0;
+  margin: 40px auto 10px;
   display: block;
+  margin-top: 10vh;
 }
 
 .form-container {
@@ -160,29 +160,40 @@ h5 {
   overflow-wrap: break-word;
 }
 
-.special-text,
-.special-text-title,
-.optional-message,
-.time-unit,
-.label {
-  font-size: clamp(1.5rem, 6vw, 4rem);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.2;
-}
-
 .carousel-container {
   position: relative;
-  width: 100%;
-  height: 500px;
-  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 50vh; /* padrão para mobile/tablet */
+  max-width: 95vw;
+  margin: 2rem auto;
+  overflow: hidden;
 }
-@media (max-width: 768px) {
+
+.carousel-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  z-index: 0;
+}
+
+.carousel-image.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+/* ✅ Apenas em telas grandes (ex: desktops acima de 1200px) */
+@media (min-width: 1200px) {
   .carousel-container {
-    height: 320px;
+    height: 80vh;
   }
 }
 /* Contêiner externo para o contador */
@@ -202,6 +213,7 @@ h5 {
   padding: 1rem 2rem;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-top: 5vh; /* 10% da altura da viewport */
 }
 
 /* Estilo do próprio contador */
@@ -211,12 +223,7 @@ h5 {
   color: #333;
   font-family: "Montserrat", sans-serif;
   letter-spacing: 1px;
-}
-
-.time-unit {
-  font-size: clamp(2.5rem, 8vw, 6rem);
-  font-weight: bold;
-  color: #8a2be2;
+  animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
@@ -227,10 +234,6 @@ h5 {
   50% {
     transform: scale(1.05);
   }
-}
-
-#meu-contador {
-  animation: pulse 2s infinite;
 }
 
 .label {
@@ -320,54 +323,78 @@ h5 {
 }
 
 /* Subtítulos e textos principais com estilo especial */
-.special-text,
-.optional-message,
+
 .special-text-title {
   font-family: "Qwitcher Grypen", cursive;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #2e4053;
-  text-shadow: 2px 2px 2px rgba(46, 64, 83, 0.4);
-  margin: 0;
-  padding: 0;
-  word-wrap: break-word;
-  white-space: normal;
+  font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
+  color: #040007;
+  line-height: 1.1;
 }
 
-/* Tamanhos responsivos com clamp */
-.special-text {
-  font-size: clamp(2.5rem, 6vw, 5rem);
-}
-
-.special-text-title {
-  font-size: clamp(3rem, 8vw, 6.5rem);
+.special-text_1 {
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
   color: #8a2be2;
+  line-height: 0.8;
+  margin-top: 3vh; /* 10% da altura da viewport */
 }
 
+.special-text_2_a {
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
+  color: #8a2be2;
+  line-height: 0.3;
+  margin-top: 13vh; /* 10% da altura da viewport */
+}
+
+.special-text_2_b {
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
+  color: #8a2be2;
+  line-height: 0.1;
+  margin-top: 13vh; /* 10% da altura da viewport */
+}
+
+.special-text_3 {
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 12vw, 15rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
+  color: #8a2be2;
+  line-height: 0.2;
+  margin-top: 5vh; /* 10% da altura da viewport */
+}
 .optional-message {
-  font-size: clamp(1.5rem, 5.5vw, 4rem);
-  color: #444;
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 9vw, 15rem);
+  font-weight: bold;
+  color: #040008;
+  line-height: 1.1;
+  margin-top: 15vh;
+  padding-left: 5vw;
+  padding-right: 5vw;
+}
+
+.label {
+  font-size: clamp(5rem, 5vw, 4rem);
+  font-family: "Qwitcher Grypen", cursive;
 }
 
 /* Contador */
 .time-unit {
   font-family: "Qwitcher Grypen", cursive;
-  font-size: clamp(2rem, 8vw, 6rem);
+  font-size: clamp(10rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
   color: #8a2be2;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.label {
-  font-family: "Qwitcher Grypen", cursive;
-  font-size: clamp(1rem, 4vw, 2.5rem);
-  color: #ffd700;
+  line-height: 1;
   margin: 0;
 }
 
 .carousel-image {
-  max-width: 100%;
+  max-width: 90%;
   max-height: 100%;
   object-fit: contain;
   position: absolute;
@@ -380,6 +407,7 @@ h5 {
   transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
   z-index: 0;
   pointer-events: none;
+  margin-top: 10vh; /* 10% da altura da viewport */
 }
 
 .carousel-image.active {
@@ -387,4 +415,50 @@ h5 {
   visibility: visible;
   z-index: 1;
   pointer-events: auto;
+}
+
+.video-wrapper {
+  max-width: 90vw;
+  margin: 2rem auto;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  margin-top: 7vh;
+}
+
+.video-wrapper iframe {
+  width: 90%;
+  height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-top: 7vh;
+}
+
+.payment-container {
+  background: #800080; /* Roxo sólido */
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  font-family: Arial, sans-serif;
+  color: white; /* Define o texto dentro da payment-container como branco */
+}
+
+.payment-container h5 {
+  color: white; /* Define especificamente o h5 dentro da container como branco */
+}
+
+.pay-button {
+  background-color: #fff; /* Cor de fundo branca */
+  color: #800080; /* Cor do texto roxo (para combinar com o fundo) */
+  padding: 10px 20px; /* Tamanho do botão */
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Animação suave no hover */
+}
+
+.pay-button:hover {
+  background-color: #ddd; /* Cor de fundo ao passar o mouse */
+  color: #800080; /* Cor do texto no hover */
 }
