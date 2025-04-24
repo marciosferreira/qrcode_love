@@ -37,5 +37,3 @@ urllib3==2.2.3
 virtualenv==20.26.3
 Werkzeug==3.0.4
 awscli
-dotenv
-stripe
