@@ -429,8 +429,8 @@ h5 {
 }
 
 .video-wrapper iframe {
-  width: 70%;
-  height: 70%;
+  width: 90%;
+  height: 90%;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   margin-top: 7vh;
