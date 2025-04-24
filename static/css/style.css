@@ -168,7 +168,6 @@ h5 {
   height: 50vh; /* padrão para mobile/tablet */
   max-width: 95vw;
   margin: 2rem auto;
-  overflow: hidden;
 }
 
 .carousel-image {
@@ -353,7 +352,7 @@ h5 {
   font-weight: bold;
   color: #8a2be2;
   line-height: 0.3;
-  margin-top: 13vh; /* 10% da altura da viewport */
+  margin-top: 30vh; /* 10% da altura da viewport */
 }
 
 .special-text_2_b {
@@ -447,8 +446,8 @@ h5 {
 }
 
 .video-wrapper iframe {
-  width: 90%;
-  height: 90%;
+  width: 70%;
+  height: 70%;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   margin-top: 7vh;
