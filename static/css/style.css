@@ -201,10 +201,16 @@ h5 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1.5rem;
+  margin-top: 3.5rem;
   margin-bottom: 2rem;
   z-index: 10;
   position: relative;
+}
+
+@media (max-width: 768px) {
+  .counter-container {
+    margin-top: 1.5rem;
+  }
 }
 
 /* Contêiner interno para ajustar melhor o layout */
@@ -355,8 +361,23 @@ h5 {
   font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
   color: #8a2be2;
-  line-height: 0.1;
+  line-height: 0.4;
   margin-top: 13vh; /* 10% da altura da viewport */
+}
+
+@media (max-width: 768px) {
+  .special-text_2_b {
+    line-height: 0.1;
+  }
+}
+
+.special-text_2_c {
+  font-family: "Qwitcher Grypen", cursive;
+  font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
+  font-weight: bold;
+  color: #8a2be2;
+  line-height: 0.8;
+  margin-top: 5vh; /* 10% da altura da viewport */
 }
 
 .special-text_3 {
@@ -373,7 +394,7 @@ h5 {
   font-weight: bold;
   color: #040008;
   line-height: 1.1;
-  margin-top: 15vh;
+  margin-top: 5vh;
   padding-left: 5vw;
   padding-right: 5vw;
 }
