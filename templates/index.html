@@ -459,7 +459,19 @@
         
         </script>
         
+        <script>function ajustarAlturaCarrossel() {
+          const container = document.querySelector('.carousel-container');
+          const ativa = container.querySelector('.carousel-image.active');
+          if (ativa && ativa.complete) {
+            container.style.height = ativa.offsetHeight + 'px';
+          }
+        }
         
+        window.addEventListener('load', ajustarAlturaCarrossel);
+        document.querySelectorAll('.carousel-image').forEach(img => {
+          img.onload = ajustarAlturaCarrossel;
+        });
+        </script>
 
 
 </body>
