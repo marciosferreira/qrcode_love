@@ -32,7 +32,17 @@ from flask import (
 )
 import sys
 
-import mercadopago
+# No início do seu arquivo app.py
+from dotenv import load_dotenv
+
+load_dotenv()  # carrega as variáveis do arquivo .env
+
+# Agora você pode acessá-las com os.getenv
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+# No início do arquivo, adicione esta linha às configurações
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+# import mercadopago
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 from boto3.dynamodb.conditions import Key
@@ -59,10 +69,12 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "uma_fchave_secreta_fixa")
 
 
 # Configure o SDK do Mercado Pago
-mp = mercadopago.SDK(
-    "APP_USR-6523172338846242-100514-afc9490970db73cf999cadf640593b3e-60830907"
-)  # production
+# production
 # mp = mercadopago.SDK("APP_USR-7788212792459286-100515-877d8d26d1cb62eb816d39854668fa8b-2022910974")  # teste
+import stripe
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
 
 # Configuração do DynamoDB
 # dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
@@ -813,99 +825,80 @@ def couple_page(page_url):
     )
 
 
-# Rota de pagamento (Mercado Pago)
+# Rota de pagamento (Stripe)
 @app.route("/pay/<string:id>", methods=["POST"])
 def pay(id):
-    # couple = Couple.query.get_or_404(id)
-    # response = table.get_item(Key={'id': str(id)})
     response = table.scan(FilterExpression=Key("page_url").eq(id))
     items = response.get("Items", [])
     if not items:
         return "Página não encontrada", 404
     couple = items[0]
 
-    # couple = response.get('Item')
-    if not couple:
-        return "Página não encontrada", 404
-
     # Capturar o email do casal
     email = couple["email"]
 
-    # Criar a preferência de pagamento
-    preference_data = {
-        "items": [
-            {
-                "title": "Página contador sem anúncios (90 dias)",
-                "quantity": 1,
-                "currency_id": "BRL",  # Moeda BRL para real brasileiro
-                "unit_price": 15.99,  # Valor do pagamento
-            }
-        ],
-        "payer": {"email": email},
-        "back_urls": {
-            "success": url_for(
-                "payment_success", page_url=couple["page_url"], _external=True
-            ),
-            "failure": url_for(
-                "couple_page", page_url=couple["page_url"], _external=True
-            ),
-            "pending": url_for(
-                "couple_page", page_url=couple["page_url"], _external=True
-            ),
-        },
-        "auto_return": "approved",
-        "notification_url": "https://qrcodelove.me/webhook",  # Webhook para fallback
-        "metadata": {
-            # "couple_id": couple.id  # Incluindo o ID do casal como metadado
-            "couple_id": couple[
-                "page_url"
-            ]  # Incluindo a URL do casal como metadado, já que não temos mais id
-        },
-    }
-
     try:
-        # Criar preferência de pagamento
-        preference_response = mp.preference().create(preference_data)
+        # Criar uma sessão de checkout do Stripe
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "brl",
+                        "product_data": {
+                            "name": "Página contador sem anúncios (30 dias)",
+                        },
+                        "unit_amount": 100,  #
+                    },
+                    "quantity": 1,
+                },
+            ],
+            mode="payment",
+            success_url=url_for(
+                "payment_success", page_url=couple["page_url"], _external=True
+            )
+            + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=url_for(
+                "couple_page", page_url=couple["page_url"], _external=True
+            ),
+            customer_email=email,
+            metadata={
+                "couple_page_url": couple[
+                    "page_url"
+                ]  # Metadados para identificar o casal
+            },
+        )
 
-        # Verifica se a resposta contém a chave esperada
-        if (
-            "response" in preference_response
-            and "id" in preference_response["response"]
-        ):
-            preference_id = preference_response["response"]["id"]
-
-            # Redirecionar o cliente para o Mercado Pago Checkout
-            return redirect(preference_response["response"]["init_point"], code=303)
-        else:
-            return "Erro ao criar preferência de pagamento", 400
-
+        # Redirecionar para a página de checkout do Stripe
+        return redirect(checkout_session.url, code=303)
     except Exception as e:
-        print(f"Erro na criação de preferência de pagamento: {e}")
+        print(f"Erro na criação da sessão de checkout: {e}")
         return "Erro ao processar o pagamento", 500
 
 
-# Rota de sucesso do pagamento (Verificação ativa)
+# Rota de sucesso do pagamento (Verificação ativa com Stripe)
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
-    # couple = Couple.query.filter_by(page_url=page_url).first_or_404()
     response = table.scan(FilterExpression=Key("page_url").eq(page_url))
     items = response.get("Items", [])
     if not items:
         return "Página não encontrada", 404
     couple = items[0]
 
-    # Verifica o status do pagamento diretamente na API do Mercado Pago
-    payment_id = request.args.get("payment_id")
-    payment_info = mp.payment().get(payment_id)
+    # Verificar o status da sessão de checkout
+    session_id = request.args.get("session_id")
+    if session_id:
+        try:
+            # Verificar o status do pagamento diretamente na API do Stripe
+            session = stripe.checkout.Session.retrieve(session_id)
 
-    # Se o status for aprovado, marque o casal como pago
-    if payment_info["response"]["status"] == "approved":
-        # couple.paid = True
-        # db.session.commit()
-        couple["paid"] = True
-        table.put_item(Item=couple)
+            # Se o status for "paid", marque o casal como pago
+            if session.payment_status == "paid":
+                couple["paid"] = True
+                table.put_item(Item=couple)
+        except Exception as e:
+            print(f"Erro ao verificar o pagamento: {e}")
 
-    # return redirect(url_for('couple_page', page_url=couple.page_url))
     return redirect(url_for("couple_page", page_url=couple["page_url"]))
 
 
@@ -916,35 +909,63 @@ from flask import jsonify, request
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    notification_data = request.json
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature")
 
-    if notification_data.get("type") == "payment":
-        payment_id = notification_data.get("data", {}).get("id")
-        payment_info = mp.payment().get(payment_id)
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET")
+        )
+    except ValueError as e:
+        # Invalid payload
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return "Invalid signature", 400
 
-        if payment_info["response"]["status"] == "approved":
-            couple_id = payment_info["response"]["metadata"]["couple_id"]
-            response = table.scan(FilterExpression=Key("page_url").eq(couple_id))
-            items = response.get("Items", [])
+    # Handle the event
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
 
-            if not items:
-                return "Página não encontrada", 404
+        # Verifica se o pagamento foi bem-sucedido
+        if session.payment_status == "paid":
+            couple_page_url = session.metadata.get("couple_page_url")
+            if couple_page_url:
+                response = table.scan(
+                    FilterExpression=Key("page_url").eq(couple_page_url)
+                )
+                items = response.get("Items", [])
 
-            couple = items[0]
+                if items:
+                    couple = items[0]
+                    # Marcar o pagamento como realizado
+                    couple["paid"] = True
 
-            # Marcar o pagamento como realizado
-            couple["paid"] = True
+                    # Definir o fuso horário para Manaus
+                    timezone = pytz.timezone("America/Manaus")
 
-            # Definir o fuso horário para Manaus
-            timezone = pytz.timezone("America/Manaus")
+                    # Obter a data e hora atuais no fuso horário de Manaus com milissegundos
+                    couple["created_at"] = (
+                        datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                        + "Z"
+                    )
 
-            # Obter a data e hora atuais no fuso horário de Manaus com milissegundos
-            couple["created_at"] = (
-                datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-            )
+                    # Atualizar o registro no banco de dados
+                    table.put_item(Item=couple)
 
-            # Atualizar o registro no banco de dados
-            table.put_item(Item=couple)
+                    # Enviar email de confirmação (opcional)
+                    try:
+                        email_subject = "Pagamento confirmado!"
+                        email_body = f"""
+                        Olá {couple["name1"]} e {couple["name2"]},<br><br>
+                        Seu pagamento foi confirmado com sucesso! Sua página agora ficará ativa por 90 dias.<br>
+                        Acesse-a aqui: <a href='{url_for("couple_page", page_url=couple["page_url"], _external=True)}'>{url_for("couple_page", page_url=couple["page_url"], _external=True)}</a>.<br><br>
+                        Atenciosamente,<br>
+                        Equipe de Suporte
+                        """
+                        send_email(couple["email"], email_subject, email_body)
+                    except Exception as e:
+                        print(f"Erro ao enviar e-mail de confirmação: {e}")
 
     return jsonify({"status": "success"}), 200
 
