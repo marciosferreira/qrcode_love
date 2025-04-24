@@ -127,6 +127,7 @@
       function showVideo(event) {
         event.preventDefault();
         document.getElementById("previewGif").style.display = "none";
+        document.getElementById("videoHint").style.display = "none";
         document.getElementById("videoContainer").style.display = "block";
         document.getElementById("youtubePlayer").src =
           "https://www.youtube.com/embed/{{ couple.video_id }}?autoplay=1&rel=0";
