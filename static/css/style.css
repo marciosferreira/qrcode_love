@@ -187,6 +187,7 @@ h5 {
 @media (min-width: 1200px) {
   .carousel-container {
     height: 80vh;
+    max-width: 1200px; /* ou até 100vw, se quiser ocupar tudo */
   }
 }
 /* Contêiner externo para o contador */
@@ -343,13 +344,13 @@ h5 {
   font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
   color: #8a2be2;
-  line-height: 0.4;
-  margin-top: 13vh; /* 10% da altura da viewport */
+  line-height: 0.2;
+  margin-top: 16vh; /* 10% da altura da viewport */
 }
 
 @media (max-width: 768px) {
   .special-text_2_b {
-    line-height: 0.1;
+    line-height: 0.5;
   }
 }
 
@@ -397,7 +398,7 @@ h5 {
 }
 
 .carousel-image {
-  max-width: 90%;
+  width: 100%;
   max-height: 100%;
   object-fit: contain;
   position: absolute;
@@ -482,4 +483,25 @@ h5 {
 .container-fluid {
   position: relative;
   z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .special-text_2_a,
+  .special-text_2_b,
+  .special-text_2_c,
+  .optional-message,
+  .carousel-image {
+    margin-top: 3vh !important;
+    margin-bottom: 2vh !important;
+  }
+
+  #previewGif {
+    margin-top: 5vh !important;
+    margin-bottom: 2vh !important;
+  }
+
+  .video-wrapper {
+    margin-top: 3vh !important;
+    margin-bottom: 2vh !important;
+  }
 }
