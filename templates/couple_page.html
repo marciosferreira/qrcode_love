@@ -189,5 +189,46 @@
         updateCounter();
       });
     </script>
+    <!-- Uniformiza altura das imagens do carrossel em telas estreitas -->
+    <script>
+      $(window).on('load', function () {
+        var $carousel = $('#carousel');
+        if (!$carousel.length) return;
+        function uniformCarouselImages() {
+          if ($(window).width() > 768) return;
+          var cw = $carousel.width();
+          var ch = $carousel.height();
+          var $imgs = $carousel.find('.carousel-image');
+          var minH = Infinity;
+          $imgs.each(function () {
+            var nw = this.naturalWidth || 0;
+            var nh = this.naturalHeight || 0;
+            if (!nw || !nh) return;
+            var scale = Math.min(1, cw / nw, ch / nh);
+            var dispH = nh * scale;
+            if (dispH < minH) minH = dispH;
+          });
+          if (minH === Infinity) return;
+          $carousel.css('height', minH + 'px');
+          $imgs.css({
+            width: 'auto',
+            height: '100%',
+            'max-width': 'none',
+            'max-height': 'none'
+          });
+        }
+        uniformCarouselImages();
+        $(window).on('resize', function () {
+          $carousel.css('height', '');
+          $carousel.find('.carousel-image').css({
+            width: '',
+            height: '',
+            'max-width': '',
+            'max-height': ''
+          });
+          uniformCarouselImages();
+        });
+      });
+    </script>
 </body>
 </html>
