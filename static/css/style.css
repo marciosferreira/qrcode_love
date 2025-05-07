@@ -471,12 +471,14 @@ h5 {
   color: #800080; /* Cor do texto no hover */
 }
 
-.background-overlay {
+ .background-overlay {
   position: absolute;
   top: 5%;
   left: 5%;
   width: 90%;
   min-height: 90%;
+  /* Espaçamento inferior para não tocar o fim da página */
+  padding-bottom: 5vh;
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   z-index: 1;
