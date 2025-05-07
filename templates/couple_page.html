@@ -36,10 +36,16 @@
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </head>
-  <div class="background-overlay">
   <body>
-    <div class="container-fluid">
-      <div class="presentation">
+    <div class="background-overlay">
+      <div class="container-fluid">
+        <header class="header-container">
+          <div class="logo-container">
+         
+        </header>
+
+        <main>
+          <section class="presentation">
         <h2 class="special-text-title">Página de</h2>
         <h3 class="special-text_1" id="couple_name1">{{ couple.name1 }}</h3>
         <h3 class="special-text_1">&amp;</h3>
@@ -121,6 +127,8 @@
           });
         </script>
         {% endif %}
+          </section>
+        </main>
       </div>
     </div>
 
@@ -181,7 +189,5 @@
         updateCounter();
       });
     </script>
-  </body>
-  </div>  </div>
-
+</body>
 </html>

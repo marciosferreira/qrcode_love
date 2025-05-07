@@ -161,7 +161,8 @@ h5 {
   align-items: center;
   height: 50vh; /* padrão para mobile/tablet */
   max-width: 95vw;
-  margin: 2rem auto;
+  /* Mantém espaçamento acima e adiciona espaçamento abaixo para separar do texto */
+  margin: 2rem auto 3rem auto;
 }
 
 .carousel-image {
@@ -336,7 +337,9 @@ h5 {
   font-weight: bold;
   color: #8a2be2;
   line-height: 0.3;
-  margin-top: 30vh; /* 10% da altura da viewport */
+  /* Espaçamento ajustado para posicionar apenas o texto 'Já se passaram' */
+  margin-top: 18vh;
+  margin-bottom: 2vh;
 }
 
 .special-text_2_b {
@@ -411,7 +414,8 @@ h5 {
   transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
   z-index: 0;
   pointer-events: none;
-  margin-top: 10vh; /* 10% da altura da viewport */
+  /* margin-top removido para não deslocar o carrossel todo */
+  margin-top: 0;
 }
 
 .carousel-image.active {
@@ -491,7 +495,7 @@ h5 {
   .special-text_2_c,
   .optional-message,
   .carousel-image {
-    margin-top: 3vh !important;
+    margin-top: 0vh !important;
     margin-bottom: 2vh !important;
   }
 
