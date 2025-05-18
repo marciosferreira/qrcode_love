@@ -876,7 +876,7 @@ def pay(id):
         print(f"Erro na criação da sessão de checkout: {e}")
         return "Erro ao processar o pagamento", 500
 
-
+ 
 # Rota de sucesso do pagamento (Verificação ativa com Stripe)
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
