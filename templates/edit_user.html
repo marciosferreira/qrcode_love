@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Usuário</title>
+    <style>
+        body {
+            font-family: "Roboto", sans-serif;
+            background: linear-gradient(to right, #f2994a, #f2c94c);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        input[type="text"], input[type="email"], input[type="date"], input[type="time"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            background-color: #2d9cdb;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1a7cb3;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #2d9cdb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Editar Usuário</h1>
+    <form method="POST">
+        <label for="name1">Nome 1:</label>
+        <input type="text" id="name1" name="name1" value="{{ user['name1'] }}">
+
+        <label for="name2">Nome 2:</label>
+        <input type="text" id="name2" name="name2" value="{{ user['name2'] }}">
+
+        <label for="event_description">Descrição do Evento:</label>
+        <textarea id="event_description" name="event_description">{{ user['event_description'] }}</textarea>
+
+        <label for="event_date">Data do Evento:</label>
+        <input type="date" id="event_date" name="event_date" value="{{ user['event_date'] }}">
+
+        <!-- Novo campo de Hora do Evento -->
+        <label for="event_time">Hora do Evento:</label>
+        <input type="time" id="event_time" name="event_time" value="{{ user['event_time'] }}">
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="{{ user['email'] }}">
+
+        <label for="optional_message">Mensagem Opcional:</label>
+        <textarea id="optional_message" name="optional_message">{{ user['optional_message'] }}</textarea>
+
+        <label for="video_id">Video Id:</label>
+        <input type="text" id="video_id" name="video_id" value="{{ user['video_id'] }}">
+
+        <label for="created_at">Data de Criação:</label>
+        <input type="date" id="created_at" name="created_at" value="{{ user['created_at'][:10] }}">
+
+        <label for="created_time">Hora de Criação:</label>
+        <input type="time" id="created_time" name="created_time" value="{{ user['created_at'][11:16] }}">
+
+        <label for="paid">Pago:</label>
+        <input type="checkbox" id="paid" name="paid" {% if user['paid'] %}checked{% endif %}>
+
+        <button type="submit">Salvar</button>
+    </form>
+
+    <a href="{{ url_for('list_dynamo_items') }}">Cancelar</a>
+</body>
+</html>
