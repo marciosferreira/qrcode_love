@@ -335,8 +335,7 @@ h5 {
   font-family: "Qwitcher Grypen", cursive;
   font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
-  color: #8a2be2;
-  line-height: 0.3;
+  color: #000000;
   /* Espaçamento ajustado para posicionar apenas o texto 'Já se passaram' */
   margin-top: 18vh;
   margin-bottom: 2vh;
@@ -471,7 +470,7 @@ h5 {
   color: #800080; /* Cor do texto no hover */
 }
 
- .background-overlay {
+.background-overlay {
   position: absolute;
   top: 5%;
   left: 5%;

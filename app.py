@@ -867,7 +867,7 @@ def pay(id):
                     "page_url"
                 ]  # Metadados para identificar o casal
             },
-            locale='pt-PT', 
+            locale='pt', 
         )
 
         # Redirecionar para a página de checkout do Stripe
