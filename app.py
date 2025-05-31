@@ -829,6 +829,9 @@ import os
 import requests
 from flask import redirect, url_for
 
+ASAAS_API_URL = "https://api.asaas.com/v3/paymentLinks"
+
+
 @app.route("/pay/<string:id>", methods=["POST"])
 def pay(id):
     response = table.scan(FilterExpression=Key("page_url").eq(id))
@@ -858,7 +861,7 @@ def pay(id):
     }
 
     try:
-        response = requests.post("https://api.asaas.com/v3/paymentLinks", json=payload, headers=headers)
+        response = requests.post(ASAAS_API_URL, json=payload, headers=headers)
         print("Status:", response.status_code)
         print("Response:", response.text)
 
@@ -873,9 +876,36 @@ def pay(id):
         return "Erro interno no servidor", 500
 
 
+import requests
+
+def buscar_pagamento_por_referencia(referencia):
+    headers = {
+        "Content-Type": "application/json",
+        "access_token": os.getenv("ASAAS_API_KEY")
+    }
+    params = {
+        "externalReference": referencia
+    }
+    response = requests.get(f"{ASAAS_API_URL}", headers=headers, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            return data["data"][0]  # Retorna o primeiro resultado
+    return None
+
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
+    pagamento = buscar_pagamento_por_referencia(page_url)
+
+    if pagamento and pagamento["status"] == "RECEIVED":
+        # Aqui você pode marcar o usuário como "pago"
+        table.update_item(
+            Key={"page_url": page_url},
+            UpdateExpression="SET is_paid = :v",
+            ExpressionAttributeValues={":v": True}
+        )
     return redirect(url_for("couple_page", page_url=page_url))
+
 
 
 
@@ -888,7 +918,7 @@ from flask import jsonify, request
 def asaas_webhook():
     body = request.json
 
-    if body.get("event") == "PAYMENT_RECEIVED":
+    if body.get("event") in ["CHECKOUT_PAID", "CHECKOUT_CREATED"]:
         payment = body.get("payment", {})
         page_url = payment.get("externalReference")
 
