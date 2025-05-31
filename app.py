@@ -844,7 +844,7 @@ def pay(id):
         "description": "Extensão da duração da página para 30 dias",
         "value": 9.9,
         "dueDateLimitDays": 1,
-        "externalReference": couple["page_url"],  # usar como referência única
+        "externalReference": couple["page_url"],
         "callback": {
             "successUrl": url_for("payment_success", page_url=couple["page_url"], _external=True)
         },
@@ -854,21 +854,24 @@ def pay(id):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "access_token": os.getenv("ASAAS_API_KEY")  # chave do Asaas
+        "access_token": os.getenv("ASAAS_API_KEY")  # ou use string fixa aqui para teste
     }
 
-    response = requests.post("https://sandbox.asaas.com/api/v3/paymentLinks", json=payload, headers=headers)
+    try:
+        response = requests.post("https://sandbox.asaas.com/api/v3/paymentLinks", json=payload, headers=headers)
+        print("Status:", response.status_code)
+        print("Response:", response.text)
 
-    print("Status:", response.status_code)
-    print("Texto:", response.text)
+        if response.status_code != 200:
+            return f"Erro ao criar link de pagamento: {response.text}", 500
 
-    data = response.json()
+        data = response.json()
+        return redirect(data["url"], code=302)
 
-    if response.status_code != 200:
-        print(f"Erro ao criar link de pagamento: {data}")
-        return "Erro ao gerar link de pagamento", 500
+    except Exception as e:
+        print("Erro ao processar pagamento:", e)
+        return "Erro interno no servidor", 500
 
-    return redirect(data["url"], code=302)
 
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
