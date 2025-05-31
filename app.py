@@ -929,7 +929,7 @@ def payment_success(page_url):
     # Passo 2: atualizar status como pago
     table.update_item(
         Key={
-            "account_id": couple["account_id"],
+            "email": couple["email"],
             "page_url": couple["page_url"]
         },
         UpdateExpression="SET is_paid = :v",
