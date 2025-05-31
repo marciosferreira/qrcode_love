@@ -842,7 +842,7 @@ def pay(id):
         "chargeType": "DETACHED",
         "name": "qrcode love 30 dias",
         "description": "Extensão da duração da página para 30 dias",
-        "value": 3.0,
+        "value": 5.0,
         "dueDateLimitDays": 1,
         "externalReference": couple["page_url"],
         "callback": {
