@@ -825,7 +825,10 @@ def couple_page(page_url):
     )
 
 
-# Rota de pagamento (Stripe)
+import os
+import requests
+from flask import redirect, url_for
+
 @app.route("/pay/<string:id>", methods=["POST"])
 def pay(id):
     response = table.scan(FilterExpression=Key("page_url").eq(id))
@@ -834,73 +837,43 @@ def pay(id):
         return "Página não encontrada", 404
     couple = items[0]
 
-    # Capturar o email do casal
-    email = couple["email"]
+    payload = {
+        "billingType": "PIX",
+        "chargeType": "DETACHED",
+        "name": "qrcode love 30 dias",
+        "description": "Extensão da duração da página para 30 dias",
+        "value": 9.9,
+        "dueDateLimitDays": 1,
+        "externalReference": couple["page_url"],  # usar como referência única
+        "callback": {
+            "successUrl": url_for("payment_success", page_url=couple["page_url"], _external=True)
+        },
+        "isAddressRequired": False
+    }
 
-    try:
-        # Criar uma sessão de checkout do Stripe
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[
-                {
-                    "price_data": {
-                        "currency": "brl",
-                        "product_data": {
-                            "name": "Página contador sem anúncios (30 dias)",
-                        },
-                        "unit_amount": 990,  #
-                    },
-                    "quantity": 1,
-                },
-            ],
-            mode="payment",
-            success_url=url_for(
-                "payment_success", page_url=couple["page_url"], _external=True
-            )
-            + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=url_for(
-                "couple_page", page_url=couple["page_url"], _external=True
-            ),
-            customer_email=email,
-            metadata={
-                "couple_page_url": couple[
-                    "page_url"
-                ]  # Metadados para identificar o casal
-            },
-            locale='pt', 
-        )
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "access_token": os.getenv("ASAAS_API_KEY")  # chave do Asaas
+    }
 
-        # Redirecionar para a página de checkout do Stripe
-        return redirect(checkout_session.url, code=303)
-    except Exception as e:
-        print(f"Erro na criação da sessão de checkout: {e}")
-        return "Erro ao processar o pagamento", 500
+    response = requests.post("https://sandbox.asaas.com/api/v3/paymentLinks", json=payload, headers=headers)
 
- 
-# Rota de sucesso do pagamento (Verificação ativa com Stripe)
+    print("Status:", response.status_code)
+    print("Texto:", response.text)
+
+    data = response.json()
+
+    if response.status_code != 200:
+        print(f"Erro ao criar link de pagamento: {data}")
+        return "Erro ao gerar link de pagamento", 500
+
+    return redirect(data["url"], code=302)
+
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
-    response = table.scan(FilterExpression=Key("page_url").eq(page_url))
-    items = response.get("Items", [])
-    if not items:
-        return "Página não encontrada", 404
-    couple = items[0]
+    return redirect(url_for("couple_page", page_url=page_url))
 
-    # Verificar o status da sessão de checkout
-    session_id = request.args.get("session_id")
-    if session_id:
-        try:
-            # Verificar o status do pagamento diretamente na API do Stripe
-            session = stripe.checkout.Session.retrieve(session_id)
-
-            # Se o status for "paid", marque o casal como pago
-            if session.payment_status == "paid":
-                couple["paid"] = True
-                table.put_item(Item=couple)
-        except Exception as e:
-            print(f"Erro ao verificar o pagamento: {e}")
-
-    return redirect(url_for("couple_page", page_url=couple["page_url"]))
 
 
 from datetime import datetime
@@ -908,67 +881,50 @@ import pytz
 from flask import jsonify, request
 
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get("Stripe-Signature")
+@app.route('/webhook', methods=['POST'])
+def asaas_webhook():
+    body = request.json
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET")
+    if body.get("event") == "PAYMENT_RECEIVED":
+        payment = body.get("payment", {})
+        page_url = payment.get("externalReference")
+
+        if not page_url:
+            return "Referência externa não encontrada", 400
+
+        response = table.scan(FilterExpression=Key("page_url").eq(page_url))
+        items = response.get("Items", [])
+        if not items:
+            return "Casal não encontrado", 404
+
+        couple = items[0]
+        couple["paid"] = True
+
+        from datetime import datetime
+        import pytz
+
+        # Timestamp de pagamento
+        timezone = pytz.timezone("America/Manaus")
+        couple["created_at"] = (
+            datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         )
-    except ValueError as e:
-        # Invalid payload
-        return "Invalid payload", 400
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        return "Invalid signature", 400
 
-    # Handle the event
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+        table.put_item(Item=couple)
 
-        # Verifica se o pagamento foi bem-sucedido
-        if session.payment_status == "paid":
-            couple_page_url = session.metadata.get("couple_page_url")
-            if couple_page_url:
-                response = table.scan(
-                    FilterExpression=Key("page_url").eq(couple_page_url)
-                )
-                items = response.get("Items", [])
+        # (opcional) Envio de email de confirmação
+        try:
+            email_subject = "Pagamento confirmado!"
+            email_body = f"""
+            Olá {couple['name1']} e {couple['name2']},<br><br>
+            Seu pagamento foi confirmado! Sua página ficará ativa por 30 dias.<br>
+            Acesse: <a href='{url_for("couple_page", page_url=page_url, _external=True)}'>{url_for("couple_page", page_url=page_url, _external=True)}</a>
+            """
+            send_email(couple["email"], email_subject, email_body)
+        except Exception as e:
+            print(f"Erro ao enviar email: {e}")
 
-                if items:
-                    couple = items[0]
-                    # Marcar o pagamento como realizado
-                    couple["paid"] = True
+    return jsonify({"received": True})
 
-                    # Definir o fuso horário para Manaus
-                    timezone = pytz.timezone("America/Manaus")
-
-                    # Obter a data e hora atuais no fuso horário de Manaus com milissegundos
-                    couple["created_at"] = (
-                        datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                        + "Z"
-                    )
-
-                    # Atualizar o registro no banco de dados
-                    table.put_item(Item=couple)
-
-                    # Enviar email de confirmação (opcional)
-                    try:
-                        email_subject = "Pagamento confirmado!"
-                        email_body = f"""
-                        Olá {couple["name1"]} e {couple["name2"]},<br><br>
-                        Seu pagamento foi confirmado com sucesso! Sua página agora ficará ativa por 90 dias.<br>
-                        Acesse-a aqui: <a href='{url_for("couple_page", page_url=couple["page_url"], _external=True)}'>{url_for("couple_page", page_url=couple["page_url"], _external=True)}</a>.<br><br>
-                        Atenciosamente,<br>
-                        Equipe de Suporte
-                        """
-                        send_email(couple["email"], email_subject, email_body)
-                    except Exception as e:
-                        print(f"Erro ao enviar e-mail de confirmação: {e}")
-
-    return jsonify({"status": "success"}), 200
 
 
 # Função para gerar QR code com uma resolução maior e retornar a imagem em bytes

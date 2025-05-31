@@ -105,14 +105,12 @@
         <br />
         <div class="payment-container">
           <h5>Esta página ficará ativa por 1 hora</h5>
-          <form
-            action="{{ url_for('pay', id=couple['page_url']) }}"
-            method="POST"
-          >
-            <button type="submit" class="pay-button omit-link">
-              Estender para 30 dias e esconder este aviso
-            </button>
-          </form>
+        <form action="{{ url_for('pay', id=couple.page_url) }}" method="post">
+  <button type="submit" class="btn btn-primary">
+    Pagar com PIX (R$9,90)
+  </button>
+</form>
+
         </div>
         <br />
         <br />
