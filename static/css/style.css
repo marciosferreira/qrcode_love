@@ -346,7 +346,7 @@ h5 {
   font-size: clamp(5rem, 12vw, 18rem); /* ← AQUI está o aumento real */
   font-weight: bold;
   color: #8a2be2;
-  line-height: 0.2;
+  line-height: 0.5;
   margin-top: 16vh; /* 10% da altura da viewport */
 }
 
