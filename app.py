@@ -842,7 +842,7 @@ def pay(id):
         "chargeType": "DETACHED",
         "name": "qrcode love 30 dias",
         "description": "Extensão da duração da página para 30 dias",
-        "value": 9.9,
+        "value": 1.0,
         "dueDateLimitDays": 1,
         "externalReference": couple["page_url"],
         "callback": {
@@ -858,7 +858,7 @@ def pay(id):
     }
 
     try:
-        response = requests.post("https://sandbox.asaas.com/api/v3/paymentLinks", json=payload, headers=headers)
+        response = requests.post("https://api.asaas.com/v3/paymentLinks", json=payload, headers=headers)
         print("Status:", response.status_code)
         print("Response:", response.text)
 
