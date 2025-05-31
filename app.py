@@ -932,7 +932,7 @@ def payment_success(page_url):
             "email": couple["email"],
             "page_url": couple["page_url"]
         },
-        UpdateExpression="SET is_paid = :v",
+        UpdateExpression="SET paid = :v",
         ExpressionAttributeValues={":v": True}
     )
 
