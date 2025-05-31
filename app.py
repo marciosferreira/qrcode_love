@@ -912,13 +912,30 @@ def buscar_pagamento_por_referencia(referencia):
 def payment_success(page_url):
     pagamento = buscar_pagamento_por_referencia(page_url)
 
-    if pagamento and pagamento["status"] == "RECEIVED":
-        # Aqui você pode marcar o usuário como "pago"
-        table.update_item(
-            Key={"page_url": page_url},
-            UpdateExpression="SET is_paid = :v",
-            ExpressionAttributeValues={":v": True}
-        )
+    if not pagamento or pagamento["status"] != "RECEIVED":
+        return "Pagamento não confirmado", 400
+
+    # Passo 1: buscar no DynamoDB pelo GSI com page_url
+    response = table.query(
+        IndexName="page_url-index",
+        KeyConditionExpression=Key("page_url").eq(page_url)
+    )
+    items = response.get("Items", [])
+    if not items:
+        return "Página não encontrada", 404
+
+    couple = items[0]
+
+    # Passo 2: atualizar status como pago
+    table.update_item(
+        Key={
+            "account_id": couple["account_id"],
+            "page_url": couple["page_url"]
+        },
+        UpdateExpression="SET is_paid = :v",
+        ExpressionAttributeValues={":v": True}
+    )
+
     return redirect(url_for("couple_page", page_url=page_url))
 
 
