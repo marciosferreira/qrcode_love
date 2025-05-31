@@ -886,12 +886,27 @@ def buscar_pagamento_por_referencia(referencia):
     params = {
         "externalReference": referencia
     }
-    response = requests.get(f"{ASAAS_API_URL}", headers=headers, params=params)
+
+    response = requests.get("https://api.asaas.com/v3/payments", headers=headers, params=params)
     if response.status_code == 200:
         data = response.json()
-        if data.get("data"):
-            return data["data"][0]  # Retorna o primeiro resultado
+        pagamentos = data.get("data", [])
+
+        # Filtra por pagamentos recebidos
+        recebidos = [p for p in pagamentos if p.get("status") == "RECEIVED"]
+        
+        # Se houver, retorna o mais recente
+        if recebidos:
+            recebidos.sort(key=lambda x: x.get("paymentDate", ""), reverse=True)
+            return recebidos[0]
+
+        # Se nenhum recebido, retorna o mais recente de qualquer status
+        if pagamentos:
+            pagamentos.sort(key=lambda x: x.get("dateCreated", ""), reverse=True)
+            return pagamentos[0]
+
     return None
+
 
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
