@@ -918,7 +918,7 @@ from flask import jsonify, request
 def asaas_webhook():
     body = request.json
 
-    if body.get("event") in ["CHECKOUT_PAID", "CHECKOUT_CREATED"]:
+    if body.get("event") in ["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]:
         payment = body.get("payment", {})
         page_url = payment.get("externalReference")
 
