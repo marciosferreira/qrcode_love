@@ -1,478 +1,1006 @@
 <!DOCTYPE html>
 <html lang="pt">
-<head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Crie grátis uma página com fotos, música, contador de tempo e QRCode
+    </title>
+    <meta
+      name="description"
+      content="Crie gratuitamente um QRCode personalizado para celebrar e compartilhar momentos especiais com quem você ama."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crie grátis uma página com fotos, música, contador de tempo e QRCode</title>
-  <meta name="description" content="Crie gratuitamente um QRCode personalizado para celebrar e compartilhar momentos especiais com quem você ama." />
-  <link rel="preload" href="/static/images/background.webp" as="image" type="image/webp">
-  <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-23RSZ1SMRX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-23RSZ1SMRX');
-  </script>
-</head>
-<body>
-  <div class="background-overlay">
-<div class="container-fluid">
-  <header class="header-container">
-    <div class="logo-container">
-      <img src="/static/images/logo_qrcode_heart_transparent.png" alt="Logo" class="logo-img" />
-    </div>
-    <div class="contact-container">
-      <span class="contact-link">contato@qrcodelove.me</span> |
-      <a href="/deletar" class="remove-link">Remover uma página</a>
-    </div>
-  </header>
-
-  <main>
-    <section class="intro-section">
-      <h2>Crie um contador de tempo com fotos e vídeo desde momentos especiais!</h2>
-      <h4>Você recebe um QR Code e uma URL para compartilhar!</h4>
-    </section>
-
-    <form action="/create" method="POST" enctype="multipart/form-data" id="createForm" class="form-container">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="name1">Nome 1:</label>
-          <input type="text" id="name1" name="name1" required />
-        </div>
-        <div class="form-group">
-          <label for="name2">Nome 2:</label>
-          <input type="text" id="name2" name="name2" required />
-        </div>
-        <div class="form-group half-width">
-          <label for="event_date">Data do Evento:</label>
-          <input type="date" id="event_date" name="event_date" required />
-        </div>
-        <div class="form-group half-width">
-          <label for="event_time">Hora do Evento:</label>
-          <input type="time" id="event_time" name="event_time" required />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="event_description">Qual o evento especial desta data?</label>
-          <select id="event_description" name="event_description" required>
-            <option value="se casaram">se casaram</option>
-            <option value="se conheceram">se conheceram</option>
-            <option value="começaram a namorar">começaram a namorar</option>
-            <option value="noivaram">noivaram</option>
-            <option value="são amigos">são amigos</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="youtubeLink">YouTube Video URL (opcional):</label>
-          <input type="text" id="youtubeLink" name="youtubeLink" placeholder="Cole o link do YouTube aqui" />
-        </div>
-        <div class="form-group">
-          <label for="images">Anexar até 3 imagens:</label>
-          <input type="file" id="images" name="images" accept="image/png, image/jpeg" multiple />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group half-width">
-          <label for="email">Seu e-mail <small>(enviaremos link e o QR Code)</small>:</label>
-          <input type="email" id="email" name="email" required />
-        </div>
-        <div class="form-group half-width">
-          <label for="message">Sua mensagem (opcional):</label>
-          <textarea id="message" name="optional_message" maxlength="1000"></textarea>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group full-width">
-          <button type="submit" class="btn btn-primary">Criar Página</button>
-        </div>
-      </div>
-
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <ul class="flashes">
-            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-          </ul>
-        {% endif %}
-      {% endwith %}
-
-      <div id="error-message" class="error-message"></div>
-    </form>
-
-    <div class="centered-hint">
-      <span class="hint-text">preencha acima e veja como vai ficar</span>
-      <img src="/static/images/seta.png" alt="seta para baixo" class="hint-arrow" />
-    </div>
-
-    <section class="presentation">
-      <h2 class="special-text-title">Página de</h2>
-      <h3 class="special-text_1" id="couple_name1">Nome 1</h3>
-      <h3 class="special-text_1">&amp;</h3>
-      <h3 class="special-text_1" id="couple_name2">Nome 2</h3>
-
-      <div id="carousel" class="carousel-container">
-        <img src="/static/images/placeholder.png" class="carousel-image active" alt="Imagem inicial" />
-      </div>
-      <h3 class="special-text_2_a">Já se passaram:</h3>
-
-      <div class="container counter-container">
-        <div id="meu-contador-container">
-          <div id="meu-contador"></div>
-        </div>
-      </div>
-      <h3 class="special-text_2_c" id="event_description_text">desde que são amigos</h3>
-      <h3 class="optional-message" id="optional_message_text">Mensagem opcional, um poema, etc., será exibida aqui</h3>
-
-      <img id="previewGif" src="/static/images/giphy.png" alt="Assista ao vídeo" onclick="showVideo(event)" />
-      <p id="videoHint">Vídeo homenagem (com som)</p>
-
-      <div id="videoContainer" style="display: none;">
-        <div class="video-wrapper">
-          <iframe id="youtubePlayer" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
-</div>
-
-</body>
-</html>
-
-
-
-
-<script>
-    function showVideo(event) {
-        event.preventDefault();
-
-        const videoContainer = document.getElementById('videoContainer');
-        const previewGif = document.getElementById('previewGif');
-        const youtubePlayer = document.getElementById('youtubePlayer');
-        const youtubeLinkInput = document.getElementById('youtubeLink');
-
-        // Remove o GIF e exibe o vídeo
-        previewGif.style.display = 'none';
-        videoContainer.style.display = 'block';
-        videoHint.style.display = 'none';
-
-        // Obtém a URL inserida pelo usuário
-        const url = youtubeLinkInput.value;
-
-        let videoId;
-
-        // Tenta criar um objeto URL e obter o valor do parâmetro "v" se houver uma URL inserida
-        if (url) {
-            try {
-                const urlObject = new URL(url);
-                videoId = urlObject.searchParams.get("v");
-            } catch (e) {
-                console.error("URL inválida. Usando vídeo padrão.");
-            }
-        }
-
-        // Se não houver um vídeo válido, define um vídeo padrão
-        if (!videoId) {
-            videoId = "hAh7C5VSLrg"; // Coloque aqui o ID do vídeo padrão
-        }
-
-        // Define o src do iframe com o vídeo correto
-        youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-
-        // Rolagem suave para o vídeo
-        videoContainer.scrollIntoView({ behavior: 'smooth' });
-
-        return false;
-    }
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
- <script>
-    $(document).ready(function () {
-      let currentIndex = 0;
-      const carouselImages = $('#carousel .carousel-image');
-      const totalImages = carouselImages.length;
-    
-      function changeImage() {
-        carouselImages.removeClass('active');
-        currentIndex = (currentIndex + 1) % totalImages;
-        carouselImages.eq(currentIndex).addClass('active');
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    
-      setInterval(changeImage, 3000);
-    });
-    </script>
-    
 
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --romantic-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --text-primary: #2d3748;
+        --text-secondary: #718096;
+        --accent-pink: #ff6b9d;
+        --accent-purple: #a78bfa;
+      }
 
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        background-attachment: fixed;
+        min-height: 100vh;
+        color: var(--text-primary);
+        overflow-x: hidden;
+      }
 
+      .background-overlay {
+        background: linear-gradient(
+          135deg,
+          rgba(102, 126, 234, 0.1) 0%,
+          rgba(118, 75, 162, 0.1) 50%,
+          rgba(240, 147, 251, 0.1) 100%
+        );
+        min-height: 100vh;
+      }
 
+      .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
 
+      /* Header Styles */
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 25px 35px;
+        backdrop-filter: blur(25px);
+        background: var(--glass-bg);
+        border-radius: 25px;
+        margin: 25px 0;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
 
-            
+      .header-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          var(--accent-pink),
+          var(--accent-purple),
+          var(--accent-pink)
+        );
+        opacity: 0.8;
+      }
 
-        </div>
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 0;
+      }
+
+      .logo-img {
+        height: 70px;
+        width: auto;
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+        transition: all 0.3s ease;
+      }
+
+      .logo-img:hover {
+        transform: scale(1.05);
+        filter: drop-shadow(0 8px 16px rgba(255, 107, 157, 0.3));
+      }
+
+      .logo-text {
+        font-family: "Playfair Display", serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #fff 0%, var(--accent-pink) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+      }
+
+      .contact-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .contact-info:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.2);
+        text-decoration: none;
+        color: white;
+      }
+
+      .remove-link-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 107, 157, 0.2) 0%,
+          rgba(167, 139, 250, 0.2) 100%
+        );
+        border-radius: 50px;
+        border: 1px solid rgba(255, 107, 157, 0.4);
+        transition: all 0.3s ease;
+        text-decoration: none;
+      }
+
+      .remove-link-container:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 107, 157, 0.3) 0%,
+          rgba(167, 139, 250, 0.3) 100%
+        );
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3);
+      }
+
+      /* Intro Section */
+      .intro-section {
+        text-align: center;
+        padding: 60px 0;
+        color: white;
+      }
+
+      .intro-section h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 3.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #fff 0%, #ffecd2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+        line-height: 1.2;
+      }
+
+      .intro-section h4 {
+        font-size: 1.4rem;
+        font-weight: 400;
+        opacity: 0.9;
+        margin-bottom: 40px;
+      }
+
+      /* Form Styles */
+      .form-container {
+        backdrop-filter: blur(20px);
+        background: var(--glass-bg);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        margin: 40px 0;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group label {
+        color: white;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        padding: 14px 18px;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .form-group select option {
+        background: var(--text-primary);
+        color: white;
+      }
+
+      .half-width {
+        grid-column: span 1;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      /* Button Styles */
+      .btn {
+        padding: 16px 40px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary {
+        background: var(--secondary-gradient);
+        color: white;
+        box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+      }
+
+      /* Hint Section */
+      .centered-hint {
+        text-align: center;
+        margin: 40px 0;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .hint-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .hint-arrow {
+        width: 40px;
+        height: 40px;
+        filter: invert(1) opacity(0.8);
+      }
+
+      /* Presentation Section */
+      .presentation {
+        backdrop-filter: blur(20px);
+        background: var(--glass-bg);
+        border-radius: 24px;
+        padding: 60px 40px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        margin: 40px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .special-text-title {
+        font-family: "Playfair Display", serif;
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 20px;
+      }
+
+      .special-text_1 {
+        font-family: "Playfair Display", serif;
+        font-size: 3rem;
+        font-weight: 600;
+        background: var(--romantic-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 10px 0;
+        text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+      }
+
+      /* Carousel Styles */
+      .carousel-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 40px auto;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      }
+
+      .carousel-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        display: none;
+        transition: all 0.5s ease;
+      }
+
+      .carousel-image.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(1.1);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Counter Styles */
+      .counter-container {
+        margin: 40px 0;
+      }
+
+      #meu-contador-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #meu-contador {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .time-unit-container {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.25) 0%,
+          rgba(255, 255, 255, 0.15) 100%
+        );
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        text-align: center;
+        min-width: 80px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .time-unit-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
+      }
+
+      .time-unit {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        line-height: 1;
+      }
+
+      .label {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .special-text_2_a,
+      .special-text_2_c {
+        font-family: "Playfair Display", serif;
+        font-size: 1.6rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 30px 0;
+      }
+
+      .optional-message {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-style: italic;
+        margin: 30px 0;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      /* Video Preview Styles */
+      #previewGif {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 20px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      #previewGif:hover {
+        transform: scale(1.1);
+        box-shadow: 0 15px 40px rgba(255, 107, 157, 0.4);
+      }
+
+      #videoHint {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        margin-bottom: 20px;
+      }
+
+      /* MODAL DE VÍDEO - ESTILOS CORRIGIDOS */
+      #customVideoOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.95);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      #customVideoOverlay.show {
+        display: flex;
+        opacity: 1;
+      }
+
+      .video-overlay-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 1;
+      }
+
+      .video-overlay-content {
+        position: relative;
+        width: 90vw;
+        max-width: 1000px;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
+        z-index: 2;
+        transform: scale(0.9);
+        transition: transform 0.3s ease-out;
+      }
+
+      #customVideoOverlay.show .video-overlay-content {
+        transform: scale(1);
+      }
+
+      .video-close-button {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .video-close-button:hover {
+        background: #ff6b9d;
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .video-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      /* Error Messages */
+      .flashes {
+        list-style: none;
+        margin-top: 20px;
+      }
+
+      .flashes li {
+        color: #ff6b9d;
+        font-weight: 500;
+        padding: 10px;
+        background: rgba(255, 107, 157, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 107, 157, 0.3);
+        margin-bottom: 10px;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container-fluid {
+          padding: 0 15px;
+        }
+
+        .intro-section h2 {
+          font-size: 2.5rem;
+        }
+
+        .intro-section h4 {
+          font-size: 1.2rem;
+        }
+
+        .form-container {
+          padding: 24px;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+
+        .special-text_1 {
+          font-size: 2.2rem;
+        }
+
+        .header-container {
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .nav-links {
+          flex-direction: column;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .contact-info,
+        .remove-link-container {
+          width: 100%;
+          justify-content: center;
+        }
+
+        #meu-contador {
+          gap: 15px;
+        }
+
+        .time-unit-container {
+          min-width: 70px;
+          padding: 16px;
+        }
+
+        .time-unit {
+          font-size: 2rem;
+        }
+
+        .video-overlay-content {
+          width: 95vw;
+          margin: 20px;
+        }
+
+        .video-close-button {
+          top: -12px;
+          right: -12px;
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .intro-section h2 {
+          font-size: 2rem;
+        }
+
+        .special-text_1 {
+          font-size: 1.8rem;
+        }
+
+        .form-container {
+          padding: 20px;
+        }
+
+        .presentation {
+          padding: 40px 20px;
+        }
+
+        .video-overlay-content {
+          width: 98vw;
+          margin: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background-overlay">
+      <div class="container-fluid">
+        <header class="header-container">
+          <div class="logo-container">
+            <img
+              src="/static/images/logo_qrcode_heart_transparent.png"
+              alt="QRCode Love Logo"
+              class="logo-img"
+            />
+            <div class="logo-text">QRCode Love</div>
+          </div>
+          <nav class="nav-links">
+            <a href="mailto:contato@qrcodelove.me" class="contact-info">
+              <i class="bi bi-envelope-fill"></i>
+              <span>contato@qrcodelove.me</span>
+            </a>
+            <a href="/deletar" class="remove-link-container">
+              <i class="bi bi-trash-fill"></i>
+              <span>Remover página</span>
+            </a>
+          </nav>
+        </header>
+
+        <main>
+          <section class="intro-section">
+            <h2>
+              Crie um contador de tempo com fotos e vídeo desde momentos
+              especiais!
+            </h2>
+            <h4>Você recebe um QR Code e uma URL para compartilhar!</h4>
+          </section>
+
+          <form
+            action="/create"
+            method="POST"
+            enctype="multipart/form-data"
+            id="createForm"
+            class="form-container"
+          >
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name1">Nome 1:</label>
+                <input type="text" id="name1" name="name1" required />
+              </div>
+              <div class="form-group">
+                <label for="name2">Nome 2:</label>
+                <input type="text" id="name2" name="name2" required />
+              </div>
+              <div class="form-group half-width">
+                <label for="event_date">Data do Evento:</label>
+                <input type="date" id="event_date" name="event_date" required />
+              </div>
+              <div class="form-group half-width">
+                <label for="event_time">Hora do Evento:</label>
+                <input type="time" id="event_time" name="event_time" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="event_description"
+                  >Qual o evento especial desta data?</label
+                >
+                <select
+                  id="event_description"
+                  name="event_description"
+                  required
+                >
+                  <option value="se casaram">se casaram</option>
+                  <option value="se conheceram">se conheceram</option>
+                  <option value="começaram a namorar">
+                    começaram a namorar
+                  </option>
+                  <option value="noivaram">noivaram</option>
+                  <option value="são amigos">são amigos</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="youtubeLink">YouTube Video URL (opcional):</label>
+                <input
+                  type="text"
+                  id="youtubeLink"
+                  name="youtubeLink"
+                  placeholder="Cole o link do YouTube aqui"
+                />
+              </div>
+              <div class="form-group">
+                <label for="images">Anexar até 3 imagens:</label>
+                <input
+                  type="file"
+                  id="images"
+                  name="images"
+                  accept="image/png, image/jpeg"
+                  multiple
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group half-width">
+                <label for="email"
+                  >Seu e-mail
+                  <small>(enviaremos link e o QR Code)</small>:</label
+                >
+                <input type="email" id="email" name="email" required />
+              </div>
+              <div class="form-group half-width">
+                <label for="message">Sua mensagem (opcional):</label>
+                <textarea
+                  id="message"
+                  name="optional_message"
+                  maxlength="1000"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group full-width">
+                <button type="submit" class="btn btn-primary">
+                  Criar Página
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="centered-hint">
+            <span class="hint-text">preencha acima e veja como vai ficar</span>
+            <img
+              src="/static/images/seta.png"
+              alt="seta para baixo"
+              class="hint-arrow"
+            />
+          </div>
+
+          <section class="presentation">
+            <h2 class="special-text-title">Página de</h2>
+            <h3 class="special-text_1" id="couple_name1">Nome 1</h3>
+            <h3 class="special-text_1">&amp;</h3>
+            <h3 class="special-text_1" id="couple_name2">Nome 2</h3>
+
+            <div id="carousel" class="carousel-container">
+              <img
+                src="http://www.qrcodelove.me/static/images/placeholder.png"
+                class="carousel-image active"
+                alt="Imagem inicial"
+              />
+            </div>
+
+            <h3 class="special-text_2_a">Já se passaram:</h3>
+
+            <div class="container counter-container">
+              <div id="meu-contador-container">
+                <div id="meu-contador">
+                  <div class="time-unit-container">
+                    <div class="time-unit">0</div>
+                    <div class="label">Anos</div>
+                  </div>
+                  <div class="time-unit-container">
+                    <div class="time-unit">0</div>
+                    <div class="label">Meses</div>
+                  </div>
+                  <div class="time-unit-container">
+                    <div class="time-unit">0</div>
+                    <div class="label">Dias</div>
+                  </div>
+                  <div class="time-unit-container">
+                    <div class="time-unit">0</div>
+                    <div class="label">Horas</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="special-text_2_c" id="event_description_text">
+              desde que são amigos
+            </h3>
+            <h3 class="optional-message" id="optional_message_text">
+              Mensagem opcional, um poema, etc., será exibida aqui
+            </h3>
+
+            <!-- Preview do vídeo -->
+            <img
+              id="previewGif"
+              src="https://www.qrcodelove.me/static/images/giphy.png"
+              alt="Assista ao vídeo"
+              onclick="showVideoFromInput()"
+            />
+
+            <p id="videoHint">Vídeo homenagem (com som)</p>
+
+            <!-- Campo oculto com o link do vídeo -->
+            <input type="hidden" id="hiddenYoutubeLink" value="" />
+          </section>
+        </main>
+      </div>
     </div>
 
+    <!-- Modal de Vídeo Corrigido -->
+    <div id="customVideoOverlay">
+      <div class="video-overlay-backdrop" onclick="closeVideo()"></div>
+      <div class="video-overlay-content">
+        <button class="video-close-button" onclick="closeVideo()">×</button>
+        <div class="video-wrapper">
+          <iframe
+            id="youtubePlayer"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
 
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+      function showVideoFromInput() {
+        const input = document.getElementById("youtubeLink");
+        const url = input?.value?.trim();
 
-
-
-
-
-
-
-<script>
-    $(document).ready(function () {
-        $('#name1').on('input', function () {
-            $('#couple_name1').text($(this).val() || 'Nome 1');
-        });
-
-        $('#name2').on('input', function () {
-            $('#couple_name2').text($(this).val() || 'Nome 2');
-        });
-
-        $('#event_description').on('change', function () {
-            $('#event_description_text').text($(this).val() || 'Evento Especial');
-        });
-
-        $('#message').on('input', function () {
-            $('#optional_message_text').text($(this).val() || 'Mensagem opcional será exibida aqui');
-        });
-
-        // Definir uma data padrão (pode ser qualquer data que desejar)
-        let eventDate = new Date("2023-01-01T00:00:00");
-
-        // Função para obter a data e hora atual no fuso horário de Manaus
-        function getManausTime() {
-            let now = new Date();
-            let options = {
-                timeZone: 'America/Manaus',
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                hour12: false
-            };
-            let formatter = new Intl.DateTimeFormat('en-US', options);
-            let parts = formatter.formatToParts(now);
-            
-            // Extrair partes da data formatada
-            let year = parts.find(part => part.type === 'year').value;
-            let month = parts.find(part => part.type === 'month').value - 1;  // Mês em JavaScript é 0-11
-            let day = parts.find(part => part.type === 'day').value;
-            let hour = parts.find(part => part.type === 'hour').value;
-            let minute = parts.find(part => part.type === 'minute').value;
-            let second = parts.find(part => part.type === 'second').value;
-
-            return new Date(year, month, day, hour, minute, second);
-        }
-
-        function updateCounter() {
-            var currentDate = getManausTime(); // Hora atual de Manaus
-            var timeDiff = currentDate.getTime() - eventDate.getTime();
-
-            var seconds = Math.floor(timeDiff / 1000);
-            var minutes = Math.floor(seconds / 60);
-            var hours = Math.floor(minutes / 60);
-            var days = Math.floor(hours / 24);
-            var months = Math.floor(days / 30);
-            var years = Math.floor(months / 12);
-
-            months %= 12;
-            days %= 30;
-            hours %= 24;
-            minutes %= 60;
-            seconds %= 60;
-
-            var result = "";
-
-            if (years > 0) {
-                result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${years == 1 ? 'ano' : 'anos'}</div></div>`;
-            }
-            if (months > 0) {
-                result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${months == 1 ? 'mês' : 'meses'}</div></div>`;
-            }
-            if (days > 0) {
-                result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${days == 1 ? 'dia' : 'dias'}</div></div>`;
-            }
-            if (hours > 0) {
-                result += `<div class="time-unit-container"><div class="time-unit">${hours}</div><div class="label">${hours == 1 ? 'hora' : 'horas'}</div></div>`;
-            }
-            if (minutes > 0) {
-                result += `<div class="time-unit-container"><div class="time-unit">${minutes}</div><div class="label">${minutes == 1 ? 'minuto' : 'minutos'}</div></div>`;
-            }
-            result += `<div class="time-unit-container"><div class="time-unit">${seconds}</div><div class="label">${seconds == 1 ? 'segundo' : 'segundos'}</div></div>`;
-
-            document.getElementById("meu-contador").innerHTML = result;
-        }
-
-        setInterval(updateCounter, 1000);
-        updateCounter();
-
-        // Atualiza a data do evento quando o usuário escolhe uma nova data e hora
-        $('#event_date').on('change', function () {
-            let selectedDate = $(this).val();
-            let selectedTime = $('#event_time').val() || "00:00"; // Hora padrão se não houver hora selecionada
-            if (selectedDate) {
-                eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
-                updateCounter(); // Atualiza o contador imediatamente após a mudança
-            }
-        });
-
-        // Atualiza a hora do evento quando o usuário altera o campo de hora
-        $('#event_time').on('change', function () {
-            let selectedTime = $(this).val();
-            let selectedDate = $('#event_date').val() || "2023-01-01"; // Data padrão se não houver data selecionada
-            if (selectedTime) {
-                eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
-                updateCounter(); // Atualiza o contador imediatamente após a mudança
-            }
-        });
-    });
-</script>
-
-
-<script>
-    function updateShadow(image) {
-      const height = image.offsetHeight;
-      const strength = Math.min(height * 0.3, 80); // sombra proporcional, limite máximo
-      image.style.boxShadow = `0 ${strength}px ${strength * 1.5}px rgba(0, 0, 0, 0.6)`;
-    }
-    
-    function adjustCarouselSize() {
-      const container = document.querySelector('.carousel-container');
-      const activeImage = container.querySelector('.carousel-image.active');
-    
-      if (activeImage) {
-        if (!activeImage.complete) {
-          activeImage.onload = () => adjustCarouselSize();
+        if (!url) {
+          alert("Por favor, insira o link do YouTube acima.");
           return;
         }
-    
-        const imageRatio = activeImage.naturalWidth / activeImage.naturalHeight;
-        const screenRatio = window.innerWidth / window.innerHeight;
-    
-        if (imageRatio > screenRatio) {
-          activeImage.style.width = '100%';
-          activeImage.style.height = 'auto';
-        } else {
-          activeImage.style.height = '90vh';
-          activeImage.style.width = 'auto';
-        }
-    
-        container.style.height = activeImage.offsetHeight + 'px';
-    
-        updateShadow(activeImage); // chama aqui
+
+        showVideo(url);
       }
-    }
-    
-    // Chamar ajuste no carregamento e a cada troca
-    window.addEventListener('load', adjustCarouselSize);
+
+      function showVideo(url) {
+        const youtubePlayer = document.getElementById("youtubePlayer");
+        const overlay = document.getElementById("customVideoOverlay");
+
+        let videoId = "";
+
+        try {
+          if (url.includes("youtube.com/watch?v=")) {
+            const parsedUrl = new URL(url);
+            videoId = parsedUrl.searchParams.get("v") || "";
+          } else if (url.includes("youtu.be/")) {
+            videoId = url.split("youtu.be/")[1].split("?")[0];
+          } else if (url.includes("youtube.com/embed/")) {
+            videoId = url.split("youtube.com/embed/")[1].split("?")[0];
+          }
+        } catch (e) {
+          console.warn("URL inválida:", url);
+        }
+
+        if (!videoId) {
+          alert("Não foi possível identificar o vídeo. Verifique o link.");
+          return;
+        }
+
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        youtubePlayer.src = embedUrl;
+
+        overlay.classList.add("show");
+        document.body.style.overflow = "hidden";
+
+        document.addEventListener("keydown", handleEscapeKey);
+      }
+
+      function closeVideo() {
+        const youtubePlayer = document.getElementById("youtubePlayer");
+        const overlay = document.getElementById("customVideoOverlay");
+
+        youtubePlayer.src = "";
+        overlay.classList.remove("show");
+        document.body.style.overflow = "";
+        document.removeEventListener("keydown", handleEscapeKey);
+      }
+
+      function handleEscapeKey(event) {
+        if (event.key === "Escape") {
+          closeVideo();
+        }
+      }
     </script>
-    
-    
-    <script>
-        let carouselInterval;
-
-        document.getElementById('images').addEventListener('change', function () {
-          const imagesInput = document.getElementById('images');
-          const carousel = document.getElementById('carousel');
-        
-          carousel.innerHTML = ''; // limpa tudo
-        
-          if (imagesInput.files.length > 0) {
-            for (let i = 0; i < imagesInput.files.length; i++) {
-              const file = imagesInput.files[i];
-              const reader = new FileReader();
-        
-              reader.onload = function (e) {
-                const newImage = document.createElement('img');
-                newImage.src = e.target.result;
-                newImage.className = 'carousel-image';
-                if (i === 0) newImage.classList.add('active');
-                carousel.appendChild(newImage);
-        
-                // Quando todas foram adicionadas, reinicia o carrossel
-                if (i === imagesInput.files.length - 1) {
-                  reader.onloadend = () => {
-                    restartCarousel(); // dispara logo que todas forem lidas
-                    adjustCarouselSize();
-                  };
-                }
-              };
-        
-              reader.readAsDataURL(file);
-            }
-          } else {
-            const placeholder = document.createElement('img');
-            placeholder.src = "/static/images/placeholder.png";
-            placeholder.className = 'carousel-image active';
-            carousel.appendChild(placeholder);
-            restartCarousel();
-          }
-        });
-        function restartCarousel() {
-          if (carouselInterval) clearInterval(carouselInterval);
-        
-          let currentIndex = 0;
-          const carouselImages = document.querySelectorAll('#carousel .carousel-image');
-        
-          // Garante que só a primeira começa visível
-          carouselImages.forEach((img, i) => {
-            img.classList.remove('active');
-            if (i === 0) img.classList.add('active');
-          });
-        
-          // Inicia imediatamente
-          carouselInterval = setInterval(() => {
-            carouselImages[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + 1) % carouselImages.length;
-            carouselImages[currentIndex].classList.add('active');
-            adjustCarouselSize();
-          }, 3000);
-        }
-        
-        
-        </script>
-        
-        <script>function ajustarAlturaCarrossel() {
-          const container = document.querySelector('.carousel-container');
-          const ativa = container.querySelector('.carousel-image.active');
-          if (ativa && ativa.complete) {
-            container.style.height = ativa.offsetHeight + 'px';
-          }
-        }
-        
-        window.addEventListener('load', ajustarAlturaCarrossel);
-        document.querySelectorAll('.carousel-image').forEach(img => {
-          img.onload = ajustarAlturaCarrossel;
-        });
-        </script>
-
-
-</body>
+  </body>
 </html>
