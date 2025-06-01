@@ -711,16 +711,3 @@ body {
   width: 100%;
   max-width: 100%;
 }
-
-#previewGif {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 4px solid white;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease;
-}
-#previewGif:hover {
-  transform: scale(1.05);
-}

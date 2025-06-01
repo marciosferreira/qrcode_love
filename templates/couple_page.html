@@ -16,10 +16,24 @@
       as="image"
       type="image/webp"
     />
-    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/style_couple.css" />
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon" />
 
     <style>
+      #previewGif {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+      #previewGif:hover {
+        transform: scale(1.05);
+      }
+
       #customVideoOverlay {
         position: fixed;
         top: 0;
@@ -95,11 +109,80 @@
         color: white;
         transform: scale(1.1);
       }
+      .video-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
 
       .video-wrapper iframe {
         width: 100%;
         height: 100%;
         border: none;
+      }
+      .video-close-button {
+        top: 10px;
+        right: 10px;
+      }
+
+      .video-overlay-content {
+        position: relative;
+        width: 90vw;
+        max-width: 1000px;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
+        z-index: 2;
+        transform: scale(0.9);
+        transition: transform 0.3s ease-out;
+
+        /* 👇 adicione isso */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+      }
+      .video-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .video-close-button {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       }
     </style>
 
@@ -119,6 +202,20 @@
   </head>
   <body>
     <div class="background-overlay">
+      <!-- Modal de vídeo -->
+      <div id="customVideoOverlay" class="video-overlay">
+        <div class="video-overlay-backdrop" onclick="closeVideo()"></div>
+        <div class="video-overlay-content">
+          <div class="video-wrapper">
+            <iframe
+              id="youtubePlayer"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+            ></iframe>
+            <button class="video-close-button" onclick="closeVideo()">×</button>
+          </div>
+        </div>
+      </div>
       <div class="container-fluid">
         <main>
           <section class="presentation">
@@ -158,41 +255,28 @@
             <br />
             <br />
             {% endif %} {% if has_video %}
-           
-            <!-- Preview do vídeo -->
-            <img
-              id="previewGif"
-              src="https://www.qrcodelove.me/static/images/giphy.png"
-              alt="Assista ao vídeo"
-              onclick="showVideoFromInput()"
-            />
+            <!-- Imagem clicável que abre o vídeo -->
+            <div class="text-center">
+              <img
+                id="previewGif"
+                src="/static/images/giphy.png"
+                alt="Assista ao vídeo"
+                onclick="showVideo('{{ couple.video_id }}')"
+                style="
+                  width: 120px;
+                  height: 120px;
+                  border-radius: 50%;
+                  object-fit: cover;
+                  cursor: pointer;
+                  border: 4px solid white;
+                  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+                "
+              />
+              <p id="videoHint">Vídeo homenagem (com som)</p>
+            </div>
 
-            <p id="videoHint">Vídeo homenagem (com som)</p>
-
-            <!-- Campo oculto com o link do vídeo -->
-            <input type="hidden" id="hiddenYoutubeLink" value="" />
-          </section>
-        </main>
-      </div>
-    </div>
-
-    <!-- Modal de Vídeo Corrigido -->
-    <div id="customVideoOverlay">
-      <div class="video-overlay-backdrop" onclick="closeVideo()"></div>
-      <div class="video-overlay-content">
-        <button class="video-close-button" onclick="closeVideo()">×</button>
-        <div class="video-wrapper">
-          <iframe
-            id="youtubePlayer"
-            allow="autoplay; encrypted-media"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </div>
-    </div>
-
-
-            {% endif %} {% if payment_pending == False and show_payment_link %}
+            {% endif %} <br /><br />{% if payment_pending == False and
+            show_payment_link %}
             <div class="payment-container">
               <h5>Esta página ficará ativa por 1 hora</h5>
               <form
@@ -221,41 +305,14 @@
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
-      function showVideoFromInput() {
-        const input = document.getElementById("youtubeLink");
-        const url = input?.value?.trim();
-
-        if (!url) {
-          alert("Por favor, insira o link do YouTube acima.");
+      function showVideo(videoId) {
+        if (!videoId) {
+          alert("ID do vídeo não fornecido.");
           return;
         }
 
-        showVideo(url);
-      }
-
-      function showVideo(url) {
         const youtubePlayer = document.getElementById("youtubePlayer");
         const overlay = document.getElementById("customVideoOverlay");
-
-        let videoId = "";
-
-        try {
-          if (url.includes("youtube.com/watch?v=")) {
-            const parsedUrl = new URL(url);
-            videoId = parsedUrl.searchParams.get("v") || "";
-          } else if (url.includes("youtu.be/")) {
-            videoId = url.split("youtu.be/")[1].split("?")[0];
-          } else if (url.includes("youtube.com/embed/")) {
-            videoId = url.split("youtube.com/embed/")[1].split("?")[0];
-          }
-        } catch (e) {
-          console.warn("URL inválida:", url);
-        }
-
-        if (!videoId) {
-          alert("Não foi possível identificar o vídeo. Verifique o link.");
-          return;
-        }
 
         const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
         youtubePlayer.src = embedUrl;
@@ -265,23 +322,8 @@
 
         document.addEventListener("keydown", handleEscapeKey);
       }
-
-      function closeVideo() {
-        const youtubePlayer = document.getElementById("youtubePlayer");
-        const overlay = document.getElementById("customVideoOverlay");
-
-        youtubePlayer.src = "";
-        overlay.classList.remove("show");
-        document.body.style.overflow = "";
-        document.removeEventListener("keydown", handleEscapeKey);
-      }
-
-      function handleEscapeKey(event) {
-        if (event.key === "Escape") {
-          closeVideo();
-        }
-      }
     </script>
+
     <script>
       $(document).ready(function () {
         const images = $("#carousel .carousel-image");
@@ -296,6 +338,34 @@
           images.eq(currentIndex).addClass("active");
         }, 3000); // muda a cada 3 segundos
       });
+    </script>
+    <script>
+      function showVideoFromImage(imgElement) {
+        const url = imgElement.dataset.url;
+        if (!url) {
+          alert("URL do vídeo não encontrada.");
+          return;
+        }
+        showVideo(url);
+      }
+    </script>
+    <script>
+      function closeVideo() {
+        const overlay = document.getElementById("customVideoOverlay");
+        const youtubePlayer = document.getElementById("youtubePlayer");
+
+        overlay.classList.remove("show");
+        document.body.style.overflow = "auto";
+
+        youtubePlayer.src = ""; // para parar o vídeo
+        document.removeEventListener("keydown", handleEscapeKey);
+      }
+
+      function handleEscapeKey(event) {
+        if (event.key === "Escape") {
+          closeVideo();
+        }
+      }
     </script>
   </body>
 </html>
