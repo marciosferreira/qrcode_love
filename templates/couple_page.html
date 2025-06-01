@@ -158,32 +158,40 @@
             <br />
             <br />
             {% endif %} {% if has_video %}
+           
+            <!-- Preview do vídeo -->
             <img
               id="previewGif"
-              src="/static/images/giphy.png"
+              src="https://www.qrcodelove.me/static/images/giphy.png"
               alt="Assista ao vídeo"
-              onclick="showVideoModal('{{ couple.video_id }}')"
+              onclick="showVideoFromInput()"
             />
+
             <p id="videoHint">Vídeo homenagem (com som)</p>
 
-            <div id="customVideoOverlay">
-              <div
-                class="video-overlay-backdrop"
-                onclick="closeVideoModal()"
-              ></div>
-              <div class="video-overlay-content">
-                <button class="video-close-button" onclick="closeVideoModal()">
-                  &times;
-                </button>
-                <div class="video-wrapper">
-                  <iframe
-                    id="youtubePlayer"
-                    allow="autoplay; encrypted-media"
-                    allowfullscreen
-                  ></iframe>
-                </div>
-              </div>
-            </div>
+            <!-- Campo oculto com o link do vídeo -->
+            <input type="hidden" id="hiddenYoutubeLink" value="" />
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal de Vídeo Corrigido -->
+    <div id="customVideoOverlay">
+      <div class="video-overlay-backdrop" onclick="closeVideo()"></div>
+      <div class="video-overlay-content">
+        <button class="video-close-button" onclick="closeVideo()">×</button>
+        <div class="video-wrapper">
+          <iframe
+            id="youtubePlayer"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+
             {% endif %} {% if payment_pending == False and show_payment_link %}
             <div class="payment-container">
               <h5>Esta página ficará ativa por 1 hora</h5>
