@@ -456,9 +456,11 @@ body {
 }
 
 /* Carousel Styles */
+/* Carousel Styles */
 .carousel-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 400px; /* ou o tamanho desejado */
+  aspect-ratio: 3 / 4;
   margin: 40px auto;
   border-radius: 20px;
   overflow: hidden;
@@ -468,7 +470,7 @@ body {
 
 .carousel-image {
   width: 100%;
-  height: 400px;
+  height: 100%;
   object-fit: cover;
   display: none;
   transition: all 0.5s ease;
