@@ -583,6 +583,8 @@ def create_couple_page():
         event_time = request.form["event_time"]
         email = request.form["email"]
         event_description = request.form["event_description"]
+        effect_type = request.form.get("effect_type", "none")
+
         optional_message = request.form.get(
             "optional_message"
         )  # Captura a mensagem opcional
@@ -643,6 +645,7 @@ def create_couple_page():
             "event_date": event_date,
             "event_time": event_time,
             "event_description": event_description,
+            "effect_type": effect_type,
             "page_url": unique_code,
             "optional_message": optional_message,
             "email": email,

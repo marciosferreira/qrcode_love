@@ -184,6 +184,32 @@
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       }
+      @keyframes floatUp {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      .image-effect-icon {
+        position: absolute;
+        animation-name: floatUp;
+        animation-timing-function: ease-out;
+        pointer-events: none;
+      }
+      #presentationEffectContainer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 135vh; /* cobre o dobro da seção */
+        pointer-events: none;
+        z-index: 10;
+      }
     </style>
 
     <script
@@ -201,6 +227,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </head>
   <body>
+    <div
+      id="presentationEffectContainer"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 5;
+      "
+    ></div>
+
     <div class="background-overlay">
       <!-- Modal de vídeo -->
       <div id="customVideoOverlay" class="video-overlay">
@@ -366,6 +405,55 @@
           closeVideo();
         }
       }
+    </script>
+    <script>
+      const effectContainer = document.getElementById(
+        "presentationEffectContainer"
+      );
+      const effectTypeFromBackend =
+        "{{ couple.effect_type | default('none') }}";
+
+      const symbols = {
+        hearts: "❤️",
+        stars: "⭐",
+        confetti: "🎉",
+      };
+
+      function createFloatingIcon(type) {
+        const icon = document.createElement("div");
+        icon.classList.add("image-effect-icon");
+
+        icon.textContent = symbols[type] || "❤️";
+
+        icon.style.left = Math.random() * 100 + "%";
+        icon.style.top = "100%";
+        icon.style.fontSize = Math.random() * 20 + 16 + "px";
+        icon.style.opacity = Math.random() * 0.5 + 0.5;
+        icon.style.animationDuration = Math.random() * 2 + 3 + "s";
+        icon.style.color = "white";
+
+        effectContainer.appendChild(icon);
+
+        icon.addEventListener("animationend", () => {
+          icon.remove();
+        });
+      }
+
+      function startEffectLoop(effectType) {
+        if (effectType === "none") return;
+
+        setInterval(() => {
+          if (effectType === "all") {
+            Object.keys(symbols).forEach((type) => createFloatingIcon(type));
+          } else {
+            createFloatingIcon(effectType);
+          }
+        }, 500);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        startEffectLoop(effectTypeFromBackend);
+      });
     </script>
   </body>
 </html>

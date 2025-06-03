@@ -155,8 +155,20 @@ $(document).ready(function () {
     const imagesInput = document.getElementById("images");
     const carousel = document.getElementById("carousel");
 
-    carousel.innerHTML = "";
+    const effectContainer = document.getElementById("carouselEffectContainer");
 
+    // Se o container de efeito não existe (caso tenha sido apagado), recrie
+    if (!effectContainer) {
+      const container = document.createElement("div");
+      container.id = "carouselEffectContainer";
+      container.className = "position-absolute top-0 start-0 w-100 h-100";
+      document.getElementById("carousel").appendChild(container);
+    }
+
+    // Remove só as imagens antigas
+    carousel.querySelectorAll(".carousel-image").forEach((img) => img.remove());
+
+    // Adiciona as novas imagens
     if (imagesInput.files.length > 0) {
       for (let i = 0; i < imagesInput.files.length; i++) {
         const file = imagesInput.files[i];
@@ -167,10 +179,19 @@ $(document).ready(function () {
           newImage.src = e.target.result;
           newImage.className = "carousel-image";
           if (i === 0) newImage.classList.add("active");
+          newImage.style.display = "block";
+          newImage.style.width = "100%";
+          newImage.style.height = "100%";
+          newImage.style.objectFit = "cover";
+
           carousel.appendChild(newImage);
 
+          // Garante que o efeito fique por cima
           if (i === imagesInput.files.length - 1) {
             setTimeout(() => {
+              carousel.appendChild(
+                document.getElementById("presentationEffectContainer")
+              );
               restartCarousel();
             }, 100);
           }
