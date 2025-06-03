@@ -958,6 +958,10 @@ def asaas_webhook():
     if body.get("event") in ["PAYMENT_CREATED", "PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]:
         payment = body.get("payment", {})
         page_url = payment.get("externalReference")
+        subscription = payment.get("subscription", "None")
+
+        if subscription == "sub_8m3grz7tz4tyfb51":  # toyota
+            return jsonify({"received": True})
 
         if not page_url:
             return "Referência externa não encontrada", 400
