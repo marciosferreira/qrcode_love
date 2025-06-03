@@ -754,6 +754,65 @@
           opacity: 0;
         }
       }
+
+      body.gradient_dark1 {
+        background: linear-gradient(135deg, #2c3e50, #4b6cb7); /* Roxo-Azul */
+      }
+      body.gradient_dark2 {
+        background: linear-gradient(
+          135deg,
+          #000428,
+          #004e92
+        ); /* Azul-Marinho */
+      }
+      body.gradient_dark3 {
+        background: linear-gradient(135deg, #2c003e, #000000); /* Vinho-Preto */
+      }
+      body.gradient_dark4 {
+        background: linear-gradient(135deg, #0f2027, #2c5364); /* Verde-Preto */
+      }
+      body.gradient_dark5 {
+        background: linear-gradient(
+          135deg,
+          #3a1c71,
+          #d76d77
+        ); /* Azul-Púrpura */
+      }
+      body.gradient_dark6 {
+        background: linear-gradient(
+          135deg,
+          #000000,
+          #ffd700
+        ); /* Preto-Dourado */
+      }
+      body.gradient_dark7 {
+        background: linear-gradient(
+          135deg,
+          #232526,
+          #414345
+        ); /* Grafite-Azul Frio */
+      }
+      body.gradient_dark8 {
+        background: linear-gradient(
+          135deg,
+          #000000,
+          #8e0e00
+        ); /* Preto-Vermelho */
+      }
+      body.gradient_dark9 {
+        background: linear-gradient(
+          135deg,
+          #41295a,
+          #2f7336
+        ); /* Roxo-Emeralda */
+      }
+      body.gradient_dark10 {
+        background: linear-gradient(
+          135deg,
+          #3f2b96,
+          #00d2ff
+        ); /* Magenta-Azul Petróleo */
+      }
     </style>
   </head>
   <body>
@@ -833,9 +892,7 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="event_description"
-                  >Qual o evento especial desta data?</label
-                >
+                <label for="event_description">Qual o evento especial?</label>
                 <select
                   id="event_description"
                   name="event_description"
@@ -869,6 +926,7 @@
                   multiple
                 />
               </div>
+
               <div class="form-group">
                 <div class="text-center mb-4">
                   <label
@@ -910,6 +968,37 @@
                 ></textarea>
               </div>
             </div>
+
+            <div class="form-group">
+              <div class="text-center mb-4">
+                <label
+                  for="backgroundSelector"
+                  style="color: white; display: block; margin-bottom: 10px"
+                >
+                  Estilo de fundo da página:
+                </label>
+                <select
+                  id="backgroundSelector"
+                  name="background_type"
+                  class="form-select w-auto mx-auto"
+                >
+                  <option value="gradient_dark1">Degradê Roxo-Azul</option>
+                  <option value="gradient_dark2">Degradê Azul-Marinho</option>
+                  <option value="gradient_dark3">Degradê Vinho-Preto</option>
+                  <option value="gradient_dark4">Degradê Verde-Preto</option>
+                  <option value="gradient_dark5">Degradê Azul-Púrpura</option>
+                  <option value="gradient_dark6">Degradê Preto-Dourado</option>
+                  <option value="gradient_dark7">Degradê Grafite-Azul</option>
+                  <option value="gradient_dark8">Degradê Preto-Vermelho</option>
+                  <option value="gradient_dark9">Degradê Roxo-Emeralda</option>
+                  <option value="gradient_dark10">
+                    Degradê Magenta-Azul Petróleo
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <br />
 
             <div class="form-row">
               <div class="form-group full-width">
@@ -1129,6 +1218,29 @@
       window.addEventListener("DOMContentLoaded", () => {
         startEffectLoop();
       });
+    </script>
+    <script>
+      const bgSelector = document.getElementById("backgroundSelector");
+
+      function applyBackgroundClass() {
+        document.body.className = document.body.className
+          .split(" ")
+          .filter(
+            (cls) =>
+              !cls.startsWith("gradient") &&
+              !cls.startsWith("solid") &&
+              !cls.startsWith("texture")
+          )
+          .join(" ");
+
+        const selected = bgSelector.value;
+        if (selected && selected !== "default") {
+          document.body.classList.add(selected);
+        }
+      }
+
+      bgSelector.addEventListener("change", applyBackgroundClass);
+      window.addEventListener("DOMContentLoaded", applyBackgroundClass);
     </script>
   </body>
 </html>
