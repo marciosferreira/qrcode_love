@@ -663,8 +663,7 @@ def create_couple_page():
 
         # Gerar QR Code e salvar
         qr_image_bytes = generate_qr_code(url, unique_code)
-        print("qr")
-        print(qr_image_bytes)
+        
         # Corpo do e-mail
         email_subject = "Sua página foi criada!"
         email_body = f"""
@@ -753,8 +752,6 @@ def couple_page(page_url):
         return render_template("not_found.html"), 404
 
     couple = items[0]
-    print("the couple")
-    print(couple)
 
     # Verifica se o campo event_time existe no banco de dados
     event_date_str = couple[
@@ -792,7 +789,6 @@ def couple_page(page_url):
     response = s3_client.list_objects_v2(
         Bucket="qrcodelove-pictures", Prefix=f"pictures/{page_url}/"
     )
-    print(response)
 
     if "Contents" in response:
         image_exists = True
@@ -806,10 +802,13 @@ def couple_page(page_url):
         images = []
 
     # Gera o caminho do QR code
-    # qr_code_path = f'static/qrcodes/{couple["page_url"]}.png'
+    import boto3
 
-    print("payment")
-    print(couple["paid"])
+    bucket_name = "qrcodelove-pictures"
+    qr_code_key = f"qrcodes/{couple['page_url']}.png"
+
+    # Se o bucket for público ou o objeto for acessível publicamente:
+    qr_code_path = f"https://{bucket_name}.s3.amazonaws.com/{qr_code_key}"
 
     # Renderiza a página com as informações calculadas
     return render_template(
@@ -823,7 +822,7 @@ def couple_page(page_url):
         hours=hours,
         minutes=minutes,
         seconds=seconds,
-        # qr_code_path=qr_code_path,
+        qr_code_path=qr_code_path,
         images=images,
         image_exists=image_exists,
         show_payment_link=show_payment_link,

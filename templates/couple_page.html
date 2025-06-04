@@ -269,6 +269,24 @@
           #00d2ff
         ); /* Magenta-Azul Petróleo */
       }
+
+      .qr-code-img {
+        width: 150px; /* Tamanho padrão */
+        max-width: 80vw; /* Nunca maior que 80% da largura da tela */
+        height: auto;
+        margin-top: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      }
+      .qr-code-caption {
+        margin-top: 8px;
+        font-size: 1rem;
+        color: #ffffffcc; /* branco translúcido para fundos escuros */
+        font-weight: 500;
+      }
     </style>
 
     <script
@@ -350,8 +368,7 @@
             <h3 class="optional-message" id="optional_message_text">
               {{ couple.optional_message.replace('\n', '<br />')|safe }}
             </h3>
-            <br />
-            <br />
+
             {% endif %} {% if has_video %}
             <!-- Imagem clicável que abre o vídeo -->
             <div class="text-center">
@@ -373,8 +390,17 @@
               <p id="videoHint">Vídeo homenagem (com som)</p>
             </div>
 
-            {% endif %} <br /><br />{% if payment_pending == False and
-            show_payment_link %}
+            {% endif %} <br /><br />
+
+            <div class="text-center">
+              <img src="{{ qr_code_path }}" alt="QR Code" class="qr-code-img" />
+              <p class="qr-code-caption">QR Code da página</p>
+            </div>
+
+            <br />
+            <br />
+
+            {% if payment_pending == False and show_payment_link %}
             <div class="payment-container">
               <form
                 action="{{ url_for('pay', id=couple.page_url) }}"
