@@ -813,6 +813,29 @@
           #00d2ff
         ); /* Magenta-Azul Petróleo */
       }
+      body.textura_papel_antigo {
+        background-image: url("/static/texturas/textura_papel_antigo.png");
+        background-repeat: repeat;
+        background-size: auto;
+        background-position: top left;
+        background-attachment: fixed;
+      }
+
+      body.textura_marmorizada {
+        background-image: url("/static/texturas/textura_marmorizada.png");
+        background-repeat: repeat;
+        background-size: auto;
+        background-position: top left;
+        background-attachment: fixed;
+      }
+
+      body.textura_arco_iris {
+        background-image: url("/static/texturas/textura_arco_iris.png");
+        background-repeat: repeat;
+        background-size: auto;
+        background-position: top left;
+        background-attachment: fixed;
+      }
     </style>
   </head>
   <body>
@@ -994,6 +1017,13 @@
                   <option value="gradient_dark10">
                     Degradê Magenta-Azul Petróleo
                   </option>
+                  <option value="textura_papel_antigo">
+                    Textura de papel antigo
+                  </option>
+                  <option value="textura_marmorizada">
+                    Textura marmorizada
+                  </option>
+                  <option value="textura_arco_iris">Textura arco-iris</option>
                 </select>
               </div>
             </div>
@@ -1229,7 +1259,7 @@
             (cls) =>
               !cls.startsWith("gradient") &&
               !cls.startsWith("solid") &&
-              !cls.startsWith("texture")
+              !cls.startsWith("textura") // <- aqui estava o problema
           )
           .join(" ");
 
