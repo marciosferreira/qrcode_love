@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt">
   <head>
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
+
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
@@ -358,7 +360,7 @@
 
       /* Presentation Section */
       .presentation {
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(5px);
         background: var(--glass-bg);
         border-radius: 24px;
         padding: 60px 40px;
@@ -836,6 +838,164 @@
         background-position: top left;
         background-attachment: fixed;
       }
+
+      body.textura_papel_antigo .special-text-title,
+      body.textura_marmorizada .special-text-title,
+      body.textura_papel_antigo .special-text_2_a,
+      body.textura_marmorizada .special-text_2_a {
+        color: #333;
+        text-shadow: none;
+      }
+
+      body.textura_papel_antigo .special-text_1,
+      body.textura_marmorizada .special-text_1 {
+        background: linear-gradient(45deg, #6e4f2a, #d7b98e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      body.textura_papel_antigo .optional-message,
+      body.textura_marmorizada .optional-message {
+        background: rgba(255, 255, 255, 0.9);
+        color: #222;
+        border-color: rgba(0, 0, 0, 0.1);
+      }
+
+      body.textura_arco_iris .special-text-title {
+        color: white;
+        text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+      }
+
+      body.textura_arco_iris .special-text_1 {
+        background: linear-gradient(
+          to right,
+          red,
+          orange,
+          yellow,
+          green,
+          blue,
+          indigo,
+          violet
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      body.gradient_dark2 .special-text-title,
+      body.gradient_dark2 .special-text_2_a,
+      body.gradient_dark2 .special-text_2_c {
+        color: #dbe9ff;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+      }
+
+      body.gradient_dark2 .special-text_1 {
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark3 .special-text-title,
+      body.gradient_dark3 .special-text_2_a,
+      body.gradient_dark3 .special-text_2_c {
+        color: #ffe6f2;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+      }
+
+      body.gradient_dark3 .special-text_1 {
+        background: linear-gradient(45deg, #ff6ec4, #7873f5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark4 .special-text-title,
+      body.gradient_dark4 .special-text_2_a,
+      body.gradient_dark4 .special-text_2_c {
+        color: #e0ffe0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+      }
+
+      body.gradient_dark4 .special-text_1 {
+        background: linear-gradient(45deg, #00c9a7, #92fe9d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark5 .special-text-title,
+      body.gradient_dark5 .special-text_2_a,
+      body.gradient_dark5 .special-text_2_c {
+        color: #fff0f9;
+        text-shadow: 0 2px 8px rgba(85, 0, 120, 0.5);
+      }
+
+      body.gradient_dark5 .special-text_1 {
+        background: linear-gradient(45deg, #fc67fa, #f4c4f3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark7 .special-text-title,
+      body.gradient_dark7 .special-text_2_a,
+      body.gradient_dark7 .special-text_2_c {
+        color: #f0f0f0;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      body.gradient_dark7 .special-text_1 {
+        background: linear-gradient(45deg, #7f8c8d, #bdc3c7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark8 .special-text-title,
+      body.gradient_dark8 .special-text_2_a,
+      body.gradient_dark8 .special-text_2_c {
+        color: #ffd6d6;
+        text-shadow: 0 2px 8px rgba(255, 50, 50, 0.4);
+      }
+
+      body.gradient_dark8 .special-text_1 {
+        background: linear-gradient(45deg, #ff512f, #dd2476);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark9 .special-text-title,
+      body.gradient_dark9 .special-text_2_a,
+      body.gradient_dark9 .special-text_2_c {
+        color: #e8ffe8;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      body.gradient_dark9 .special-text_1 {
+        background: linear-gradient(45deg, #00bf8f, #8c3fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body.gradient_dark10 .special-text-title,
+      body.gradient_dark10 .special-text_2_a,
+      body.gradient_dark10 .special-text_2_c {
+        color: #f0f8ff;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+      }
+
+      body.gradient_dark10 .special-text_1 {
+        background: linear-gradient(45deg, #fc466b, #3f5efb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body[class^="gradient_dark"] .optional-message {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      body.textura_marmorizada .special-text_1 {
+        background: linear-gradient(
+          135deg,
+          #b8860b,
+          /* dark goldenrod */ #ffd700,
+          /* gold */ #f5deb3 /* wheat (para brilho claro) */
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4),
+          /* brilho sutil no topo */ 0 2px 4px rgba(0, 0, 0, 0.5),
+          /* sombra de profundidade */ 0 0 10px rgba(255, 215, 0, 0.3); /* brilho difuso dourado */
+      }
     </style>
   </head>
   <body>
@@ -992,11 +1152,14 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <div class="text-center mb-4">
+            <div class="form-row mt-0 mb-2">
+              <div
+                class="form-group text-center"
+                style="max-width: 400px; margin-top: -15px"
+              >
                 <label
                   for="backgroundSelector"
-                  style="color: white; display: block; margin-bottom: 10px"
+                  style="color: white; display: block; margin-bottom: 6px"
                 >
                   Estilo de fundo da página:
                 </label>
