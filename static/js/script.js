@@ -151,64 +151,83 @@ $(document).ready(function () {
   }
 
   // Handle image upload
-  document.getElementById("images").addEventListener("change", function () {
-    const imagesInput = document.getElementById("images");
-    const carousel = document.getElementById("carousel");
+  const imagesInput = document.getElementById("images");
+  const carousel = document.getElementById("carousel");
 
-    const effectContainer = document.getElementById("carouselEffectContainer");
+  imagesInput.addEventListener("change", function () {
+    const files = imagesInput.files;
+    const total = files.length;
 
-    // Se o container de efeito não existe (caso tenha sido apagado), recrie
-    if (!effectContainer) {
-      const container = document.createElement("div");
-      container.id = "carouselEffectContainer";
-      container.className = "position-absolute top-0 start-0 w-100 h-100";
-      document.getElementById("carousel").appendChild(container);
-    }
-
-    // Remove só as imagens antigas
+    // Remove imagens antigas
     carousel.querySelectorAll(".carousel-image").forEach((img) => img.remove());
 
-    // Adiciona as novas imagens
-    if (imagesInput.files.length > 0) {
-      for (let i = 0; i < imagesInput.files.length; i++) {
-        const file = imagesInput.files[i];
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-          const newImage = document.createElement("img");
-          newImage.src = e.target.result;
-          newImage.className = "carousel-image";
-          if (i === 0) newImage.classList.add("active");
-          newImage.style.display = "block";
-          newImage.style.width = "100%";
-          newImage.style.height = "100%";
-          newImage.style.objectFit = "cover";
-
-          carousel.appendChild(newImage);
-
-          // Garante que o efeito fique por cima
-          if (i === imagesInput.files.length - 1) {
-            setTimeout(() => {
-              carousel.appendChild(
-                document.getElementById("presentationEffectContainer")
-              );
-              restartCarousel();
-            }, 100);
-          }
-        };
-
-        reader.readAsDataURL(file);
-      }
-    } else {
+    // Se não houver imagens, volta o placeholder
+    if (total === 0) {
       const placeholder = document.createElement("img");
       placeholder.src = "/static/images/placeholder.png";
       placeholder.className = "carousel-image active";
       placeholder.alt = "Imagem inicial";
       carousel.appendChild(placeholder);
       restartCarousel();
+      return;
+    }
+
+    let loadedCount = 0;
+
+    for (let i = 0; i < total; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const newImage = document.createElement("img");
+        newImage.src = e.target.result;
+        newImage.className = "carousel-image";
+        if (i === 0) newImage.classList.add("active");
+
+        newImage.style.width = "100%";
+        newImage.style.height = "100%";
+        newImage.style.objectFit = "cover";
+
+        carousel.appendChild(newImage);
+        loadedCount++;
+
+        if (loadedCount === total) {
+          // Garante que o container de efeito seja o último (z-index alto)
+          const effect = document.getElementById("presentationEffectContainer");
+          if (effect && effect.parentNode !== carousel) {
+            carousel.appendChild(effect);
+          }
+
+          restartCarousel();
+        }
+      };
+
+      reader.readAsDataURL(file);
     }
   });
 
-  // Initialize carousel
+  // Função de rotação automática do carrossel
+  function restartCarousel() {
+    const images = document.querySelectorAll("#carousel .carousel-image");
+    let index = 0;
+
+    // Resetar visibilidade
+    images.forEach((img, i) => {
+      img.classList.remove("active");
+      if (i === 0) img.classList.add("active");
+    });
+
+    if (images.length < 2) return;
+
+    clearInterval(window._carouselInterval);
+
+    window._carouselInterval = setInterval(() => {
+      images[index].classList.remove("active");
+      index = (index + 1) % images.length;
+      images[index].classList.add("active");
+    }, 3000);
+  }
+
+  // Inicializa carrossel no carregamento
   restartCarousel();
 });

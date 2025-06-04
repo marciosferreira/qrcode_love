@@ -310,17 +310,6 @@
         overflow: hidden;
       }
 
-      .btn-primary {
-        background: var(--secondary-gradient);
-        color: white;
-        box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
-      }
-
-      .btn-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
-      }
-
       /* Hint Section */
       .centered-hint {
         text-align: center;
@@ -869,16 +858,17 @@
       body.textura_arco_iris .special-text_1 {
         background: linear-gradient(
           to right,
-          red,
-          orange,
-          yellow,
-          green,
-          blue,
-          indigo,
-          violet
+          #e63946,
+          /* vermelho queimado */ #f4a261,
+          /* laranja pêssego */ #f7dc6f,
+          /* amarelo suave */ #2a9d8f,
+          /* verde petróleo */ #457b9d,
+          /* azul acinzentado */ #6a4c93 /* roxo profundo */
         );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
       }
 
       body.gradient_dark2 .special-text-title,
@@ -983,18 +973,87 @@
         border-color: rgba(255, 255, 255, 0.2);
       }
       body.textura_marmorizada .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
+        background: rgba(
+          255,
+          248,
+          220,
+          0.8
+        ); /* fundo tipo pergaminho (bege translúcido) */
+        color: #d4af37 !important; /* dourado clássico */
+
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3),
+          0 0 8px rgba(255, 215, 0, 0.4); /* brilho dourado */
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        /* limpar resquícios de gradiente em texto */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
+      }
+
+      body.textura_marmorizada .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
+        background: rgba(230, 230, 230, 0.85); /* fundo cinza-claro suave */
+        color: #444; /* grafite escuro elegante */
+
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        border-radius: 16px;
+
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+          0 0 4px rgba(255, 255, 255, 0.2); /* contraste com brilho sutil */
+
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+
+        /* reset de estilos antigos */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
+      }
+
+      body.textura_arco_iris .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
         background: linear-gradient(
           135deg,
-          #b8860b,
-          /* dark goldenrod */ #ffd700,
-          /* gold */ #f5deb3 /* wheat (para brilho claro) */
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4),
-          /* brilho sutil no topo */ 0 2px 4px rgba(0, 0, 0, 0.5),
-          /* sombra de profundidade */ 0 0 10px rgba(255, 215, 0, 0.3); /* brilho difuso dourado */
+          #fbc2eb,
+          #a6c1ee
+        ); /* rosa → azul claro */
+        color: #2d2d2d !important;
+
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        /* ⚠️ Limpar resquícios de estilos anteriores */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
       }
     </style>
   </head>
