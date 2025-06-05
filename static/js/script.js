@@ -17,14 +17,6 @@ $(document).ready(function () {
   console.log("Data final construída:", `${usedDateStr}T${usedTimeStr}:00`);
   console.log("Objeto Date:", eventDate);
 
-  $("#name1").on("input", function () {
-    $("#couple_name1").text($(this).val() || "Nome 1");
-  });
-
-  $("#name2").on("input", function () {
-    $("#couple_name2").text($(this).val() || "Nome 2");
-  });
-
   $("#event_description").on("change", function () {
     const selectedValue = $(this).val();
     $("#event_description_text").text("desde que " + selectedValue);

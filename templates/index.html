@@ -216,14 +216,15 @@
 
       /* Form Styles */
       .form-container {
-        backdrop-filter: blur(20px);
-        background: var(--glass-bg);
-        border-radius: 24px;
-        padding: 40px;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        margin: 40px 0;
-        animation: fadeInUp 0.8s ease-out;
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(20px); /* Mantido do glass-bg original */
+        border: 1px solid var(--glass-border); /* Mantido do glass-border original */
+        animation: fadeInUp 0.8s ease-out; /* Mantido da animação original */
       }
 
       @keyframes fadeInUp {
@@ -231,6 +232,7 @@
           opacity: 0;
           transform: translateY(30px);
         }
+
         to {
           opacity: 1;
           transform: translateY(0);
@@ -238,76 +240,167 @@
       }
 
       .form-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-        gap: 24px;
-        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 25px;
       }
 
       .form-group {
+        flex: 1;
+        min-width: 250px;
         display: flex;
         flex-direction: column;
       }
 
-      .form-group label {
-        color: white;
-        font-weight: 500;
+      .form-group.half-width {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .form-group.full-width {
+        flex: 1 1 100%;
+      }
+
+      .form-group.third-width {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      /* Grupo especial para o seletor de eventos */
+      .event-selector-group {
+        flex: 1 1 100%;
+        margin-bottom: 20px;
+      }
+
+      /* Estilos consolidados para labels e inputs */
+      label {
+        font-weight: bold;
         margin-bottom: 8px;
-        font-size: 0.95rem;
+        color: #333; /* Cor escura para a label */
+        font-size: 14px;
       }
 
-      .form-group input,
-      .form-group select,
-      .form-group textarea {
-        padding: 14px 18px;
-        border: 2px solid transparent;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
+      input,
+      select,
+      textarea {
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        color: #000000; /* Garante que o texto do input seja preto */
+        background: rgba(
+          255,
+          255,
+          255,
+          0.9
+        ); /* Fundo quase opaco para visibilidade */
       }
 
-      .form-group input::placeholder,
-      .form-group textarea::placeholder {
-        color: rgba(255, 255, 255, 0.7);
+      input::placeholder,
+      textarea::placeholder {
+        color: #999; /* Cor do placeholder mais escura para melhor contraste */
       }
 
-      .form-group input:focus,
-      .form-group select:focus,
-      .form-group textarea:focus {
+      input:focus,
+      select:focus,
+      textarea:focus {
         outline: none;
-        border-color: var(--text-primary);
-        background: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
-        transform: translateY(-2px);
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white; /* Garante fundo branco ao focar */
       }
 
-      .form-group select option {
-        background: var(--text-primary);
-        color: white;
-      }
-
-      .half-width {
-        grid-column: span 1;
-      }
-
-      .full-width {
-        grid-column: 1 / -1;
-      }
-
-      /* Button Styles */
-      .btn {
-        padding: 16px 40px;
-        border: none;
-        border-radius: 50px;
-        font-size: 1.1rem;
-        font-weight: 600;
+      select {
         cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        background-color: white;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 12px;
+        padding-right: 40px;
+      }
+
+      /* Estilo para garantir contraste nas opções de grupo */
+      select.styled-select optgroup {
+        background-color: #f8f9fa; /* cinza bem claro */
+        color: #333333;
+        font-weight: bold;
+        padding: 4px 8px;
+      }
+
+      /* Opcional: melhorar aparência geral do select */
+      select.styled-select {
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 16px;
+      }
+
+      .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+
+      .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
+
+      .form-check-label {
+        margin: 0;
+        cursor: pointer;
+        color: #333; /* Cor escura para a label do checkbox */
+      }
+
+      .d-none {
+        display: none;
+      }
+
+      .mt-2 {
+        margin-top: 10px;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      small {
+        font-size: 12px;
+        color: #666;
+        font-weight: normal;
       }
 
       /* Hint Section */
@@ -410,6 +503,7 @@
           opacity: 0;
           transform: scale(1.1);
         }
+
         to {
           opacity: 1;
           transform: scale(1);
@@ -637,11 +731,16 @@
 
         .form-container {
           padding: 24px;
+          margin: 10px; /* Ajuste para melhor visualização em telas menores */
         }
 
         .form-row {
-          grid-template-columns: 1fr;
-          gap: 16px;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .form-group {
+          min-width: unset;
         }
 
         .special-text_1 {
@@ -714,6 +813,8 @@
           margin: 10px;
         }
       }
+
+      /* Efeitos visuais da apresentação */
       .presentation {
         position: relative;
         overflow: hidden;
@@ -724,7 +825,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 135vh; /* cobre o dobro da seção */
+        height: 135vh;
         pointer-events: none;
         z-index: 10;
       }
@@ -735,6 +836,7 @@
         animation: floatUp 3s linear forwards;
         opacity: 0.8;
       }
+
       @keyframes floatUp {
         0% {
           transform: translateY(0) scale(1);
@@ -746,6 +848,7 @@
         }
       }
 
+      /* Temas de fundo */
       body.gradient_dark1 {
         background: linear-gradient(135deg, #2c3e50, #4b6cb7); /* Roxo-Azul */
       }
@@ -804,6 +907,8 @@
           #00d2ff
         ); /* Magenta-Azul Petróleo */
       }
+
+      /* Texturas de fundo */
       body.textura_papel_antigo {
         background-image: url("/static/texturas/textura_papel_antigo.png");
         background-repeat: repeat;
@@ -828,6 +933,7 @@
         background-attachment: fixed;
       }
 
+      /* Ajustes de cor de texto para temas de textura */
       body.textura_papel_antigo .special-text-title,
       body.textura_marmorizada .special-text-title,
       body.textura_papel_antigo .special-text_2_a,
@@ -836,18 +942,44 @@
         text-shadow: none;
       }
 
-      body.textura_papel_antigo .special-text_1,
-      body.textura_marmorizada .special-text_1 {
-        background: linear-gradient(45deg, #6e4f2a, #d7b98e);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+      body.textura_papel_antigo .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+        background: rgba(255, 248, 220, 0.8);
+        color: #d4af37 !important;
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3),
+          0 0 8px rgba(255, 215, 0, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
       }
 
-      body.textura_papel_antigo .optional-message,
-      body.textura_marmorizada .optional-message {
-        background: rgba(255, 255, 255, 0.9);
-        color: #222;
-        border-color: rgba(0, 0, 0, 0.1);
+      body.textura_marmorizada .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+        background: rgba(230, 230, 230, 0.85);
+        color: #444 !important;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        border-radius: 16px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+          0 0 4px rgba(255, 255, 255, 0.2);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
       }
 
       body.textura_arco_iris .special-text-title {
@@ -856,21 +988,24 @@
       }
 
       body.textura_arco_iris .special-text_1 {
-        background: linear-gradient(
-          to right,
-          #e63946,
-          /* vermelho queimado */ #f4a261,
-          /* laranja pêssego */ #f7dc6f,
-          /* amarelo suave */ #2a9d8f,
-          /* verde petróleo */ #457b9d,
-          /* azul acinzentado */ #6a4c93 /* roxo profundo */
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+        background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+        color: #2d2d2d !important;
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
       }
 
+      /* Ajustes de cor de texto para temas de gradiente escuro */
       body.gradient_dark2 .special-text-title,
       body.gradient_dark2 .special-text_2_a,
       body.gradient_dark2 .special-text_2_c {
@@ -972,88 +1107,12 @@
         color: rgba(255, 255, 255, 0.85);
         border-color: rgba(255, 255, 255, 0.2);
       }
-      body.textura_papel_antigo .special-text_1 {
-        display: block;
-        padding: 12px 24px;
-        margin: 10px auto;
-        max-width: fit-content;
-
-        background: rgba(
-          255,
-          248,
-          220,
-          0.8
-        ); /* fundo tipo pergaminho (bege translúcido) */
-        color: #d4af37 !important; /* dourado clássico */
-
-        border-radius: 16px;
-        font-weight: 600;
-        font-size: 2.5rem;
-        text-align: center;
-
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3),
-          0 0 8px rgba(255, 215, 0, 0.4); /* brilho dourado */
-
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
-        /* limpar resquícios de gradiente em texto */
-        -webkit-background-clip: initial !important;
-        -webkit-text-fill-color: initial !important;
-        background-clip: initial !important;
-        -webkit-text-stroke: 0 !important;
-      }
-
-      body.textura_marmorizada .special-text_1 {
-        display: block;
-        padding: 12px 24px;
-        margin: 10px auto;
-        max-width: fit-content;
-
-        background: rgba(230, 230, 230, 0.85); /* fundo cinza-claro suave */
-        color: #444; /* grafite escuro elegante */
-
-        font-size: 2.5rem;
-        font-weight: 700;
-        text-align: center;
-        border-radius: 16px;
-
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
-          0 0 4px rgba(255, 255, 255, 0.2); /* contraste com brilho sutil */
-
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-
-        /* reset de estilos antigos */
-        -webkit-background-clip: initial !important;
-        -webkit-text-fill-color: initial !important;
-        background-clip: initial !important;
-        -webkit-text-stroke: 0 !important;
-      }
-
-      body.textura_arco_iris .special-text_1 {
-        display: block;
-        padding: 12px 24px;
-        margin: 10px auto;
-        max-width: fit-content;
-
-        background: linear-gradient(
-          135deg,
-          #fbc2eb,
-          #a6c1ee
-        ); /* rosa → azul claro */
-        color: #2d2d2d !important;
-
-        border-radius: 16px;
-        font-weight: 600;
-        font-size: 2.5rem;
-        text-align: center;
-
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
-        /* ⚠️ Limpar resquícios de estilos anteriores */
-        -webkit-background-clip: initial !important;
-        -webkit-text-fill-color: initial !important;
-        background-clip: initial !important;
-        -webkit-text-stroke: 0 !important;
+      .couple-names-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px; /* espaço entre os elementos */
+        flex-wrap: wrap; /* garante quebra em telas pequenas */
       }
     </style>
   </head>
@@ -1113,15 +1172,19 @@
             id="createForm"
             class="form-container"
           >
+            <!-- Linha 1: Nomes e Data/Hora -->
             <div class="form-row">
               <div class="form-group">
                 <label for="name1">Nome 1:</label>
                 <input type="text" id="name1" name="name1" required />
               </div>
               <div class="form-group">
-                <label for="name2">Nome 2:</label>
-                <input type="text" id="name2" name="name2" required />
+                <label for="name2">Nome 2 (opcional):</label>
+                <input type="text" id="name2" name="name2" />
               </div>
+            </div>
+
+            <div class="form-row">
               <div class="form-group half-width">
                 <label for="event_date">Data do Evento:</label>
                 <input type="date" id="event_date" name="event_date" required />
@@ -1132,23 +1195,98 @@
               </div>
             </div>
 
+            <!-- Linha 2: Seletor de Evento (ocupando linha inteira) -->
             <div class="form-row">
-              <div class="form-group">
-                <label for="event_description">Qual o evento especial?</label>
+              <div class="event-selector-group spacing-fix">
+                <label class="form-label">Escolha o tipo de evento:</label>
+
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="customPhraseToggle"
+                  />
+                  <label class="form-check-label" for="customPhraseToggle">
+                    Usar frase personalizada
+                  </label>
+                </div>
+                <input
+                  type="hidden"
+                  name="description_mode"
+                  id="descriptionMode"
+                  value="select"
+                />
+
                 <select
-                  id="event_description"
                   name="event_description"
-                  required
+                  id="eventSelect"
+                  class="form-select styled-select"
                 >
-                  <option value="se casaram">se casaram</option>
-                  <option value="se conheceram">se conheceram</option>
-                  <option value="começaram a namorar">
-                    começaram a namorar
-                  </option>
-                  <option value="noivaram">noivaram</option>
-                  <option value="são amigos">são amigos</option>
+                  <optgroup label="Relacionamentos amorosos 💑">
+                    <option value="se casaram">se casaram</option>
+                    <option value="se conheceram">se conheceram</option>
+                    <option value="começaram a namorar">
+                      começaram a namorar
+                    </option>
+                    <option value="noivaram">noivaram</option>
+                    <option value="se reencontraram">se reencontraram</option>
+                    <option value="se apaixonaram">se apaixonaram</option>
+                  </optgroup>
+                  <optgroup label="Amizade e conexões especiais 💖">
+                    <option value="se tornaram amigos">
+                      se tornaram amigos
+                    </option>
+                    <option value="se conheceram na escola">
+                      se conheceram na escola
+                    </option>
+                    <option value="se encontraram pela primeira vez">
+                      se encontraram pela primeira vez
+                    </option>
+                    <option value="viraram melhores amigos">
+                      viraram melhores amigos
+                    </option>
+                  </optgroup>
+                  <optgroup label="Família 👪">
+                    <option value="se tornaram pais">se tornaram pais</option>
+                    <option value="descobriram a gravidez">
+                      descobriram a gravidez
+                    </option>
+                    <option value="adotaram um filho">adotaram um filho</option>
+                    <option value="formaram uma família">
+                      formaram uma família
+                    </option>
+                  </optgroup>
+                  <optgroup label="Pets 🐶">
+                    <option value="adotaram um pet">adotaram um pet</option>
+                    <option value="conheceram seu pet">
+                      conheceram seu pet
+                    </option>
+                  </optgroup>
+                  <optgroup label="Momentos comemorativos 🎉">
+                    <option value="comemoraram seu primeiro aniversário juntos">
+                      comemoraram seu primeiro aniversário juntos
+                    </option>
+                    <option value="viajaram juntos pela primeira vez">
+                      viajaram juntos pela primeira vez
+                    </option>
+                    <option value="deram o primeiro beijo">
+                      deram o primeiro beijo
+                    </option>
+                  </optgroup>
                 </select>
+
+                <input
+                  type="text"
+                  name="custom_event_description"
+                  id="customPhraseInput"
+                  class="form-control mt-2 d-none"
+                  placeholder="Digite sua frase personalizada..."
+                />
               </div>
+            </div>
+
+            <!-- Linha 3: YouTube e Imagens -->
+            <div class="form-row">
               <div class="form-group">
                 <label for="youtubeLink">YouTube Video URL (opcional):</label>
                 <input
@@ -1168,40 +1306,38 @@
                   multiple
                 />
               </div>
+            </div>
 
-              <div class="form-group">
-                <div class="text-center mb-4">
-                  <label
-                    for="imageEffectSelector"
-                    style="color: white; display: block; margin-bottom: 10px"
-                  >
-                    Efeito visual na página:
-                  </label>
-                  <select
-                    id="imageEffectSelector"
-                    name="effect_type"
-                    class="form-select w-auto mx-auto"
-                    style="margin-top: 1px"
-                  >
-                    <option value="none">Sem efeito</option>
-                    <option value="hearts">Corações</option>
-                    <option value="stars">Estrelas</option>
-                    <option value="confetti">Confetes</option>
-                    <option value="all">Todos</option>
-                  </select>
-                </div>
+            <!-- Linha 4: Efeitos Visuais -->
+            <div class="form-row">
+              <div class="form-group text-center">
+                <label for="imageEffectSelector"
+                  >Efeito visual na página:</label
+                >
+                <select
+                  id="imageEffectSelector"
+                  name="effect_type"
+                  class="form-select"
+                >
+                  <option value="none">Sem efeito</option>
+                  <option value="hearts">Corações</option>
+                  <option value="stars">Estrelas</option>
+                  <option value="confetti">Confetes</option>
+                  <option value="all">Todos</option>
+                </select>
               </div>
             </div>
 
+            <!-- Linha 5: Email e Mensagem -->
             <div class="form-row">
-              <div class="form-group half-width">
+              <div class="form-group">
                 <label for="email"
                   >Seu e-mail
                   <small>(enviaremos link e o QR Code)</small>:</label
                 >
                 <input type="email" id="email" name="email" required />
               </div>
-              <div class="form-group half-width">
+              <div class="form-group">
                 <label for="message">Sua mensagem (opcional):</label>
                 <textarea
                   id="message"
@@ -1211,21 +1347,16 @@
               </div>
             </div>
 
-            <div class="form-row mt-0 mb-2">
-              <div
-                class="form-group text-center"
-                style="max-width: 400px; margin-top: -15px"
-              >
-                <label
-                  for="backgroundSelector"
-                  style="color: white; display: block; margin-bottom: 6px"
+            <!-- Linha 6: Estilo de Fundo -->
+            <div class="form-row">
+              <div class="form-group text-center">
+                <label for="backgroundSelector"
+                  >Estilo de fundo da página:</label
                 >
-                  Estilo de fundo da página:
-                </label>
                 <select
                   id="backgroundSelector"
                   name="background_type"
-                  class="form-select w-auto mx-auto"
+                  class="form-select"
                 >
                   <option value="gradient_dark1">Degradê Roxo-Azul</option>
                   <option value="gradient_dark2">Degradê Azul-Marinho</option>
@@ -1250,10 +1381,9 @@
               </div>
             </div>
 
-            <br />
-
+            <!-- Botão de Submit -->
             <div class="form-row">
-              <div class="form-group full-width">
+              <div class="form-group full-width text-center">
                 <button type="submit" class="btn btn-primary">
                   Criar Página
                 </button>
@@ -1271,10 +1401,12 @@
           </div>
 
           <section class="presentation">
-            <h2 class="special-text-title">Página de</h2>
-            <h3 class="special-text_1" id="couple_name1">Nome 1</h3>
-            <h3 class="special-text_1">&amp;</h3>
-            <h3 class="special-text_1" id="couple_name2">Nome 2</h3>
+            <h2 class="special-text-title">Homenagem a</h2>
+            <div class="couple-names-wrapper">
+              <h3 class="special-text_1" id="couple_name1">Nome 1</h3>
+              <h3 class="special-text_1" id="e_comercial">&amp;</h3>
+              <h3 class="special-text_1" id="couple_name2">Nome 2</h3>
+            </div>
 
             <div id="carousel" class="carousel-container">
               <img
@@ -1310,7 +1442,7 @@
             </div>
 
             <h3 class="special-text_2_c" id="event_description_text">
-              desde que são amigos
+              desde que se tornaram amigos
             </h3>
             <h3 class="optional-message" id="optional_message_text">
               Mensagem opcional, um poema, etc., será exibida aqui
@@ -1493,6 +1625,88 @@
 
       bgSelector.addEventListener("change", applyBackgroundClass);
       window.addEventListener("DOMContentLoaded", applyBackgroundClass);
+    </script>
+    <script>
+      const customToggle = document.getElementById("customPhraseToggle");
+      const customInput = document.getElementById("customPhraseInput");
+      const eventSelect = document.getElementById("eventSelect");
+      const descriptionModeInput = document.getElementById("descriptionMode");
+
+      function atualizarVisibilidadeCampos() {
+        if (customToggle.checked) {
+          customInput.classList.remove("d-none");
+          eventSelect.classList.add("d-none");
+          descriptionModeInput.value = "custom";
+        } else {
+          customInput.classList.add("d-none");
+          eventSelect.classList.remove("d-none");
+          descriptionModeInput.value = "select";
+        }
+      }
+
+      customToggle.addEventListener("change", atualizarVisibilidadeCampos);
+      window.addEventListener("DOMContentLoaded", atualizarVisibilidadeCampos);
+    </script>
+
+    <script>
+      function atualizarFraseEvento() {
+        const customToggle = document.getElementById("customPhraseToggle");
+        const customInput = document.getElementById("customPhraseInput");
+        const eventSelect = document.getElementById("eventSelect");
+        const fraseDestino = document.getElementById("event_description_text");
+
+        if (customToggle.checked && customInput.value.trim()) {
+          fraseDestino.textContent = "desde que " + customInput.value.trim();
+        } else {
+          fraseDestino.textContent = "desde que " + eventSelect.value;
+        }
+      }
+
+      document
+        .getElementById("eventSelect")
+        .addEventListener("change", atualizarFraseEvento);
+      document
+        .getElementById("customPhraseInput")
+        .addEventListener("input", atualizarFraseEvento);
+      document
+        .getElementById("customPhraseToggle")
+        .addEventListener("change", atualizarFraseEvento);
+
+      window.addEventListener("DOMContentLoaded", atualizarFraseEvento);
+    </script>
+    <script>
+      function atualizarNomesPreview() {
+        const nome1 = document.getElementById("name1")?.value?.trim() || "";
+        const nome2 = document.getElementById("name2")?.value?.trim() || "";
+
+        const nome1El = document.getElementById("couple_name1");
+        const nome2El = document.getElementById("couple_name2");
+        const eComercial = nome1El?.nextElementSibling;
+
+        if (!nome1 && !nome2) {
+          nome1El.textContent = "Nome 1";
+          nome2El.textContent = "Nome 2";
+          eComercial.style.display = "inline";
+          nome2El.style.display = "inline";
+        } else if (nome1 && !nome2) {
+          nome1El.textContent = nome1;
+          nome2El.style.display = "none";
+          eComercial.style.display = "none";
+        } else if (nome1 && nome2) {
+          nome1El.textContent = nome1;
+          nome2El.textContent = nome2;
+          nome2El.style.display = "inline";
+          eComercial.style.display = "inline";
+        }
+      }
+
+      document
+        .getElementById("name1")
+        .addEventListener("input", atualizarNomesPreview);
+      document
+        .getElementById("name2")
+        .addEventListener("input", atualizarNomesPreview);
+      window.addEventListener("DOMContentLoaded", atualizarNomesPreview);
     </script>
   </body>
 </html>

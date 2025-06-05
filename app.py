@@ -582,7 +582,21 @@ def create_couple_page():
         event_date = request.form["event_date"]
         event_time = request.form["event_time"]
         email = request.form["email"]
-        event_description = request.form["event_description"]
+        event_description = request.form.get("event_description")
+        custom_description = request.form.get("custom_event_description")
+
+        print(event_description)
+        print(custom_description)
+
+        event_description = request.form.get("event_description", "").strip()
+        custom_description = request.form.get("custom_event_description", "").strip()
+        description_mode = request.form.get("description_mode")
+
+        if description_mode == "custom" and custom_description:
+            final_description = custom_description
+        else:
+            final_description = event_description
+
         effect_type = request.form.get("effect_type", "none")
         background_type = request.form.get("background_type", "default")
 
@@ -645,7 +659,7 @@ def create_couple_page():
             "name2": name2,
             "event_date": event_date,
             "event_time": event_time,
-            "event_description": event_description,
+            "event_description": final_description,
             "effect_type": effect_type,
             "background_type": background_type,
             "page_url": unique_code,
