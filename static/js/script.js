@@ -2,11 +2,19 @@ $(document).ready(function () {
   let eventDateStr = $("body").data("event-date");
   let eventTimeStr = $("body").data("event-time") || "00:00";
 
-  let eventDate = new Date(`${eventDateStr}T${eventTimeStr}:00`);
+  // Valor padrão
+  const defaultDateStr = "2023-01-01";
+  const defaultTimeStr = "00:00";
+
+  // Usa data do backend se existir, senão usa valor padrão
+  let usedDateStr = eventDateStr || defaultDateStr;
+  let usedTimeStr = eventTimeStr || defaultTimeStr;
+
+  let eventDate = new Date(`${usedDateStr}T${usedTimeStr}:00`);
 
   console.log("Data do backend:", eventDateStr);
   console.log("Hora do backend:", eventTimeStr);
-  console.log("Data final construída:", `${eventDateStr}T${eventTimeStr}:00`);
+  console.log("Data final construída:", `${usedDateStr}T${usedTimeStr}:00`);
   console.log("Objeto Date:", eventDate);
 
   $("#name1").on("input", function () {
