@@ -436,21 +436,89 @@
         color: rgba(255, 255, 255, 0.85);
         border-color: rgba(255, 255, 255, 0.2);
       }
-      body.textura_marmorizada .special-text_1 {
-        background: linear-gradient(
-          135deg,
-          #b8860b,
-          /* dark goldenrod */ #ffd700,
-          /* gold */ #f5deb3 /* wheat (para brilho claro) */
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4),
-          /* brilho sutil no topo */ 0 2px 4px rgba(0, 0, 0, 0.5),
-          /* sombra de profundidade */ 0 0 10px rgba(255, 215, 0, 0.3); /* brilho difuso dourado */
+      body.textura_papel_antigo .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
+        background: rgba(
+          255,
+          248,
+          220,
+          0.8
+        ); /* fundo tipo pergaminho (bege translúcido) */
+        color: #d4af37 !important; /* dourado clássico */
+
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3),
+          0 0 8px rgba(255, 215, 0, 0.4); /* brilho dourado */
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        /* limpar resquícios de gradiente em texto */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
       }
 
+      body.textura_marmorizada .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
+        background: rgba(230, 230, 230, 0.85); /* fundo cinza-claro suave */
+        color: #444; /* grafite escuro elegante */
+
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        border-radius: 16px;
+
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+          0 0 4px rgba(255, 255, 255, 0.2); /* contraste com brilho sutil */
+
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+
+        /* reset de estilos antigos */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
+      }
+
+      body.textura_arco_iris .special-text_1 {
+        display: block;
+        padding: 12px 24px;
+        margin: 10px auto;
+        max-width: fit-content;
+
+        background: linear-gradient(
+          135deg,
+          #fbc2eb,
+          #a6c1ee
+        ); /* rosa → azul claro */
+        color: #2d2d2d !important;
+
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 2.5rem;
+        text-align: center;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        /* ⚠️ Limpar resquícios de estilos anteriores */
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        background-clip: initial !important;
+        -webkit-text-stroke: 0 !important;
+      }
       .qr-code-img {
         width: 100%;
         max-width: 180px; /* ajuste conforme desejado */
