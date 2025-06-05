@@ -284,7 +284,7 @@ def send_email_with_qr_attachment(
     # Cria a mensagem MIME
     msg = MIMEMultipart()
     msg["Subject"] = subject
-    msg["From"] = "contato@qrcodelove.me"
+    msg["From"] = "contato@meueventoespecial.com.br"
     msg["To"] = to_address
 
     # Corpo do e-mail em HTML
@@ -302,7 +302,7 @@ def send_email_with_qr_attachment(
 
     # Envia o e-mail com cópia oculta
     response = client.send_raw_email(
-        Source="contato@qrcodelove.me",
+        Source="contato@meueventoespecial.com.br",
         Destinations=[to_address],  # destinatário principal e BCC
         RawMessage={"Data": raw_msg},
     )
@@ -686,7 +686,7 @@ def create_couple_page():
         Para estender para 1 mês e ter tempo psuficiente para preparar sua surpesa, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
         Seu QR Code está anexado neste e-mail.<br><br>
         Se quiser deletar sua página, acesse o link abaixo e insira seu e-mail e o código da página: {unique_code}<br>
-        <a href='https://qrcodelove.me/deletar'>https://qrcodelove.me/deletar</a> <br>
+        <a href='https://www.meueventoespecial.com.br/deletar'>https://www.meueventoespecial.com.br/deletar</a> <br>
         Ou ela será deletada automaticamente em 1 hora (exceto se fizer upgrade para 30 dias).<br><br>
         Atenciosamente,<br>
         Equipe de Suporte
@@ -861,7 +861,7 @@ def pay(id):
     payload = {
         "billingType": "PIX",
         "chargeType": "DETACHED",
-        "name": "qrcode love 30 dias",
+        "name": "Meu Evento Especial 30 dias",
         "description": "Extensão da duração da página para 30 dias",
         "value": 5.0,
         "dueDateLimitDays": 1,
