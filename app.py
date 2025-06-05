@@ -865,6 +865,7 @@ def pay(id):
         "description": "Extensão da duração da página para 30 dias",
         "value": 5.0,
         "dueDateLimitDays": 1,
+        "notificationEnabled": False,
         "externalReference": couple["page_url"],
         "callback": {
             "successUrl": url_for("payment_success", page_url=couple["page_url"], _external=True)
