@@ -1,4 +1,14 @@
 $(document).ready(function () {
+  let eventDateStr = $("body").data("event-date");
+  let eventTimeStr = $("body").data("event-time") || "00:00";
+
+  let eventDate = new Date(`${eventDateStr}T${eventTimeStr}:00`);
+
+  console.log("Data do backend:", eventDateStr);
+  console.log("Hora do backend:", eventTimeStr);
+  console.log("Data final construída:", `${eventDateStr}T${eventTimeStr}:00`);
+  console.log("Objeto Date:", eventDate);
+
   $("#name1").on("input", function () {
     $("#couple_name1").text($(this).val() || "Nome 1");
   });
@@ -17,8 +27,6 @@ $(document).ready(function () {
       $(this).val() || "Mensagem opcional será exibida aqui"
     );
   });
-
-  let eventDate = new Date("2023-01-01T00:00:00");
 
   function getManausTime() {
     let now = new Date();

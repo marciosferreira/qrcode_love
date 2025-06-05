@@ -9,7 +9,6 @@
       name="description"
       content="Celebre momentos especiais com fotos, contadores, música e QRCode."
     />
-
     <link
       rel="preload"
       href="/static/images/background.webp"
@@ -604,6 +603,10 @@
             {% endif %}
 
             <h3 class="special-text_2_a">Já se passaram:</h3>
+
+
+            <body data-event-date="{{ couple.event_date }}" data-event-time="{{ couple.event_time }}">
+
 
             <div class="container counter-container">
               <div id="meu-contador-container">
