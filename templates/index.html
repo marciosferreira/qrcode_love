@@ -1109,10 +1109,13 @@
       }
       .couple-names-wrapper {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px; /* espaço entre os elementos */
-        flex-wrap: wrap; /* garante quebra em telas pequenas */
+        flex-direction: column; /* força os itens a ficarem em coluna */
+        align-items: center; /* centraliza horizontalmente */
+        text-align: center;
+      }
+
+      .couple-names-wrapper h3 {
+        margin: 0.25em 0;
       }
     </style>
   </head>
