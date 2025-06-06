@@ -120,27 +120,6 @@ def load_user(user_id):
     return User(user_id)
 
 
-def resize_image_if_needed(image, max_width=1000):
-    """Redimensiona a imagem se a largura exceder o limite permitido."""
-    img = Image.open(image)
-    width, height = img.size
-
-    # Redimensionar se a largura for maior que o limite
-    if width > max_width:
-        # Calcula a nova altura mantendo a proporção
-        new_height = int(max_width * height / width)
-        img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
-
-        # Salva a imagem redimensionada em um objeto de memória
-        img_io = io.BytesIO()
-        img.save(img_io, format="PNG")  # Salvar como PNG
-        img_io.seek(0)  # Voltar ao início do objeto BytesIO
-        return img_io
-    else:
-        # Se não for necessário redimensionar, retorna a imagem original
-        image.seek(0)  # Certifica-se de que a imagem esteja no início para o upload
-        return image
-
 
 # Este decorador adiciona headers a todas as respostas
 @app.after_request
@@ -572,6 +551,22 @@ def extract_video_id(youtube_url):
 # def create_form():
 # return render_template('index.html')  # Seu template com o formulário
 
+from PIL import Image
+import io
+
+def compress_image(image, max_size=(1600, 1600), quality=80):
+    img = Image.open(image)
+    img.thumbnail(max_size)
+
+    output = io.BytesIO()
+    if img.format == "PNG":
+        img.save(output, format="PNG", optimize=True)
+    else:
+        img = img.convert("RGB")  # Evita erros com imagens .webp etc
+        img.save(output, format="JPEG", quality=quality, optimize=True)
+
+    output.seek(0)
+    return output
 
 @app.route("/create", methods=["POST"])
 def create_couple_page():
@@ -638,7 +633,8 @@ def create_couple_page():
                 s3_key = f"pictures/{unique_code}/{filename}"
                 try:
                     # redimensiona se muito grande
-                    resized_image = resize_image_if_needed(image)
+                    resized_image = compress_image(image)
+
                     # Enviar imagem ao S3
                     s3_client.upload_fileobj(
                         resized_image, S3_BUCKET, s3_key
