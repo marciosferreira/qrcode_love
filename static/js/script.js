@@ -192,10 +192,6 @@ $(document).ready(function () {
         newImage.className = "carousel-image";
         if (i === 0) newImage.classList.add("active");
 
-        newImage.style.width = "100%";
-        newImage.style.height = "100%";
-        newImage.style.objectFit = "cover";
-
         carousel.appendChild(newImage);
         loadedCount++;
 
