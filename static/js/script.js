@@ -1,6 +1,6 @@
 $(document).ready(function () {
-  let eventDateStr = $("body").data("event-date");
-  let eventTimeStr = $("body").data("event-time") || "00:00";
+  let eventDateStr = $("#event-data").data("event-date");
+  let eventTimeStr = $("#event-data").data("event-time");
 
   // Valor padrão
   const defaultDateStr = "2023-01-01";

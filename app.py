@@ -821,6 +821,7 @@ def couple_page(page_url):
     qr_code_path = f"https://{bucket_name}.s3.amazonaws.com/{qr_code_key}"
 
     # Renderiza a página com as informações calculadas
+
     return render_template(
         "couple_page.html",
         has_video=has_video,
