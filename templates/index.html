@@ -2,6 +2,8 @@
 <html lang="pt">
   <head>
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
+    <!-- No <head> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link
       rel="stylesheet"
@@ -1566,7 +1568,12 @@
         const url = input?.value?.trim();
 
         if (!url) {
-          alert("Por favor, insira o link do YouTube acima.");
+          Swal.fire({
+            icon: "warning",
+            title: "URL ausente",
+            text: "Por favor, insira a URL do YouTube Video acima.",
+            confirmButtonText: "OK",
+          });
           return;
         }
 

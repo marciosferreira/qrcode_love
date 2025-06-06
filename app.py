@@ -293,7 +293,7 @@ def send_email_with_qr_attachment(
 def send_email(to_address, subject, body):
     client = boto3.client("ses", region_name="us-east-1")  # Substitua pela sua região
     response = client.send_email(
-        Source="contato@qrcodelove.me",  # Substitua pelo seu e-mail
+        Source="meueventoespecial.com.br",  # Substitua pelo seu e-mail
         Destination={
             "ToAddresses": [to_address],
         },
