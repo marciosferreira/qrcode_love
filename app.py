@@ -679,7 +679,7 @@ def create_couple_page():
         email_body = f"""
         Olá {name1} e {name2},<br><br>
         Sua página foi criada com sucesso e estará ativa por 1 hora pra você testar à vontade! Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
-        Para estender para 1 mês e ter tempo psuficiente para preparar sua surpesa, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
+        Para estender para 1 mês e ter tempo suficiente para preparar sua surpesa, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
         Seu QR Code está anexado neste e-mail.<br><br>
         Se quiser deletar sua página, acesse o link abaixo e insira seu e-mail e o código da página: {unique_code}<br>
         <a href='https://www.meueventoespecial.com.br/deletar'>https://www.meueventoespecial.com.br/deletar</a> <br>
