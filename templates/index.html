@@ -1169,6 +1169,22 @@
           padding: 40px 20px;
         }
       }
+
+      .qr-code-img {
+        width: 100%;
+        max-width: 180px; /* ajuste conforme desejado */
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .qr-code-caption {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
@@ -1504,7 +1520,7 @@
 
             <div id="carousel" class="carousel-container">
               <img
-                src="http://meueventoespecial.com.br/static/images/placeholder.png"
+                src="https://meueventoespecial.com.br/static/images/placeholder.png"
                 class="carousel-image active"
                 alt="Imagem inicial"
               />
@@ -1542,6 +1558,9 @@
               Mensagem opcional, um poema, etc., será exibida aqui
             </h3>
 
+            <br />
+            <br />
+
             <!-- Preview do vídeo -->
             <img
               id="previewGif"
@@ -1555,6 +1574,19 @@
             <!-- Campo oculto com o link do vídeo -->
             <input type="hidden" id="hiddenYoutubeLink" value="" />
             <div id="presentationEffectContainer"></div>
+
+            <br />
+            <br />
+            <br />
+
+            <div class="text-center">
+              <img
+                src="/static/images/TEk0Fa.png"
+                alt="QR Code"
+                class="qr-code-img"
+              />
+              <p class="qr-code-caption">QR Code da página</p>
+            </div>
           </section>
         </main>
       </div>
