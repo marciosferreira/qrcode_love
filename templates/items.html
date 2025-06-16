@@ -1,177 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Items List</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
       rel="stylesheet"
     />
     <style>
-        body {
-            font-family: "Roboto", sans-serif;
-            background: linear-gradient(to right, #f2994a, #f2c94c);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
+      body {
+        font-family: "Roboto", sans-serif;
+        background: linear-gradient(to right, #f2994a, #f2c94c);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
 
-        h2 {
-            text-align: center;
-            color: #333;
-            font-weight: 700;
-        }
+      h2 {
+        text-align: center;
+        color: #333;
+        font-weight: 700;
+      }
 
-        table {
-            width: 95%;
-            max-width: 1200px;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
+      table {
+        width: 95%;
+        max-width: 1200px;
+        margin: 20px auto;
+        border-collapse: collapse;
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+      }
 
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
+      th,
+      td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
 
-        th {
-            background-color: #f4f4f4;
-            color: #555;
-            font-weight: 700;
-        }
+      th {
+        background-color: #f4f4f4;
+        color: #555;
+        font-weight: 700;
+      }
 
-        tr:hover {
-            background-color: #f1f1f1;
-        }
+      tr:hover {
+        background-color: #f1f1f1;
+      }
 
-        .delete-btn, .open-btn {
-            color: white;
-            border: none;
-            padding: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
+      .delete-btn,
+      .open-btn {
+        color: white;
+        border: none;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
 
-        .delete-btn {
-            background-color: red;
-        }
+      .delete-btn {
+        background-color: red;
+      }
 
-        .delete-btn:hover {
-            background-color: darkred;
-        }
+      .delete-btn:hover {
+        background-color: darkred;
+      }
 
-        .open-btn {
-            background-color: #2d9cdb;
-        }
+      .open-btn {
+        background-color: #2d9cdb;
+      }
 
-        .open-btn:hover {
-            background-color: #1a7cb3;
-        }
+      .open-btn:hover {
+        background-color: #1a7cb3;
+      }
 
-        /* Estilo para mensagens flash */
-        ul {
-            padding: 0;
-            margin: 10px 0;
-            list-style-type: none;
-            text-align: center;
-        }
+      /* Estilo para mensagens flash */
+      ul {
+        padding: 0;
+        margin: 10px 0;
+        list-style-type: none;
+        text-align: center;
+      }
 
-        li {
-            background-color: #ff4c4c;
-            color: white;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
+      li {
+        background-color: #ff4c4c;
+        color: white;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+      }
 
-        a {
-            margin-top: 20px;
-            display: inline-block;
-            text-align: center;
-            color: #2d9cdb;
-            text-decoration: none;
-            font-weight: 700;
-        }
+      a {
+        margin-top: 20px;
+        display: inline-block;
+        text-align: center;
+        color: #2d9cdb;
+        text-decoration: none;
+        font-weight: 700;
+      }
 
-        a:hover {
-            text-decoration: underline;
-        }
+      a:hover {
+        text-decoration: underline;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h2>Lista de Itens do DynamoDB</h2>
 
     <!-- Mensagens flash -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
 
     <!-- Tabela de itens -->
     <table>
-        <tr>
-            <th>Email</th>
-            <th>URL da Página</th>
-            <th>Nome 1</th>
-            <th>Nome 2</th>
-            <th>Data do Evento</th>
-            <th>Hora do Evento</th>
-            <th>Descrição do Evento</th>
-            <th>Mensagem Opcional</th>
-            <th>Pago</th>
-            <th>Data de Criação</th>
-            <th>Video ID</th>
-            <th>Ação</th> <!-- Coluna para os botões de ações -->
-        </tr>
+      <tr>
+        <th>Email</th>
+        <th>URL da Página</th>
+        <th>Nome 1</th>
+        <th>Nome 2</th>
+        <th>Data do Evento</th>
+        <th>Hora do Evento</th>
+        <th>Descrição do Evento</th>
+        <th>Mensagem Opcional</th>
+        <th>Pago</th>
+        <th>Data de Criação</th>
+        <th>Video ID</th>
+        <th>Ação</th>
+        <!-- Coluna para os botões de ações -->
+      </tr>
 
-        {% for item in items %}
-        <tr>
-            <td>{{ item['email'] }}</td>
-            <td>{{ item['page_url'] }}</td>
-            <td>{{ item['name1'] }}</td>
-            <td>{{ item['name2'] }}</td>
-            <td>{{ item['event_date'] }}</td>
-            <td>{{ item['event_time'] }}</td>
-            <td>{{ item['event_description'] }}</td>
-            <td>{{ item['optional_message'] }}</td>
-            <td>{{ item['paid'] }}</td>
-            <td>{{ item['created_at'] }}</td>
-            <td>{{ item['video_id'] }}</td>
-            <td>
-                <!-- Botão de deletar com email e page_url -->
-                <form method="POST" action="{{ url_for('delete_item', email=item['email'], page_url=item['page_url']) }}" style="display:inline;">
-                    <button type="submit" class="delete-btn" onclick="return confirm('Tem certeza que deseja deletar este item?')">Excluir</button>
-                </form>
+      {% for item in items %}
+      <tr>
+        <td>{{ item['email'] }}</td>
+        <td>{{ item['page_url'] }}</td>
+        <td>{{ item['name1'] }}</td>
+        <td>{{ item['name2'] }}</td>
+        <td>{{ item['event_date'] }}</td>
+        <td>{{ item['event_time'] }}</td>
+        <td>{{ item['event_description'] }}</td>
+        <td>{{ item['optional_message'] }}</td>
+        <td>{{ item['paid'] }}</td>
+        <td>{{ item['created_at'] }}</td>
+        <td>{{ item['video_id'] }}</td>
+        <td>
+          <!-- Botão de deletar com email e page_url -->
+          <form
+            method="POST"
+            action="{{ url_for('delete_item', email=item['email'], page_url=item['page_url']) }}"
+            style="display: inline"
+          >
+            <button
+              type="submit"
+              class="delete-btn"
+              onclick="return confirm('Tem certeza que deseja deletar este item?')"
+            >
+              Excluir
+            </button>
+          </form>
 
-                <!-- Botão de abrir página -->
-                <a href="https://qrcodelove.me/couple_page/{{ item['page_url'] }}" target="_blank">
-                    <button type="button" class="open-btn">Abrir</button>
-                </a>
-<a href="{{ url_for('edit_user', email=item['email'], page_url=item['page_url']) }}">
-    <button type="button" class="open-btn">Editar</button>
-</a>
-
-            </td>
-        </tr>
-        {% endfor %}
-
+          <!-- Botão de abrir página -->
+          <a
+            href="https://meueventoespecial.com.br/couple_page/{{ item['page_url'] }}"
+            target="_blank"
+          >
+            <button type="button" class="open-btn">Abrir</button>
+          </a>
+          <a
+            href="{{ url_for('edit_user', email=item['email'], page_url=item['page_url']) }}"
+          >
+            <button type="button" class="open-btn">Editar</button>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
     </table>
     <a href="{{ url_for('logout') }}">Logout</a>
-</body>
+  </body>
 </html>
