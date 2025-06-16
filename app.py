@@ -293,7 +293,7 @@ def send_email_with_qr_attachment(
 def send_email(to_address, subject, body):
     client = boto3.client("ses", region_name="us-east-1")  # Substitua pela sua região
     response = client.send_email(
-        Source="meueventoespecial.com.br",  # Substitua pelo seu e-mail
+        Source="contato@meueventoespecial.com.br",  # Substitua pelo seu e-mail
         Destination={
             "ToAddresses": [to_address],
         },
@@ -689,8 +689,12 @@ def create_couple_page():
         """
         email_admin = "marciosferreira@yahoo.com.br"
         # Enviar e-mail admin
+        print('first')
         send_email(email_admin, email_subject, email_body)
         # envia email cliente com qrcode
+
+        print("email")
+        print(email)
         response = send_email_with_qr_attachment(
             email, email_subject, email_body, qr_image_bytes, filename="qrcode.png"
         )
