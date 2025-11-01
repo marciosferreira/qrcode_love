@@ -734,7 +734,14 @@ def index():
     # images = [f'{i}.png' for i in range(1, 4) if os.path.exists(os.path.join(image_folder, f'{i}.png'))]
     # print(images)
     # image_exists = bool(images)
-    return render_template("index.html")
+    # SEO: canonical e og:image dinâmicos
+    canonical_url = request.url_root.rstrip("/")
+    og_image_url = url_for(
+        "static",
+        filename="images/logo_qrcode_heart_transparent.png",
+        _external=True,
+    )
+    return render_template("index.html", canonical_url=canonical_url, og_image_url=og_image_url)
 
 
 import os
@@ -826,6 +833,24 @@ def couple_page(page_url):
 
     # Renderiza a página com as informações calculadas
 
+    # SEO: canonical, og:image e meta description dinâmicos
+    canonical_url = url_for("couple_page", page_url=page_url, _external=True)
+
+    if image_exists and images:
+        # Usa a primeira imagem do S3 como imagem OG
+        og_image_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{images[0]}"
+    else:
+        og_image_url = url_for(
+            "static",
+            filename="images/logo_qrcode_heart_transparent.png",
+            _external=True,
+        )
+
+    meta_description = (
+        f"Homenagem: {couple['name1']} e {couple['name2']} — "
+        f"{couple.get('event_description', 'Celebre momentos especiais com fotos, música e QRCode.')}"
+    )
+
     return render_template(
         "couple_page.html",
         has_video=has_video,
@@ -841,7 +866,59 @@ def couple_page(page_url):
         images=images,
         image_exists=image_exists,
         show_payment_link=show_payment_link,
+        canonical_url=canonical_url,
+        og_image_url=og_image_url,
+        meta_description=meta_description,
     )
+
+@app.route("/robots.txt")
+def robots_txt():
+    sitemap_url = url_for("sitemap_xml", _external=True)
+    content = f"User-agent: *\nAllow: /\nSitemap: {sitemap_url}\n"
+    return content, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    # URL base
+    urls = []
+    # Home
+    urls.append({
+        "loc": url_for("index", _external=True),
+        "changefreq": "weekly",
+        "priority": "0.8",
+    })
+
+    try:
+        # Lista páginas de casal (pode ser ajustado para usar index secundário)
+        response = table.scan()
+        items = response.get("Items", [])
+        for item in items:
+            page_url = item.get("page_url")
+            if not page_url:
+                continue
+            urls.append({
+                "loc": url_for("couple_page", page_url=page_url, _external=True),
+                "changefreq": "monthly",
+                "priority": "0.6",
+            })
+    except Exception as e:
+        # Em caso de erro, seguimos com apenas a home
+        pass
+
+    # Monta XML
+    xml_parts = [
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
+    ]
+    for u in urls:
+        xml_parts.append("  <url>")
+        xml_parts.append(f"    <loc>{u['loc']}</loc>")
+        xml_parts.append(f"    <changefreq>{u['changefreq']}</changefreq>")
+        xml_parts.append(f"    <priority>{u['priority']}</priority>")
+        xml_parts.append("  </url>")
+    xml_parts.append("</urlset>")
+    xml = "\n".join(xml_parts)
+    return xml, 200, {"Content-Type": "application/xml; charset=utf-8"}
 
 
 import os
