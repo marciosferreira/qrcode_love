@@ -9,11 +9,15 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Página de Evento Personalizada</title>
-    <meta
-      name="description"
-      content="Celebre momentos especiais com fotos, contadores, música e QRCode."
-    />
+    <title>{{ couple.name1 }} e {{ couple.name2 }} - Meu Evento Especial</title>
+    <meta name="description" content="{{ meta_description }}" />
+    <link rel="canonical" href="{{ canonical_url }}" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="{{ couple.name1 }} e {{ couple.name2 }} - Meu Evento Especial" />
+    <meta property="og:description" content="{{ meta_description }}" />
+    <meta property="og:image" content="{{ og_image_url }}" />
+    <meta property="og:url" content="{{ canonical_url }}" />
+    <meta property="og:type" content="website" />
     <link
       rel="preload"
       href="/static/images/background.webp"
@@ -1134,21 +1138,6 @@
 
       document.addEventListener("DOMContentLoaded", () => {
         startEffectLoop(effectTypeFromBackend);
-      });
-    </script>
-    <!-- Script para esconder o preloader após 5s -->
-    <script>
-      const startTime = Date.now();
-
-      window.addEventListener("load", function () {
-        const now = Date.now();
-        const elapsed = now - startTime;
-        const delay = Math.max(5000 - elapsed, 0); // no mínimo 5s
-
-        setTimeout(() => {
-          document.getElementById("preloader").style.display = "none";
-          document.getElementById("conteudo-principal").style.display = "block";
-        }, delay);
       });
     </script>
   </body>
