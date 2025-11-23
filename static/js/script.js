@@ -1,237 +1,567 @@
 $(document).ready(function () {
-  let eventDateStr = $("#event-data").data("event-date");
-  let eventTimeStr = $("#event-data").data("event-time");
+  /* =========================================
+     GLOBAL VARIABLES & HELPER FUNCTIONS
+     ========================================= */
+  const $eventData = $("#event-data");
+  const $counterContainer = $("#meu-contador");
 
-  // Valor padrão
-  const defaultDateStr = "2023-01-01";
-  const defaultTimeStr = "00:00";
+  // Initial Data
+  let eventDateStr = $eventData.data("event-date");
+  let eventTimeStr = $eventData.data("event-time");
+  let counterMode = $eventData.data("counter-mode") || "since";
 
-  // Usa data do backend se existir, senão usa valor padrão
-  let usedDateStr = eventDateStr || defaultDateStr;
-  let usedTimeStr = eventTimeStr || defaultTimeStr;
+  // Default to current date if not provided (for preview)
+  if (!eventDateStr) {
+    const now = new Date();
+    eventDateStr = now.toISOString().split('T')[0];
+    eventTimeStr = "00:00";
+  }
 
-  let eventDate = new Date(`${usedDateStr}T${usedTimeStr}:00`);
-
-  console.log("Data do backend:", eventDateStr);
-  console.log("Hora do backend:", eventTimeStr);
-  console.log("Data final construída:", `${usedDateStr}T${usedTimeStr}:00`);
-  console.log("Objeto Date:", eventDate);
-
-  $("#event_description").on("change", function () {
-    const selectedValue = $(this).val();
-    $("#event_description_text").text("desde que " + selectedValue);
-  });
-
-  $("#message").on("input", function () {
-    $("#optional_message_text").text(
-      $(this).val() || "Mensagem opcional será exibida aqui"
-    );
-  });
+  let eventDate = new Date(`${eventDateStr}T${eventTimeStr}:00`);
 
   function getManausTime() {
     let now = new Date();
     let options = {
       timeZone: "America/Manaus",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
+      year: "numeric", month: "numeric", day: "numeric",
+      hour: "numeric", minute: "numeric", second: "numeric",
       hour12: false,
     };
     let formatter = new Intl.DateTimeFormat("en-US", options);
     let parts = formatter.formatToParts(now);
 
-    let year = parts.find((part) => part.type === "year").value;
-    let month = parts.find((part) => part.type === "month").value - 1;
-    let day = parts.find((part) => part.type === "day").value;
-    let hour = parts.find((part) => part.type === "hour").value;
-    let minute = parts.find((part) => part.type === "minute").value;
-    let second = parts.find((part) => part.type === "second").value;
+    let year = parts.find((p) => p.type === "year").value;
+    let month = parts.find((p) => p.type === "month").value - 1;
+    let day = parts.find((p) => p.type === "day").value;
+    let hour = parts.find((p) => p.type === "hour").value;
+    let minute = parts.find((p) => p.type === "minute").value;
+    let second = parts.find((p) => p.type === "second").value;
 
     return new Date(year, month, day, hour, minute, second);
   }
 
+  /* =========================================
+     COUNTER LOGIC
+     ========================================= */
   function updateCounter() {
-    var currentDate = getManausTime();
-    var timeDiff = currentDate.getTime() - eventDate.getTime();
+    const currentDate = getManausTime();
+    let timeDiff;
 
-    if (timeDiff < 0) {
-      timeDiff = Math.abs(timeDiff);
-    }
+    // Re-read mode from DOM in case it changed (preview)
+    counterMode = $eventData.data("counter-mode") || "since";
 
-    var seconds = Math.floor(timeDiff / 1000);
-    var minutes = Math.floor(seconds / 60);
-    var hours = Math.floor(minutes / 60);
-    var days = Math.floor(hours / 24);
-    var months = Math.floor(days / 30);
-    var years = Math.floor(months / 12);
-
-    months %= 12;
-    days %= 30;
-    hours %= 24;
-    minutes %= 60;
-    seconds %= 60;
-
-    var result = "";
-
-    if (years > 0) {
-      result += `<div class="time-unit-container"><div class="time-unit">${years}</div><div class="label">${
-        years == 1 ? "ano" : "anos"
-      }</div></div>`;
-    }
-    if (months > 0) {
-      result += `<div class="time-unit-container"><div class="time-unit">${months}</div><div class="label">${
-        months == 1 ? "mês" : "meses"
-      }</div></div>`;
-    }
-    if (days > 0) {
-      result += `<div class="time-unit-container"><div class="time-unit">${days}</div><div class="label">${
-        days == 1 ? "dia" : "dias"
-      }</div></div>`;
-    }
-    if (hours > 0) {
-      result += `<div class="time-unit-container"><div class="time-unit">${hours}</div><div class="label">${
-        hours == 1 ? "hora" : "horas"
-      }</div></div>`;
-    }
-    if (minutes > 0) {
-      result += `<div class="time-unit-container"><div class="time-unit">${minutes}</div><div class="label">${
-        minutes == 1 ? "minuto" : "minutos"
-      }</div></div>`;
-    }
-    result += `<div class="time-unit-container"><div class="time-unit">${seconds}</div><div class="label">${
-      seconds == 1 ? "segundo" : "segundos"
-    }</div></div>`;
-
-    const counterElement = document.getElementById("meu-contador");
-    if (counterElement) {
-      counterElement.innerHTML = result;
-    }
-  }
-
-  // Initialize counter immediately
-  updateCounter();
-  setInterval(updateCounter, 1000);
-
-  $("#event_date").on("change", function () {
-    let selectedDate = $(this).val();
-    let selectedTime = $("#event_time").val() || "00:00";
-    if (selectedDate) {
-      eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
-      updateCounter();
-    }
-  });
-
-  $("#event_time").on("change", function () {
-    let selectedTime = $(this).val();
-    let selectedDate = $("#event_date").val() || "2023-01-01";
-    if (selectedTime) {
-      eventDate = new Date(`${selectedDate}T${selectedTime}:00`);
-      updateCounter();
-    }
-  });
-
-  // Carousel functionality
-  let carouselInterval;
-
-  function restartCarousel() {
-    if (carouselInterval) clearInterval(carouselInterval);
-
-    let currentIndex = 0;
-    const carouselImages = document.querySelectorAll(
-      "#carousel .carousel-image"
-    );
-
-    carouselImages.forEach((img, i) => {
-      img.classList.remove("active");
-      if (i === 0) img.classList.add("active");
-    });
-
-    if (carouselImages.length > 1) {
-      carouselInterval = setInterval(() => {
-        carouselImages[currentIndex].classList.remove("active");
-        currentIndex = (currentIndex + 1) % carouselImages.length;
-        carouselImages[currentIndex].classList.add("active");
-      }, 3000);
-    }
-  }
-
-  // Handle image upload
-  const imagesInput = document.getElementById("images");
-  const carousel = document.getElementById("carousel");
-
-  imagesInput.addEventListener("change", function () {
-    const files = imagesInput.files;
-    const total = files.length;
-
-    // Remove imagens antigas
-    carousel.querySelectorAll(".carousel-image").forEach((img) => img.remove());
-
-    // Se não houver imagens, volta o placeholder
-    if (total === 0) {
-      const placeholder = document.createElement("img");
-      placeholder.src = "/static/images/placeholder.png";
-      placeholder.className = "carousel-image active";
-      placeholder.alt = "Imagem inicial";
-      carousel.appendChild(placeholder);
-      restartCarousel();
+    // Caso incoerente: modo "Desde" com data futura → mostrar mensagem e não contar
+    if (counterMode === "since" && currentDate.getTime() < eventDate.getTime()) {
+      const $prefix = $("#counter_prefix_text");
+      if ($prefix.length) $prefix.text("Ainda não começou:");
+      $counterContainer.html('<div class="glass-card" style="padding: 1rem;"><h3 style="margin:0;">Evento ainda não chegou</h3></div>');
       return;
     }
 
-    let loadedCount = 0;
-
-    for (let i = 0; i < total; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-
-      reader.onload = function (e) {
-        const newImage = document.createElement("img");
-        newImage.src = e.target.result;
-        newImage.className = "carousel-image";
-        if (i === 0) newImage.classList.add("active");
-
-        carousel.appendChild(newImage);
-        loadedCount++;
-
-        if (loadedCount === total) {
-          // Garante que o container de efeito seja o último (z-index alto)
-          const effect = document.getElementById("presentationEffectContainer");
-          if (effect && effect.parentNode !== carousel) {
-            carousel.appendChild(effect);
-          }
-
-          restartCarousel();
-        }
-      };
-
-      reader.readAsDataURL(file);
+    if (counterMode === "until") {
+      timeDiff = eventDate.getTime() - currentDate.getTime();
+    } else {
+      timeDiff = currentDate.getTime() - eventDate.getTime();
     }
-  });
 
-  // Função de rotação automática do carrossel
-  function restartCarousel() {
-    const images = document.querySelectorAll("#carousel .carousel-image");
-    let index = 0;
+    // Countdown finished
+    if (counterMode === "until" && timeDiff <= 0) {
+      $counterContainer.html('<div class="glass-card" style="padding: 1rem;"><h3 style="margin:0;">❤️ O evento chegou! ❤️</h3></div>');
+      return;
+    }
 
-    // Resetar visibilidade
-    images.forEach((img, i) => {
-      img.classList.remove("active");
-      if (i === 0) img.classList.add("active");
-    });
+    if (timeDiff < 0) timeDiff = Math.abs(timeDiff);
 
-    if (images.length < 2) return;
+    const seconds = Math.floor(timeDiff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(months / 12);
 
-    clearInterval(window._carouselInterval);
+    const dYears = years;
+    const dMonths = months % 12;
+    const dDays = days % 30;
+    const dHours = hours % 24;
+    const dMinutes = minutes % 60;
+    const dSeconds = seconds % 60;
 
-    window._carouselInterval = setInterval(() => {
-      images[index].classList.remove("active");
-      index = (index + 1) % images.length;
-      images[index].classList.add("active");
+    // Helper to build HTML
+    const buildBox = (val, label) => `
+            <div class="time-box">
+                <span class="time-value">${val}</span>
+                <span class="time-label">${val === 1 ? label.slice(0, -1) : label}</span>
+            </div>
+        `;
+
+    let html = "";
+    if (dYears > 0) html += buildBox(dYears, "Anos");
+    if (dMonths > 0 || dYears > 0) html += buildBox(dMonths, "Meses");
+    html += buildBox(dDays, "Dias");
+    html += buildBox(dHours, "Horas");
+    html += buildBox(dMinutes, "Minutos");
+    html += buildBox(dSeconds, "Segundos");
+
+    $counterContainer.html(html);
+  }
+
+  // Start Timer
+  setInterval(updateCounter, 1000);
+  updateCounter();
+
+  /* =========================================
+     CAROUSEL LOGIC
+     ========================================= */
+  let carouselInterval;
+  function startCarousel() {
+    if (carouselInterval) clearInterval(carouselInterval);
+
+    carouselInterval = setInterval(() => {
+      const $images = $(".carousel-image");
+      if ($images.length <= 1) return;
+
+      const $active = $images.filter(".active");
+      let $next = $active.next("img");
+      if ($next.length === 0) $next = $images.first();
+
+      $active.removeClass("active").css("opacity", 0);
+      $next.addClass("active").css("opacity", 1);
     }, 3000);
   }
 
-  // Inicializa carrossel no carregamento
-  restartCarousel();
+  startCarousel();
+
+  /* =========================================
+     EFFECTS LOGIC
+     ========================================= */
+  const $effectContainer = $("#presentationEffectContainer");
+  let effectInterval;
+
+  function createIcon(type) {
+    const symbols = { hearts: "❤️", stars: "⭐", confetti: "🎉" };
+    const icon = $(`<div class="floating-icon">${symbols[type] || "❤️"}</div>`);
+
+    icon.css({
+      position: "absolute",
+      left: Math.random() * 100 + "%",
+      top: "100%",
+      fontSize: (Math.random() * 20 + 16) + "px",
+      opacity: Math.random() * 0.5 + 0.5,
+      color: "white",
+      transition: `top ${Math.random() * 2 + 3}s linear, opacity 3s ease-out`
+    });
+
+    $effectContainer.append(icon);
+
+    setTimeout(() => {
+      icon.css({ top: "-20%", opacity: 0 });
+    }, 50);
+
+    setTimeout(() => icon.remove(), 4000);
+  }
+
+  function startEffects() {
+    if (effectInterval) clearInterval(effectInterval);
+
+    const type = $("#imageEffectSelector").val() || $("#imageEffectSelector").attr("value");
+    if (!type || type === "none") return;
+
+    effectInterval = setInterval(() => {
+      createIcon(type);
+    }, 500);
+  }
+
+  $("#imageEffectSelector").on("change", startEffects);
+  startEffects();
+
+  /* =========================================
+     PREVIEW LOGIC (Index Page Only)
+     ========================================= */
+  if ($("#createForm").length) {
+    // Update Date/Time
+    $("#event_date, #event_time").on("change", function () {
+      const d = $("#event_date").val();
+      const t = $("#event_time").val();
+      if (d && t) {
+        eventDate = new Date(`${d}T${t}:00`);
+        updateCounter();
+      }
+    });
+
+    // Update Names
+    $("#name1, #name2").on("input", function () {
+      const n1 = $("#name1").val() || "Nome 1";
+      const n2 = $("#name2").val();
+
+      $("#couple_name1").text(n1);
+      if (n2) {
+        $("#couple_name2").text(n2).show();
+        $("#e_comercial").show();
+      } else {
+        $("#couple_name2").hide();
+        $("#e_comercial").hide();
+      }
+    });
+
+    // Event Options
+    const eventOptions = {
+      since: {
+        "Relacionamentos amorosos 💑": [
+          { value: "se casaram", singular: "se casou", plural: "se casaram" },
+          { value: "se conheceram", singular: "conheceu alguém especial", plural: "se conheceram" },
+          { value: "começaram a namorar", singular: "começou a namorar", plural: "começaram a namorar" },
+          { value: "noivaram", singular: "noivou", plural: "noivaram" },
+          { value: "deram o primeiro beijo", singular: "deu o primeiro beijo", plural: "deram o primeiro beijo" },
+          { value: "foram morar juntos", singular: "foi morar junto", plural: "foram morar juntos" }
+        ],
+        "Família e Amigos 👨‍👩‍👧‍👦": [
+          { value: "se tornaram amigos", singular: "fez um novo amigo", plural: "se tornaram amigos" },
+          { value: "se reencontraram", singular: "reencontrou alguém", plural: "se reencontraram" },
+          { value: "a família aumentou", singular: "a família aumentou", plural: "a família aumentou" }
+        ],
+        "Conquistas Pessoais 🏆": [
+          { value: "nasceu", singular: "nasceu", plural: "nasceram" },
+          { value: "se formou", singular: "se formou", plural: "se formaram" },
+          { value: "começou no novo emprego", singular: "começou no novo emprego", plural: "começaram no novo emprego" },
+          { value: "realizou um sonho", singular: "realizou um sonho", plural: "realizaram um sonho" },
+          { value: "mudou de cidade", singular: "mudou de cidade", plural: "mudaram de cidade" }
+        ]
+      },
+      until: {
+        "Relacionamentos amorosos 💑": [
+          { value: "se casarem", singular: "se casar", plural: "se casarem" },
+          { value: "noivarem", singular: "noivar", plural: "noivarem" },
+          { value: "morarem juntos", singular: "morar junto", plural: "morarem juntos" },
+          { value: "a lua de mel", singular: "a lua de mel", plural: "a lua de mel" },
+          { value: "renovarem os votos", singular: "renovar os votos", plural: "renovarem os votos" }
+        ],
+        "Família e Amigos 👨‍👩‍👧‍👦": [
+          { value: "se reencontrarem", singular: "se reencontrar", plural: "se reencontrarem" },
+          { value: "o nascimento do bebê", singular: "o nascimento do bebê", plural: "o nascimento do bebê" },
+          { value: "a festa de 15 anos", singular: "a festa de 15 anos", plural: "a festa de 15 anos" }
+        ],
+        "Conquistas e Planos 🚀": [
+          { value: "a formatura", singular: "a formatura", plural: "a formatura" },
+          { value: "a viagem dos sonhos", singular: "a viagem dos sonhos", plural: "a viagem dos sonhos" },
+          { value: "a aposentadoria", singular: "a aposentadoria", plural: "a aposentadoria" },
+          { value: "a mudança de casa", singular: "a mudança de casa", plural: "a mudança de casa" },
+          { value: "realizar um sonho", singular: "realizar um sonho", plural: "realizarem um sonho" }
+        ]
+      }
+    };
+
+    function updateEventSelectOptions(mode) {
+      const $select = $("#eventSelect");
+      const currentVal = $select.val();
+      const hasSecondName = $("#name2").val().trim().length > 0;
+      $select.empty();
+
+      const groups = eventOptions[mode];
+      if (groups) {
+        for (const [groupLabel, options] of Object.entries(groups)) {
+          const $optgroup = $("<optgroup>").attr("label", groupLabel);
+          options.forEach(opt => {
+            const text = hasSecondName ? opt.plural : opt.singular;
+            $("<option>").val(opt.value).text(text).appendTo($optgroup);
+          });
+          $select.append($optgroup);
+        }
+      }
+
+      if (currentVal) {
+        $select.val(currentVal);
+      }
+    }
+
+    function updateDescriptionAndMode() {
+      const mode = $("input[name='counter_mode']:checked").val();
+      const useCustom = $("#customPhraseToggle").is(":checked");
+      const customText = $("#customPhraseInput").val();
+      const selectText = $("#eventSelect").val();
+
+      $eventData.data("counter-mode", mode);
+      $("#counter_prefix_text").text(mode === "until" ? "Faltam:" : "Já se passaram:");
+
+      const prefix = mode === "until" ? "para " : "desde que ";
+      const mainText = useCustom && customText ? customText : selectText;
+      $("#event_description_text").text(prefix + mainText);
+
+      if (useCustom) {
+        $("#customPhraseInput").removeClass("d-none");
+        $("#eventSelect").addClass("d-none");
+        $("#descriptionMode").val("custom");
+      } else {
+        $("#customPhraseInput").addClass("d-none");
+        $("#eventSelect").removeClass("d-none");
+        $("#descriptionMode").val("select");
+      }
+
+      updateCounter();
+    }
+
+    $("input[name='counter_mode']").on("change", function () {
+      const mode = $(this).val();
+      updateEventSelectOptions(mode);
+      updateDescriptionAndMode();
+    });
+
+    $("#name2").on("input", function () {
+      const mode = $("input[name='counter_mode']:checked").val();
+      updateEventSelectOptions(mode);
+      updateDescriptionAndMode();
+    });
+
+    $("#customPhraseToggle, #eventSelect, #customPhraseInput").on("change input", updateDescriptionAndMode);
+
+    $("#message").on("input", function () {
+      const msg = $(this).val();
+      $("#optional_message_text").text(msg || "Sua mensagem aparecerá aqui...");
+    });
+
+    // Validação de modo/data na submissão
+    $("#createForm").on("submit", function (e) {
+      const d = $("#event_date").val();
+      const t = $("#event_time").val();
+      const mode = $("input[name='counter_mode']:checked").val();
+
+      if (!d || !t || !mode) return; // Campos obrigatórios já cobrem ausência
+
+      // Validação simples usando o horário local do navegador
+      const eventMs = new Date(`${d}T${t}:00`).getTime();
+      const nowMs = Date.now();
+
+      if (mode === "since" && eventMs > nowMs) {
+        e.preventDefault();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Evento ainda não chegou',
+            text: "Para 'Tempo desde...', escolha uma data que já passou ou mude para 'Contagem para...'.",
+            confirmButtonText: 'Entendi'
+          });
+        } else {
+          alert("Para 'Tempo desde...', escolha uma data que já passou ou mude para 'Contagem para...'.");
+        }
+      }
+
+      if (mode === "until" && eventMs <= nowMs) {
+        e.preventDefault();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'error',
+            title: 'O evento já chegou',
+            text: "Para 'Contagem para...', escolha uma data futura ou mude para 'Tempo desde...'.",
+            confirmButtonText: 'Entendi'
+          });
+        } else {
+          alert("Para 'Contagem para...', escolha uma data futura ou mude para 'Tempo desde...'.");
+        }
+      }
+    });
+
+    // Photo Adjustment
+    let currentAdjustments = {};
+    let isDragging = false;
+    let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotate = 0;
+    let activeImageIndex = 0;
+
+    function updateEditButtonVisibility() {
+      if ($(".carousel-image").length > 0) {
+        $("#editPhotoBtn").fadeIn();
+      } else {
+        $("#editPhotoBtn").hide();
+      }
+    }
+
+    $("#images").on("change", function () {
+      const files = this.files;
+      const $carousel = $("#carousel");
+      $carousel.find("img").remove();
+      currentAdjustments = {};
+      $("#imageAdjustments").val("");
+
+      if (files.length === 0) {
+        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
+        updateEditButtonVisibility();
+        return;
+      }
+
+      let loadedCount = 0;
+      const totalFiles = files.length;
+
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const activeClass = index === 0 ? "active" : "";
+          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${index}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${index === 0 ? 1 : 0}; transition: opacity 1s;">`);
+          $carousel.prepend(img);
+
+          loadedCount++;
+          if (loadedCount === totalFiles) {
+            startCarousel();
+            updateEditButtonVisibility();
+          }
+        }
+        reader.readAsDataURL(file);
+      });
+    });
+
+    $("#editPhotoBtn").on("click", function () {
+      if (carouselInterval) clearInterval(carouselInterval);
+
+      const $activeImg = $(".carousel-image.active");
+      if ($activeImg.length === 0) return;
+
+      activeImageIndex = $activeImg.data("index");
+      if (activeImageIndex === undefined) activeImageIndex = 0;
+
+      const src = $activeImg.attr("src");
+      $("#adjustmentImage").attr("src", src);
+
+      const adj = currentAdjustments[activeImageIndex] || { x: 0, y: 0, scale: 1, rotate: 0 };
+      currentX = adj.x;
+      currentY = adj.y;
+      currentScale = adj.scale;
+      currentRotate = adj.rotate || 0;
+
+      $("#zoomSlider").val(currentScale);
+      $("#rotateSlider").val(currentRotate);
+      updateModalImageTransform();
+
+      $("#photoAdjustmentModal").fadeIn();
+    });
+
+    function updateModalImageTransform() {
+      $("#adjustmentImage").css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotate}deg)`);
+    }
+
+    $("#zoomSlider").on("input", function () {
+      currentScale = parseFloat($(this).val());
+      updateModalImageTransform();
+    });
+
+    $("#rotateSlider").on("input", function () {
+      currentRotate = parseInt($(this).val(), 10);
+      updateModalImageTransform();
+    });
+
+    const $container = $("#adjustmentContainer");
+
+    $container.on("mousedown", function (e) {
+      isDragging = true;
+      startX = e.clientX - currentX;
+      startY = e.clientY - currentY;
+      $(this).css("cursor", "grabbing");
+    });
+
+    $(document).on("mousemove", function (e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      currentX = e.clientX - startX;
+      currentY = e.clientY - startY;
+      updateModalImageTransform();
+    });
+
+    $(document).on("mouseup", function () {
+      if (isDragging) {
+        isDragging = false;
+        $container.css("cursor", "grab");
+      }
+    });
+
+    $("#saveAdjustmentBtn").on("click", function () {
+      currentAdjustments[activeImageIndex] = {
+        x: currentX,
+        y: currentY,
+        scale: currentScale,
+        rotate: currentRotate
+      };
+
+      const $img = $(`.carousel-image[data-index='${activeImageIndex}']`);
+      $img.css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotate}deg)`);
+
+      $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
+
+      $("#photoAdjustmentModal").fadeOut();
+      startCarousel();
+    });
+
+    $("#cancelAdjustmentBtn").on("click", function () {
+      $("#photoAdjustmentModal").fadeOut();
+      startCarousel();
+    });
+
+    // Background Preview
+    $("#backgroundSelector").on("change", function () {
+      const bg = $(this).val();
+      // Remove qualquer classe de tema previamente aplicada (gradientes e texturas)
+      $("body").removeClass((i, c) => (c.match(/(^|\s)(gradient|texture)_\S+/g) || []).join(' '));
+      if (bg) $("body").addClass(bg);
+    });
+
+    // YouTube Preview
+    function extractYouTubeId(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    $("#youtubeLink").on("input", function () {
+      const url = $(this).val();
+      const videoId = extractYouTubeId(url);
+      const $videoContainer = $("#videoPreviewContainer");
+
+      $videoContainer.empty();
+
+      if (videoId) {
+        const $cover = $(`
+          <div class="video-cover" style="
+              width: 100%; 
+              height: 300px; 
+              background: linear-gradient(135deg, #1a1a1a, #2c2c2c); 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center; 
+              cursor: pointer; 
+              position: relative;
+          ">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🎁</div>
+            <h4 style="color: white; margin-bottom: 0.5rem;">Vídeo Surpresa</h4>
+            <p style="color: #aaa; font-size: 0.9rem;">Clique para assistir (com som) 🔊</p>
+            <div style="
+                position: absolute; 
+                top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(255,255,255,0.05); 
+                opacity: 0; 
+                transition: opacity 0.3s;
+            "></div>
+          </div>
+        `);
+
+        $cover.hover(
+          function () { $(this).find("div:last-child").css("opacity", 1); },
+          function () { $(this).find("div:last-child").css("opacity", 0); }
+        );
+
+        $cover.on("click", function () {
+          const iframe = $(`<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&loop=0" 
+                                  frameborder="0" 
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                  allowfullscreen
+                                  style="width: 100%; height: 300px; border: none;"></iframe>`);
+          $videoContainer.empty().append(iframe);
+        });
+
+        $videoContainer.append($cover).show();
+      } else {
+        $videoContainer.hide();
+      }
+    });
+  }
+
+  $("#createForm").on("submit", function () {
+    const $btn = $("#submitBtn");
+    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Criando...');
+  });
 });
