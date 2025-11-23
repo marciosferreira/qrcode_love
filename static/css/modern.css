@@ -182,6 +182,17 @@ h2 {
     transition: all 0.3s ease;
 }
 
+/* Placeholder legível em fundos escuros */
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+    opacity: 1; /* garante visibilidade em alguns navegadores */
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+}
+
 .form-control:focus {
     outline: none;
     border-color: var(--accent-color);
@@ -307,6 +318,7 @@ select.form-control optgroup {
     font-weight: 800;
     display: block;
     line-height: 1;
+    color: #FFD54F;
 }
 
 .time-label {
