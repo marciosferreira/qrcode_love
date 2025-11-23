@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "{{ page_title }}",
+  "url": "{{ canonical_url }}",
+  "inLanguage": "pt-BR",
+  "description": "{{ meta_description }}",
+  "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": "{{ og_image_url }}"
+  }
+}
+</script>
+{% endblock %}
+
 {% block title %}{{ couple.name1 }} & {{ couple.name2 if couple.name2 else '' }}{% endblock %}
 
 {% block content %}
@@ -64,9 +81,7 @@
     {% endif %}
 
     {% if couple.video_id %}
-    <div id="videoContainer" style="margin-top: 3rem;">
-      <p style="margin-bottom: 1rem; color: var(--text-muted);">🎁 Temos uma surpresa para você!</p>
-    </div>
+    <div id="videoContainer" style="margin-top: 3rem;"></div>
     {% endif %}
 
     <div style="margin-top: 4rem;">
@@ -91,7 +106,7 @@
       const adj = JSON.parse($('#imageAdjustmentsData').val() || '{}');
       $('.carousel-image').each(function (i) {
         const a = adj[i.toString()];
-        if (a) $(this).css({ 'transform': `translate(${a.x}px, ${a.y}px) scale(${a.scale})`, 'transform-origin': 'center' });
+        if (a) $(this).css({ 'transform': `translate(${a.x}px, ${a.y}px) scale(${a.scale}) rotate(${(a.rotate || 0)}deg)`, 'transform-origin': 'center' });
       });
     } catch (e) { }
 
@@ -100,10 +115,10 @@
     if (vid) {
       $('#videoContainer').append(`
       <div class="video-cover" style="position:relative;padding-bottom:56.25%;background:linear-gradient(135deg,#1a1a1a,#2c2c2c);cursor:pointer;border-radius:16px;margin-top:1rem;">
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:2;">
-          <div style="font-size:3rem;margin-bottom:1rem;">🎁</div>
-          <h4 style="color:white;margin-bottom:0.5rem;">Vídeo Surpresa</h4>
-          <p style="color:#aaa;font-size:0.9rem;">Clique para assistir (com som) 🔊</p>
+        <div style="position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:2;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+          <div style="font-size:3rem;line-height:1;">🎁</div>
+          <h4 style="color:white;margin:0;line-height:1.1;">Vídeo Surpresa</h4>
+          <p style="color:#aaa;font-size:0.95rem;margin:0;line-height:1.1;">Clique para assistir (com som) 🔊</p>
         </div>
         <div class="hover-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.05);opacity:0;transition:opacity .3s;border-radius:16px;z-index:1;"></div>
       </div>

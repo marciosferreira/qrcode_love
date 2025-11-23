@@ -817,7 +817,16 @@ def index():
         filename="images/logo_qrcode_heart_transparent.png",
         _external=True,
     )
-    return render_template("index.html", canonical_url=canonical_url, og_image_url=og_image_url)
+    meta_description = (
+        "Crie páginas especiais com QR Code, fotos e vídeo para celebrar momentos únicos."
+    )
+    return render_template(
+        "index.html",
+        canonical_url=canonical_url,
+        og_image_url=og_image_url,
+        meta_description=meta_description,
+        page_title="Meu Evento Especial — Compartilhe com QR Code, Fotos e Vídeo",
+    )
 
 
 import os
@@ -926,9 +935,11 @@ def couple_page(page_url):
         )
 
     meta_description = (
-        f"Homenagem: {couple['name1']} e {couple['name2']} — "
+        f"Homenagem: {couple['name1']}" + (f" e {couple['name2']}" if couple.get('name2') else "") + " — "
         f"{couple.get('event_description', 'Celebre momentos especiais com fotos, música e QRCode.')}"
     )
+
+    page_title = couple["name1"] + (f" & {couple['name2']}" if couple.get("name2") else "")
 
     return render_template(
         "couple_page.html",
@@ -949,7 +960,9 @@ def couple_page(page_url):
         canonical_url=canonical_url,
         og_image_url=og_image_url,
         meta_description=meta_description,
+        page_title=page_title,
         image_adjustments=convert_decimal_to_float(couple.get("image_adjustments", {})),  # Passa ajustes para template
+        body_class=couple.get("background_type", ""),
     )
 
 @app.route("/robots.txt")
