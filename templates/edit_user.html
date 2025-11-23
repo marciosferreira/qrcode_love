@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +37,11 @@
             display: block;
         }
 
-        input[type="text"], input[type="email"], input[type="date"], input[type="time"], textarea {
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -78,6 +83,7 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Editar Usuário</h1>
     <form method="POST">
@@ -89,6 +95,14 @@
 
         <label for="event_description">Descrição do Evento:</label>
         <textarea id="event_description" name="event_description">{{ user['event_description'] }}</textarea>
+
+        <label for="counter_mode">Modo do Contador:</label>
+        <select id="counter_mode" name="counter_mode">
+            <option value="since" {% if user.get('counter_mode', 'since' )=='since' %}selected{% endif %}>Tempo desde
+                (Passado)</option>
+            <option value="until" {% if user.get('counter_mode')=='until' %}selected{% endif %}>Contagem regressiva
+                (Futuro)</option>
+        </select>
 
         <label for="event_date">Data do Evento:</label>
         <input type="date" id="event_date" name="event_date" value="{{ user['event_date'] }}">
@@ -120,4 +134,5 @@
 
     <a href="{{ url_for('list_dynamo_items') }}">Cancelar</a>
 </body>
+
 </html>

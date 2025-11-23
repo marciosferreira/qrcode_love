@@ -11,7 +11,7 @@ from flask_login import (
     current_user,
 )
 import io
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from urllib.parse import urlparse, parse_qs
 from werkzeug.utils import secure_filename
 import os
@@ -30,27 +30,14 @@ from flask import (
     send_from_directory,
     abort,
 )
-import sys
-
-# No início do seu arquivo app.py
 from dotenv import load_dotenv
 
-load_dotenv()  # carrega as variáveis do arquivo .env
-
-# Agora você pode acessá-las com os.getenv
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-
-# No início do arquivo, adicione esta linha às configurações
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-# import mercadopago
+load_dotenv()
 from datetime import datetime, timedelta
-from PIL import Image, ImageDraw, ImageFont
+import pytz
 from boto3.dynamodb.conditions import Key
 import random
 import string
-import os
-from datetime import datetime
-import pytz
 
 # Defina o fuso horário desejado
 timezone = pytz.timezone("America/Manaus")
@@ -58,19 +45,70 @@ timezone = pytz.timezone("America/Manaus")
 # Configurações iniciais
 app = Flask(__name__)
 
-region_name = ("us-east-1",)
+# Sanitização de HTML básico para mensagens (permite apenas poucas tags)
+from html import escape
+from html.parser import HTMLParser
+from decimal import Decimal
+
+ALLOWED_TAGS = {"b", "strong", "i", "em", "u", "br", "p", "ul", "ol", "li"}
+
+
+class SafeHTMLParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.result = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ALLOWED_TAGS:
+            if tag == "br":
+                self.result.append("<br>")
+            else:
+                self.result.append(f"<{tag}>")
+
+    def handle_endtag(self, tag):
+        if tag in ALLOWED_TAGS and tag != "br":
+            self.result.append(f"</{tag}>")
+
+    def handle_data(self, data):
+        self.result.append(escape(data))
+
+
+def sanitize_html(html_text: str) -> str:
+    if not html_text:
+        return ""
+    parser = SafeHTMLParser()
+    parser.feed(html_text)
+    return "".join(parser.result)
+
+# Utilitário: converter números para Decimal (recursivo) para DynamoDB
+def convert_numbers_to_decimal(obj):
+    if isinstance(obj, dict):
+        return {k: convert_numbers_to_decimal(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [convert_numbers_to_decimal(v) for v in obj]
+    if isinstance(obj, float):
+        # Usa str para preservar valor exato
+        return Decimal(str(obj))
+    if isinstance(obj, int):
+        return Decimal(obj)
+    return obj
+
+# Utilitário: converter Decimal em float para JSON/template
+def convert_decimal_to_float(obj):
+    if isinstance(obj, dict):
+        return {k: convert_decimal_to_float(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [convert_decimal_to_float(v) for v in obj]
+    if isinstance(obj, Decimal):
+        # Converte para float para ser serializável no tojson
+        return float(obj)
+    return obj
+
+region_name = "us-east-1"
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-# print(aws_secret_access_key)
-# print(aws_access_key_id)
 
-# app.secret_key = 'sua_chave_seHGcreta_aqui'  # Troque por uma string aleatória e segura
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "uma_fchave_secreta_fixa")
-
-
-# Configure o SDK do Mercado Pago
-# production
-# mp = mercadopago.SDK("APP_USR-7788212792459286-100515-877d8d26d1cb62eb816d39854668fa8b-2022910974")  # teste
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "uma_chave_secreta_fixa")
 import stripe
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -126,8 +164,9 @@ def load_user(user_id):
 def add_cache_control(response):
     if request.path.startswith("/static/"):
         # Define o header Cache-Control para arquivos estáticos (como CSS, JS, imagens)
+        # Desabilitando cache para garantir que as alterações sejam refletidas
         response.headers["Cache-Control"] = (
-            "public, max-age=31536000"  # Cache por 1 ano
+            "no-cache, no-store, must-revalidate"
         )
     elif request.path == "/":
         # Define o header Cache-Control para a homepage, impedindo o cache
@@ -202,8 +241,9 @@ def edit_user(email, page_url):
             user["event_date"] = request.form["event_date"]
             user["event_time"] = request.form["event_time"]
             user["email"] = request.form["email"]
-            user["optional_message"] = request.form["optional_message"]
+            user["optional_message"] = sanitize_html(request.form.get("optional_message", ""))
             user["video_id"] = request.form["video_id"]
+            user["counter_mode"] = request.form.get("counter_mode", "since")
 
             # Obtenha a nova data e hora do formulário
             new_date = request.form["created_at"]  # 'YYYY-MM-DD'
@@ -258,7 +298,12 @@ def list_dynamo_items():
 def send_email_with_qr_attachment(
     to_address, subject, body, qr_image_bytes, filename="qrcode.png"
 ):
-    client = boto3.client("ses", region_name="us-east-1")
+    client = boto3.client(
+        "ses",
+        region_name="us-east-1",
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+    )
 
     # Cria a mensagem MIME
     msg = MIMEMultipart()
@@ -291,7 +336,12 @@ def send_email_with_qr_attachment(
 
 # Função para enviar e-mail
 def send_email(to_address, subject, body):
-    client = boto3.client("ses", region_name="us-east-1")  # Substitua pela sua região
+    client = boto3.client(
+        "ses",
+        region_name="us-east-1",
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+    )  # Substitua pela sua região
     response = client.send_email(
         Source="contato@meueventoespecial.com.br",  # Substitua pelo seu e-mail
         Destination={
@@ -309,17 +359,6 @@ def send_email(to_address, subject, body):
         },
     )
     return response
-
-
-from datetime import datetime
-
-from datetime import datetime, timedelta
-import pytz
-from flask import request, jsonify
-
-from datetime import datetime, timedelta
-import pytz
-from flask import request, jsonify
 
 
 @app.route("/delete_old_pages", methods=["GET", "POST"])
@@ -568,9 +607,11 @@ def compress_image(image, max_size=(1600, 1600), quality=80):
     output.seek(0)
     return output
 
-@app.route("/create", methods=["POST"])
+@app.route("/create", methods=["GET", "POST"])
 def create_couple_page():
     try:
+        if request.method == "GET":
+            return redirect(url_for("index"))
         # Capturando os valores do formulário
         name1 = request.form["name1"]
         name2 = request.form["name2"]
@@ -594,11 +635,44 @@ def create_couple_page():
 
         effect_type = request.form.get("effect_type", "none")
         background_type = request.form.get("background_type", "default")
+        counter_mode = request.form.get("counter_mode", "since")
 
-        optional_message = request.form.get(
-            "optional_message"
-        )  # Captura a mensagem opcional
+        # Validação: modo "Tempo desde..." não pode ter data futura
+        try:
+            event_dt_naive = datetime.strptime(f"{event_date} {event_time}", "%Y-%m-%d %H:%M")
+            event_dt = timezone.localize(event_dt_naive)
+            now_dt = datetime.now(timezone)
+            if counter_mode == "since" and event_dt > now_dt:
+                flash("Para o modo 'Tempo desde...', escolha uma data que já passou ou mude para 'Contagem para...'.")
+                return redirect(url_for("index"))
+        except Exception:
+            pass
+
+        # Validação: modo "Contagem para..." não pode ter data passada ou já chegada
+        try:
+            event_dt_naive = datetime.strptime(f"{event_date} {event_time}", "%Y-%m-%d %H:%M")
+            event_dt = timezone.localize(event_dt_naive)
+            now_dt = datetime.now(timezone)
+            if counter_mode == "until" and event_dt <= now_dt:
+                flash("Para o modo 'Contagem para...', escolha uma data futura ou mude para 'Tempo desde...'.")
+                return redirect(url_for("index"))
+        except Exception:
+            pass
+
+        optional_message = sanitize_html(request.form.get("optional_message", ""))
         youtubelink = request.form.get("youtubeLink")
+        
+        # Captura os ajustes de posição/zoom das fotos
+        image_adjustments = request.form.get("image_adjustments", "{}")
+        # Converte para dict se não estiver vazio
+        try:
+            import json
+            image_adjustments_dict = json.loads(image_adjustments) if image_adjustments else {}
+        except:
+            image_adjustments_dict = {}
+
+        # Converte números em Decimal para salvar no DynamoDB
+        image_adjustments_dict = convert_numbers_to_decimal(image_adjustments_dict)
 
         # Gera um código alfanumérico único para a URL da página
         unique_code = generate_unique_code()
@@ -665,6 +739,8 @@ def create_couple_page():
             "created_at": datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
             "video_id": video_id,
+            "counter_mode": counter_mode,
+            "image_adjustments": image_adjustments_dict,  # Adiciona ajustes de foto
         }
         table.put_item(Item=new_couple)
 
@@ -797,6 +873,9 @@ def couple_page(page_url):
 
     # Calcula o tempo desde o evento
     time_diff = now - event_datetime
+
+    # Define modo efetivo do contador baseado no tempo real
+    display_counter_mode = "since" if now >= event_datetime else "until"
     years = time_diff.days // 365
     months = (time_diff.days % 365) // 30
     days = (time_diff.days % 365) % 30
@@ -862,6 +941,7 @@ def couple_page(page_url):
         hours=hours,
         minutes=minutes,
         seconds=seconds,
+        display_counter_mode=display_counter_mode,
         qr_code_path=qr_code_path,
         images=images,
         image_exists=image_exists,
@@ -869,6 +949,7 @@ def couple_page(page_url):
         canonical_url=canonical_url,
         og_image_url=og_image_url,
         meta_description=meta_description,
+        image_adjustments=convert_decimal_to_float(couple.get("image_adjustments", {})),  # Passa ajustes para template
     )
 
 @app.route("/robots.txt")
