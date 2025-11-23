@@ -445,28 +445,78 @@ $(document).ready(function () {
       updateModalImageTransform();
     });
 
+    function normalizeAngle(angle) {
+      // Mantém ângulo entre -180 e 180
+      let a = ((angle + 180) % 360 + 360) % 360 - 180;
+      return a;
+    }
+
+    $("#rotateLeft90").on("click", function () {
+      currentRotate = normalizeAngle(currentRotate - 90);
+      $("#rotateSlider").val(currentRotate);
+      updateModalImageTransform();
+    });
+
+    $("#rotateRight90").on("click", function () {
+      currentRotate = normalizeAngle(currentRotate + 90);
+      $("#rotateSlider").val(currentRotate);
+      updateModalImageTransform();
+    });
+
     const $container = $("#adjustmentContainer");
 
-    $container.on("mousedown", function (e) {
+    function beginDrag(clientX, clientY) {
       isDragging = true;
-      startX = e.clientX - currentX;
-      startY = e.clientY - currentY;
+      startX = clientX - currentX;
+      startY = clientY - currentY;
+    }
+
+    function moveDrag(clientX, clientY) {
+      currentX = clientX - startX;
+      currentY = clientY - startY;
+      updateModalImageTransform();
+    }
+
+    function endDrag() {
+      isDragging = false;
+    }
+
+    // Mouse events (desktop)
+    $container.on("mousedown", function (e) {
+      beginDrag(e.clientX, e.clientY);
       $(this).css("cursor", "grabbing");
     });
 
     $(document).on("mousemove", function (e) {
       if (!isDragging) return;
       e.preventDefault();
-      currentX = e.clientX - startX;
-      currentY = e.clientY - startY;
-      updateModalImageTransform();
+      moveDrag(e.clientX, e.clientY);
     });
 
     $(document).on("mouseup", function () {
-      if (isDragging) {
-        isDragging = false;
-        $container.css("cursor", "grab");
-      }
+      if (!isDragging) return;
+      endDrag();
+      $container.css("cursor", "grab");
+    });
+
+    // Touch events (mobile)
+    $container.on("touchstart", function (e) {
+      const t = e.originalEvent.touches && e.originalEvent.touches[0];
+      if (!t) return;
+      beginDrag(t.clientX, t.clientY);
+    });
+
+    $(document).on("touchmove", function (e) {
+      if (!isDragging) return;
+      const t = e.originalEvent.touches && e.originalEvent.touches[0];
+      if (!t) return;
+      e.preventDefault();
+      moveDrag(t.clientX, t.clientY);
+    });
+
+    $(document).on("touchend touchcancel", function () {
+      if (!isDragging) return;
+      endDrag();
     });
 
     $("#saveAdjustmentBtn").on("click", function () {
