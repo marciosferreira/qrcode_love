@@ -277,13 +277,25 @@ $(document).ready(function () {
       const mode = $("input[name='counter_mode']:checked").val();
       const useCustom = $("#customPhraseToggle").is(":checked");
       const customText = $("#customPhraseInput").val();
-      const selectText = $("#eventSelect").val();
+      // Use o texto exibido da opção, que já respeita singular/plural
+      const selectText = $("#eventSelect option:selected").text();
+      const hasSecondName = $("#name2").val().trim().length > 0;
 
       $eventData.data("counter-mode", mode);
       $("#counter_prefix_text").text(mode === "until" ? "Faltam:" : "Já se passaram:");
 
       const prefix = mode === "until" ? "para " : "desde que ";
-      const mainText = useCustom && customText ? customText : selectText;
+      let mainText = useCustom && customText ? customText : selectText;
+
+      // Texto padrão quando nada foi selecionado/digitado
+      if (!mainText) {
+        if (mode === "until") {
+          mainText = hasSecondName ? "se casarem" : "se casar";
+        } else {
+          mainText = hasSecondName ? "se casaram" : "se casou";
+        }
+      }
+
       $("#event_description_text").text(prefix + mainText);
 
       if (useCustom) {
@@ -312,6 +324,20 @@ $(document).ready(function () {
     });
 
     $("#customPhraseToggle, #eventSelect, #customPhraseInput").on("change input", updateDescriptionAndMode);
+
+    // Atualiza opções e descrição ao digitar o primeiro nome (garante singular)
+    $("#name1").on("input", function () {
+      const mode = $("input[name='counter_mode']:checked").val();
+      updateEventSelectOptions(mode);
+      updateDescriptionAndMode();
+    });
+
+    // Inicializa opções e descrição na carga da página
+    (function initPreview() {
+      const mode = $("input[name='counter_mode']:checked").val();
+      updateEventSelectOptions(mode);
+      updateDescriptionAndMode();
+    })();
 
     $("#message").on("input", function () {
       const msg = $(this).val();
