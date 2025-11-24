@@ -98,7 +98,8 @@
   </div>
   {% endif %}
 
-  {% if couple.optional_message %}
+  {% set msg_clean = (couple.optional_message or '') | striptags | trim %}
+  {% if msg_clean %}
   <div class="section-card">
     <div class="section-title">Mensagem especial</div>
     <p style="font-style: italic; font-size: 1.2rem; white-space: pre-wrap;">{{ couple.optional_message | safe }}</p>
