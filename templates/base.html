@@ -5,29 +5,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Meu Evento Especial{% endblock %}</title>
-    
+
     <!-- SEO basics -->
-    <meta name="description" content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
-    {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+    <meta name="description"
+        content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
+    {% if canonical_url %}
+    <link rel="canonical" href="{{ canonical_url }}">{% endif %}
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-    
+
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Meu Evento Especial">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:title" content="{{ page_title|default('Meu Evento Especial') }}">
-    <meta property="og:description" content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
-    {% if og_image_url %}<meta property="og:image" content="{{ og_image_url }}">{% else %}
-    <meta property="og:image" content="{{ url_for('static', filename='images/logo_qrcode_heart_transparent.png', _external=True) }}">
+    <meta property="og:description"
+        content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
+    {% if og_image_url %}
+    <meta property="og:image" content="{{ og_image_url }}">{% else %}
+    <meta property="og:image"
+        content="{{ url_for('static', filename='images/logo_qrcode_heart_transparent.png', _external=True) }}">
     {% endif %}
-    {% if canonical_url %}<meta property="og:url" content="{{ canonical_url }}">{% endif %}
+    {% if canonical_url %}
+    <meta property="og:url" content="{{ canonical_url }}">{% endif %}
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ page_title|default('Meu Evento Especial') }}">
-    <meta name="twitter:description" content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
-    {% if og_image_url %}<meta name="twitter:image" content="{{ og_image_url }}">{% else %}
-    <meta name="twitter:image" content="{{ url_for('static', filename='images/logo_qrcode_heart_transparent.png', _external=True) }}">
+    <meta name="twitter:description"
+        content="{{ meta_description|default('Crie páginas especiais com fotos, vídeo e QR Code para celebrar momentos únicos.') }}">
+    {% if og_image_url %}
+    <meta name="twitter:image" content="{{ og_image_url }}">{% else %}
+    <meta name="twitter:image"
+        content="{{ url_for('static', filename='images/logo_qrcode_heart_transparent.png', _external=True) }}">
     {% endif %}
 
     <!-- Google Fonts -->
@@ -42,6 +51,8 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
 
     {% block head %}{% endblock %}
 </head>

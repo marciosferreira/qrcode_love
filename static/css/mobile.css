@@ -1,0 +1,285 @@
+/* ============================================
+   MOBILE.CSS - Mobile-First Optimizations
+   ============================================ */
+
+/* Mobile Base Adjustments */
+@media (max-width: 768px) {
+
+    /* Touch-Friendly Sizing */
+    .btn {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 14px 28px;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        min-height: 48px;
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+        padding: 14px 18px;
+    }
+
+    .btn-glass-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.4rem;
+    }
+
+    /* Typography Adjustments */
+    h1 {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    h2 {
+        font-size: 1.6rem;
+    }
+
+    h3 {
+        font-size: 1.3rem;
+    }
+
+    .special-text {
+        font-size: 1.8rem;
+    }
+
+    /* Layout Adjustments */
+    .main-content {
+        padding: 1rem;
+    }
+
+    .glass-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+        margin-bottom: 1.5rem;
+    }
+
+    .glass-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .logo-text {
+        font-size: 1rem;
+    }
+
+    .logo-img {
+        height: 32px;
+    }
+
+    /* Grid Adjustments */
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Counter Adjustments */
+    .counter-wrapper {
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+
+    .time-box {
+        min-width: 70px;
+        padding: 0.8rem 0.6rem;
+    }
+
+    .time-value {
+        font-size: 1.6rem;
+    }
+
+    .time-label {
+        font-size: 0.7rem;
+    }
+
+    /* Form Groups */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    /* Modal Adjustments */
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        padding: 1.5rem !important;
+        margin: 1rem;
+    }
+
+    #adjustmentContainer {
+        height: 400px !important;
+    }
+
+    /* Radio Groups */
+    .custom-radio-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .radio-label {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    /* Image Carousel */
+    #carousel {
+        height: 300px !important;
+    }
+
+    .carousel-container {
+        height: 300px !important;
+    }
+
+    /* Navigation Actions */
+    .nav-actions {
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem;
+    }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+
+    .special-text {
+        font-size: 1.5rem;
+    }
+
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    .glass-card {
+        padding: 1.25rem;
+        border-radius: 16px;
+    }
+
+    .time-box {
+        min-width: 60px;
+        padding: 0.6rem 0.4rem;
+    }
+
+    .time-value {
+        font-size: 1.4rem;
+    }
+
+    #carousel,
+    .carousel-container {
+        height: 250px !important;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Tablet Landscape */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .grid-2 {
+        gap: 1.25rem;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    #carousel,
+    .carousel-container {
+        height: 450px !important;
+    }
+}
+
+/* Touch Device Specific */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Enhance tap targets */
+    a,
+    button,
+    input,
+    select,
+    textarea {
+        -webkit-tap-highlight-color: rgba(255, 75, 139, 0.3);
+    }
+
+    /* Remove hover states on touch devices */
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-glass-icon:hover {
+        transform: none;
+    }
+
+    /* Active states instead */
+    .btn-primary:active {
+        transform: scale(0.98);
+    }
+
+    .btn-glass-icon:active {
+        transform: scale(1.05);
+    }
+}
+
+/* Horizontal Orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    .glass-header {
+        padding: 0.75rem 1.5rem;
+    }
+
+    #carousel,
+    .carousel-container {
+        height: 60vh !important;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* High DPI Screens */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+
+    /* Ensure crisp images */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Reduce Motion for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .orb {
+        animation: none !important;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+
+    /* Already dark by default, but can add specific adjustments */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.06);
+    }
+}

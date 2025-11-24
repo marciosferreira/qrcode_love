@@ -50,14 +50,6 @@ $(document).ready(function () {
     // Re-read mode from DOM in case it changed (preview)
     counterMode = $eventData.data("counter-mode") || "since";
 
-    // Caso incoerente: modo "Desde" com data futura → mostrar mensagem e não contar
-    if (counterMode === "since" && currentDate.getTime() < eventDate.getTime()) {
-      const $prefix = $("#counter_prefix_text");
-      if ($prefix.length) $prefix.text("Ainda não começou:");
-      $counterContainer.html('<div class="glass-card" style="padding: 1rem;"><h3 style="margin:0;">Evento ainda não chegou</h3></div>');
-      return;
-    }
-
     if (counterMode === "until") {
       timeDiff = eventDate.getTime() - currentDate.getTime();
     } else {
@@ -277,25 +269,13 @@ $(document).ready(function () {
       const mode = $("input[name='counter_mode']:checked").val();
       const useCustom = $("#customPhraseToggle").is(":checked");
       const customText = $("#customPhraseInput").val();
-      // Use o texto exibido da opção, que já respeita singular/plural
-      const selectText = $("#eventSelect option:selected").text();
-      const hasSecondName = $("#name2").val().trim().length > 0;
+      const selectText = $("#eventSelect").val();
 
       $eventData.data("counter-mode", mode);
       $("#counter_prefix_text").text(mode === "until" ? "Faltam:" : "Já se passaram:");
 
       const prefix = mode === "until" ? "para " : "desde que ";
-      let mainText = useCustom && customText ? customText : selectText;
-
-      // Texto padrão quando nada foi selecionado/digitado
-      if (!mainText) {
-        if (mode === "until") {
-          mainText = hasSecondName ? "se casarem" : "se casar";
-        } else {
-          mainText = hasSecondName ? "se casaram" : "se casou";
-        }
-      }
-
+      const mainText = useCustom && customText ? customText : selectText;
       $("#event_description_text").text(prefix + mainText);
 
       if (useCustom) {
@@ -325,70 +305,15 @@ $(document).ready(function () {
 
     $("#customPhraseToggle, #eventSelect, #customPhraseInput").on("change input", updateDescriptionAndMode);
 
-    // Atualiza opções e descrição ao digitar o primeiro nome (garante singular)
-    $("#name1").on("input", function () {
-      const mode = $("input[name='counter_mode']:checked").val();
-      updateEventSelectOptions(mode);
-      updateDescriptionAndMode();
-    });
-
-    // Inicializa opções e descrição na carga da página
-    (function initPreview() {
-      const mode = $("input[name='counter_mode']:checked").val();
-      updateEventSelectOptions(mode);
-      updateDescriptionAndMode();
-    })();
-
     $("#message").on("input", function () {
       const msg = $(this).val();
       $("#optional_message_text").text(msg || "Sua mensagem aparecerá aqui...");
     });
 
-    // Validação de modo/data na submissão
-    $("#createForm").on("submit", function (e) {
-      const d = $("#event_date").val();
-      const t = $("#event_time").val();
-      const mode = $("input[name='counter_mode']:checked").val();
-
-      if (!d || !t || !mode) return; // Campos obrigatórios já cobrem ausência
-
-      // Validação simples usando o horário local do navegador
-      const eventMs = new Date(`${d}T${t}:00`).getTime();
-      const nowMs = Date.now();
-
-      if (mode === "since" && eventMs > nowMs) {
-        e.preventDefault();
-        if (window.Swal) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Evento ainda não chegou',
-            text: "Para 'Tempo desde...', escolha uma data que já passou ou mude para 'Contagem para...'.",
-            confirmButtonText: 'Entendi'
-          });
-        } else {
-          alert("Para 'Tempo desde...', escolha uma data que já passou ou mude para 'Contagem para...'.");
-        }
-      }
-
-      if (mode === "until" && eventMs <= nowMs) {
-        e.preventDefault();
-        if (window.Swal) {
-          Swal.fire({
-            icon: 'error',
-            title: 'O evento já chegou',
-            text: "Para 'Contagem para...', escolha uma data futura ou mude para 'Tempo desde...'.",
-            confirmButtonText: 'Entendi'
-          });
-        } else {
-          alert("Para 'Contagem para...', escolha uma data futura ou mude para 'Tempo desde...'.");
-        }
-      }
-    });
-
     // Photo Adjustment
     let currentAdjustments = {};
     let isDragging = false;
-    let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotate = 0;
+    let startX, startY, currentX = 0, currentY = 0, currentScale = 1;
     let activeImageIndex = 0;
 
     function updateEditButtonVisibility() {
@@ -407,7 +332,7 @@ $(document).ready(function () {
       $("#imageAdjustments").val("");
 
       if (files.length === 0) {
-        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
+        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
         updateEditButtonVisibility();
         return;
       }
@@ -419,7 +344,7 @@ $(document).ready(function () {
         const reader = new FileReader();
         reader.onload = function (e) {
           const activeClass = index === 0 ? "active" : "";
-          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${index}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${index === 0 ? 1 : 0}; transition: opacity 1s;">`);
+          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${index}" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: ${index === 0 ? 1 : 0}; transition: opacity 1s;">`);
           $carousel.prepend(img);
 
           loadedCount++;
@@ -444,21 +369,19 @@ $(document).ready(function () {
       const src = $activeImg.attr("src");
       $("#adjustmentImage").attr("src", src);
 
-      const adj = currentAdjustments[activeImageIndex] || { x: 0, y: 0, scale: 1, rotate: 0 };
+      const adj = currentAdjustments[activeImageIndex] || { x: 0, y: 0, scale: 1 };
       currentX = adj.x;
       currentY = adj.y;
       currentScale = adj.scale;
-      currentRotate = adj.rotate || 0;
 
       $("#zoomSlider").val(currentScale);
-      $("#rotateSlider").val(currentRotate);
       updateModalImageTransform();
 
       $("#photoAdjustmentModal").fadeIn();
     });
 
     function updateModalImageTransform() {
-      $("#adjustmentImage").css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotate}deg)`);
+      $("#adjustmentImage").css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale})`);
     }
 
     $("#zoomSlider").on("input", function () {
@@ -466,95 +389,39 @@ $(document).ready(function () {
       updateModalImageTransform();
     });
 
-    $("#rotateSlider").on("input", function () {
-      currentRotate = parseInt($(this).val(), 10);
-      updateModalImageTransform();
-    });
-
-    function normalizeAngle(angle) {
-      // Mantém ângulo entre -180 e 180
-      let a = ((angle + 180) % 360 + 360) % 360 - 180;
-      return a;
-    }
-
-    $("#rotateLeft90").on("click", function () {
-      currentRotate = normalizeAngle(currentRotate - 90);
-      $("#rotateSlider").val(currentRotate);
-      updateModalImageTransform();
-    });
-
-    $("#rotateRight90").on("click", function () {
-      currentRotate = normalizeAngle(currentRotate + 90);
-      $("#rotateSlider").val(currentRotate);
-      updateModalImageTransform();
-    });
-
     const $container = $("#adjustmentContainer");
 
-    function beginDrag(clientX, clientY) {
-      isDragging = true;
-      startX = clientX - currentX;
-      startY = clientY - currentY;
-    }
-
-    function moveDrag(clientX, clientY) {
-      currentX = clientX - startX;
-      currentY = clientY - startY;
-      updateModalImageTransform();
-    }
-
-    function endDrag() {
-      isDragging = false;
-    }
-
-    // Mouse events (desktop)
     $container.on("mousedown", function (e) {
-      beginDrag(e.clientX, e.clientY);
+      isDragging = true;
+      startX = e.clientX - currentX;
+      startY = e.clientY - currentY;
       $(this).css("cursor", "grabbing");
     });
 
     $(document).on("mousemove", function (e) {
       if (!isDragging) return;
       e.preventDefault();
-      moveDrag(e.clientX, e.clientY);
+      currentX = e.clientX - startX;
+      currentY = e.clientY - startY;
+      updateModalImageTransform();
     });
 
     $(document).on("mouseup", function () {
-      if (!isDragging) return;
-      endDrag();
-      $container.css("cursor", "grab");
-    });
-
-    // Touch events (mobile)
-    $container.on("touchstart", function (e) {
-      const t = e.originalEvent.touches && e.originalEvent.touches[0];
-      if (!t) return;
-      beginDrag(t.clientX, t.clientY);
-    });
-
-    $(document).on("touchmove", function (e) {
-      if (!isDragging) return;
-      const t = e.originalEvent.touches && e.originalEvent.touches[0];
-      if (!t) return;
-      e.preventDefault();
-      moveDrag(t.clientX, t.clientY);
-    });
-
-    $(document).on("touchend touchcancel", function () {
-      if (!isDragging) return;
-      endDrag();
+      if (isDragging) {
+        isDragging = false;
+        $container.css("cursor", "grab");
+      }
     });
 
     $("#saveAdjustmentBtn").on("click", function () {
       currentAdjustments[activeImageIndex] = {
         x: currentX,
         y: currentY,
-        scale: currentScale,
-        rotate: currentRotate
+        scale: currentScale
       };
 
       const $img = $(`.carousel-image[data-index='${activeImageIndex}']`);
-      $img.css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotate}deg)`);
+      $img.css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale})`);
 
       $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
 
@@ -570,8 +437,7 @@ $(document).ready(function () {
     // Background Preview
     $("#backgroundSelector").on("change", function () {
       const bg = $(this).val();
-      // Remove qualquer classe de tema previamente aplicada (gradientes e texturas)
-      $("body").removeClass((i, c) => (c.match(/(^|\s)(gradient|texture)_\S+/g) || []).join(' '));
+      $("body").removeClass((i, c) => (c.match(/(^|\s)gradient_\S+/g) || []).join(' '));
       if (bg) $("body").addClass(bg);
     });
 
