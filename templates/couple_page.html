@@ -22,7 +22,8 @@
   /* Layout de seções modernas para destacar cada feature */
   .page-wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
   .section-title { color: var(--text-muted); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 .75rem; }
-  .section-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.25rem; margin: 1.25rem 0; }
+  .section-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.25rem; margin: 1.25rem 0; box-shadow: 0 6px 24px rgba(0,0,0,0.30); }
+  .section-card.message { text-align: center; }
   .section-sep { height: 1px; border: none; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 1.5rem 0; }
   .names-display h1 { margin: 0 .5rem; }
   .counter-section .counter-wrapper { margin-top: .75rem; }
@@ -100,7 +101,7 @@
 
   {% set msg_clean = (couple.optional_message or '') | striptags | trim %}
   {% if msg_clean %}
-  <div class="section-card">
+  <div class="section-card message">
     <div class="section-title">Mensagem especial</div>
     <p style="font-style: italic; font-size: 1.2rem; white-space: pre-wrap;">{{ couple.optional_message | safe }}</p>
   </div>

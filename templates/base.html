@@ -81,6 +81,17 @@
         </header>
 
         <main class="main-content">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="section-card" style="margin-top: 1rem;">
+                {% for msg in messages %}
+                <div class="alert" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: .75rem 1rem; border-radius: 8px; margin-bottom: .5rem;">
+                    {{ msg }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
             {% block content %}{% endblock %}
         </main>
 

@@ -21,10 +21,19 @@
   }
 }
 </script>
+<style>
+  /* Layout de seções modernas para destacar cada feature (alinha com página do casal) */
+  .page-wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+  .section-title { color: var(--text-muted); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 .75rem; }
+  .section-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.25rem; margin: 1.25rem 0; box-shadow: 0 6px 24px rgba(0,0,0,0.30); }
+  .section-sep { height: 1px; border: none; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 1.5rem 0; }
+  @media (max-width: 640px) { .page-wrap { padding: 12px; } }
+</style>
 {% endblock %}
 
 {% block content %}
-<section class="glass-card text-center">
+<div class="page-wrap">
+<section class="section-card text-center">
   <h1>Crie sua Página Especial</h1>
   <p class="lead" style="color: var(--text-muted);">
     Reviva momentos ou conte o tempo para um evento especial. Crie uma página personalizada com QR Code, fotos e vídeo.
@@ -33,7 +42,7 @@
 
 <div class="grid-2">
   <!-- Form Section -->
-  <section class="glass-card">
+  <section class="section-card">
     <h2>Personalize</h2>
     <form action="/create" method="POST" enctype="multipart/form-data" id="createForm">
 
@@ -154,21 +163,35 @@
     </form>
   </section>
 
-  <!-- Preview Section -->
-  <section class="glass-card" style="position: relative; overflow: hidden;">
-    <div class="text-center">
-      <h3 style="color: var(--text-muted); font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">Prévia</h3>
-      <div style="margin: 2rem 0;">
-        <h2 class="special-text">Homenagem a</h2>
-        <div id="namesPreview">
-          <h1 id="couple_name1">Nome 1</h1>
-          <span id="e_comercial" class="special-text" style="display: none;">&</span>
-          <h1 id="couple_name2" style="display: none;">Nome 2</h1>
-        </div>
+  <!-- Preview Section (espelhando os cards da página do casal) -->
+  <div>
+    <!-- Card: Nomes + Contador + Descrição -->
+    <div class="section-card text-center">
+      <div class="section-title">Prévia</div>
+      <h2 class="special-text">Homenagem a</h2>
+      <div id="namesPreview" style="margin: 1rem 0; display:flex; justify-content:center; align-items:center; gap:.5rem;">
+        <h1 id="couple_name1">Nome 1</h1>
+        <span id="e_comercial" class="special-text" style="display: none; font-size: 2rem;">&</span>
+        <h1 id="couple_name2" style="display: none;">Nome 2</h1>
       </div>
 
+      <hr class="section-sep">
+
+      <h3 id="counter_prefix_text">Já se passaram:</h3>
+      <div id="event-data" style="display:none" data-counter-mode="since"></div>
+      <div class="counter-wrapper" id="meu-contador">
+        <div class="time-box"><span class="time-value">0</span><span class="time-label">Anos</span></div>
+        <div class="time-box"><span class="time-value">0</span><span class="time-label">Meses</span></div>
+        <div class="time-box"><span class="time-value">0</span><span class="time-label">Dias</span></div>
+      </div>
+      <h3 id="event_description_text" class="special-text" style="font-size: 1.6rem; margin-top: 1rem;">desde que...</h3>
+    </div>
+
+    <!-- Card: Fotos -->
+    <div class="section-card">
+      <div class="section-title">Fotos</div>
       <div id="carousel" class="carousel-container"
-        style="position: relative; height: 400px; border-radius: 16px; overflow: hidden; margin-bottom: 2rem; background: rgba(0,0,0,0.3);">
+        style="position: relative; height: 400px; border-radius: 16px; overflow: hidden; background: rgba(0,0,0,0.45);">
         <img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active"
           alt="Preview"
           style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; transition: opacity 1s;">
@@ -181,31 +204,30 @@
         <div id="presentationEffectContainer"
           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
       </div>
+    </div>
 
-      <h3 id="counter_prefix_text">Já se passaram:</h3>
-      <div id="event-data" style="display:none" data-counter-mode="since"></div>
+    <!-- Card: Mensagem especial -->
+    <div class="section-card message">
+      <div class="section-title">Mensagem especial</div>
+      <p id="optional_message_text" style="font-style: italic; color: var(--text-muted); margin-top: .5rem; white-space: pre-wrap;">Sua mensagem especial</p>
+    </div>
 
-      <div class="counter-wrapper" id="meu-contador">
-        <div class="time-box"><span class="time-value">0</span><span class="time-label">Anos</span></div>
-        <div class="time-box"><span class="time-value">0</span><span class="time-label">Meses</span></div>
-        <div class="time-box"><span class="time-value">0</span><span class="time-label">Dias</span></div>
-      </div>
+    <!-- Card: Vídeo -->
+    <div class="section-card">
+      <div class="section-title">Vídeo</div>
+      <div id="videoPreviewContainer" style="margin-top: .5rem; border-radius: 16px; overflow: hidden; display: none;"></div>
+    </div>
 
-      <h3 id="event_description_text" class="special-text" style="font-size: 1.5rem;">desde que...</h3>
-              <p id="optional_message_text" style="font-style: italic; color: var(--text-muted); margin-top: 1rem; white-space: pre-wrap;">Sua mensagem especial</p>
-
-      <div id="videoPreviewContainer" style="margin-top: 2rem; border-radius: 16px; overflow: hidden; display: none;">
-      </div>
-
-      <div style="margin-top: 2rem;">
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">Seu QR Code (Exemplo)</p>
-        <div class="glass-card" style="display: inline-block; padding: 10px; background: white;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://meueventoespecial.com.br"
-            alt="QR Code Exemplo" style="width: 150px; height: 150px; display: block;">
-        </div>
+    <!-- Card: Compartilhar (QR exemplo) -->
+    <div class="section-card">
+      <div class="section-title">Compartilhar</div>
+      <div style="text-align:center;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://meueventoespecial.com.br"
+          alt="QR Code Exemplo" style="width: 150px; height: 150px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); background: white; padding: 8px; display:inline-block;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">Exemplo de QR Code</p>
       </div>
     </div>
-  </section>
+  </div>
 </div>
 
 <div id="photoAdjustmentModal" class="modal-overlay" style="display: none;">
@@ -215,7 +237,7 @@
       dar zoom.</p>
 
       <div id="adjustmentContainer"
-      style="width: 100%; height: 500px; overflow: hidden; position: relative; border-radius: 12px; background: #000; cursor: grab; margin-bottom: 1.5rem; touch-action: none;">
+      style="width: 100%; overflow: hidden; position: relative; border-radius: 12px; background: #000; cursor: grab; margin-bottom: 1.5rem; touch-action: none;">
       <img id="adjustmentImage" src=""
         style="width: 100%; height: 100%; object-fit: contain; transform-origin: center; pointer-events: none; user-select: none;">
       <!-- Overlay de guia: regra dos terços + marca central -->
@@ -250,6 +272,8 @@
       <button type="button" id="saveAdjustmentBtn" class="btn btn-primary">Salvar Ajuste</button>
     </div>
   </div>
+</div>
+
 </div>
 {% endblock %}
 

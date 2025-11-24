@@ -263,6 +263,14 @@ $(document).ready(function () {
       if (currentVal) {
         $select.val(currentVal);
       }
+
+      // Se nada estiver selecionado após repovoar, define a primeira opção
+      if (!$select.val()) {
+        const firstOpt = $select.find("option").first();
+        if (firstOpt.length) {
+          $select.val(firstOpt.val());
+        }
+      }
     }
 
     function updateDescriptionAndMode() {
@@ -275,7 +283,17 @@ $(document).ready(function () {
       $("#counter_prefix_text").text(mode === "until" ? "Faltam:" : "Já se passaram:");
 
       const prefix = mode === "until" ? "para " : "desde que ";
-      const mainText = useCustom && customText ? customText : selectText;
+      let mainText = useCustom && customText ? customText : selectText;
+      // Fallback: se a seleção estiver vazia após trocar modo, usa a primeira opção
+      if (!mainText) {
+        const firstOpt = $("#eventSelect option").first();
+        if (firstOpt.length) {
+          $("#eventSelect").val(firstOpt.val());
+          mainText = firstOpt.text();
+        } else {
+          mainText = "o evento escolhido"; // fallback genérico
+        }
+      }
       $("#event_description_text").text(prefix + mainText);
 
       if (useCustom) {
@@ -310,10 +328,25 @@ $(document).ready(function () {
       $("#optional_message_text").text(msg || "Sua mensagem aparecerá aqui...");
     });
 
+    // Inicializa descrição com base no modo atual e primeira opção
+    (function initDescription() {
+      const initMode = $("input[name='counter_mode']:checked").val();
+      updateEventSelectOptions(initMode);
+      updateDescriptionAndMode();
+    })();
+
     // Photo Adjustment
+    // Buffer de arquivos para acumular seleções múltiplas do input
+    let imagesDT;
+    try {
+      imagesDT = new DataTransfer();
+    } catch (e) {
+      imagesDT = null; // fallback para navegadores sem DataTransfer
+    }
+    const accumulatedFiles = [];
     let currentAdjustments = {};
     let isDragging = false;
-    let startX, startY, currentX = 0, currentY = 0, currentScale = 1;
+    let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotation = 0;
     let activeImageIndex = 0;
 
     function updateEditButtonVisibility() {
@@ -325,36 +358,120 @@ $(document).ready(function () {
     }
 
     $("#images").on("change", function () {
-      const files = this.files;
+      const inputEl = this;
+      const incomingFiles = Array.from(inputEl.files || []);
       const $carousel = $("#carousel");
-      $carousel.find("img").remove();
-      currentAdjustments = {};
-      $("#imageAdjustments").val("");
 
-      if (files.length === 0) {
+      // Remove somente placeholder, preservando imagens já adicionadas
+      $carousel
+        .find(".carousel-image")
+        .filter(function () {
+          const src = $(this).attr("src") || "";
+          return src.includes("placeholder.png");
+        })
+        .remove();
+
+      const existingCount = $carousel.find(".carousel-image").length;
+
+      // Adiciona os novos arquivos ao buffer (máximo 3), evitando duplicados
+      const maxPhotos = 3;
+      const filesToAppend = [];
+      const currentCountDT = imagesDT ? imagesDT.files.length : 0;
+      const currentCountAcc = accumulatedFiles.length;
+
+      incomingFiles.forEach((file) => {
+        // Respeita limite somando buffer atual
+        const totalCount = (imagesDT ? imagesDT.files.length : 0) + accumulatedFiles.length;
+        if (totalCount >= maxPhotos) return;
+        // Evita duplicados
+        const isDupDT = imagesDT ? Array.from(imagesDT.files).some(
+          (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+        ) : false;
+        const isDupAcc = accumulatedFiles.some(
+          (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+        );
+        if (isDupDT || isDupAcc) return;
+
+        // Adiciona ao buffer disponível
+        if (imagesDT && imagesDT.items) imagesDT.items.add(file);
+        accumulatedFiles.push(file);
+        filesToAppend.push(file);
+      });
+      // Garante que o formulário enviará todas as fotos acumuladas
+      const imagesInput = document.getElementById("images");
+      if (imagesInput && imagesDT) imagesInput.files = imagesDT.files;
+
+      const totalBuffered = (imagesDT ? imagesDT.files.length : 0) + accumulatedFiles.length;
+      if (totalBuffered === 0 && existingCount === 0) {
         $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
         updateEditButtonVisibility();
         return;
       }
 
       let loadedCount = 0;
-      const totalFiles = files.length;
+      const totalFiles = filesToAppend.length;
 
-      Array.from(files).forEach((file, index) => {
+      filesToAppend.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = function (e) {
-          const activeClass = index === 0 ? "active" : "";
-          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${index}" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: ${index === 0 ? 1 : 0}; transition: opacity 1s;">`);
-          $carousel.prepend(img);
+          // Define índice acumulado e ativa apenas se ainda não houver imagem ativa
+          const dataIndex = existingCount + index;
+          const hasActive = $carousel.find(".carousel-image.active").length > 0;
+          const activeClass = (!hasActive && index === 0) ? "active" : "";
+          const initialOpacity = activeClass ? 1 : 0;
+          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transition: opacity 1s;">`);
+          $carousel.append(img);
 
           loadedCount++;
           if (loadedCount === totalFiles) {
+            // Atualiza campo oculto com ajustes atuais (preservados)
+            $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
             startCarousel();
             updateEditButtonVisibility();
           }
-        }
+        };
         reader.readAsDataURL(file);
       });
+
+      // Limpa valor do input para permitir adicionar novamente o mesmo arquivo se desejado
+      inputEl.value = "";
+    });
+
+    // Envia formulário via fetch garantindo anexos do buffer de fotos
+    $("#createForm").on("submit", async function (e) {
+      e.preventDefault();
+      const formEl = this;
+      const formData = new FormData(formEl);
+
+      // Atualiza campos que podem estar somente na UI
+      formData.set("image_adjustments", JSON.stringify(currentAdjustments));
+      const msgVal = $("#message").val();
+      if (typeof msgVal !== "undefined") {
+        formData.set("optional_message", msgVal);
+      }
+
+      // Substitui os arquivos do input pelos acumulados no buffer
+      formData.delete("images");
+      const filesForSubmit = imagesDT && imagesDT.files && imagesDT.files.length > 0
+        ? Array.from(imagesDT.files)
+        : accumulatedFiles;
+      filesForSubmit.slice(0, 3).forEach((file) => formData.append("images", file));
+
+      try {
+        const resp = await fetch(formEl.action || "/create", {
+          method: "POST",
+          body: formData,
+          redirect: "follow",
+        });
+        if (resp.ok) {
+          // Redireciona para a página final (após follow em 302)
+          window.location.href = resp.url || (formEl.action || "/");
+        } else {
+          alert("Erro ao criar a página. Tente novamente.");
+        }
+      } catch (err) {
+        alert("Falha de rede ao criar a página. Verifique sua conexão.");
+      }
     });
 
     $("#editPhotoBtn").on("click", function () {
@@ -369,23 +486,72 @@ $(document).ready(function () {
       const src = $activeImg.attr("src");
       $("#adjustmentImage").attr("src", src);
 
-      const adj = currentAdjustments[activeImageIndex] || { x: 0, y: 0, scale: 1 };
+      const adj = currentAdjustments[activeImageIndex] || { x: 0, y: 0, scale: 1, rotate: 0 };
       currentX = adj.x;
       currentY = adj.y;
       currentScale = adj.scale;
+      currentRotation = adj.rotate || 0;
 
       $("#zoomSlider").val(currentScale);
+      $("#rotateSlider").val(currentRotation);
       updateModalImageTransform();
 
       $("#photoAdjustmentModal").fadeIn();
+      // Garante que não há estado de arrasto ativo ao abrir
+      isDragging = false;
     });
 
     function updateModalImageTransform() {
-      $("#adjustmentImage").css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale})`);
+      $("#adjustmentImage").css({
+        "transform": `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotation}deg)`,
+        "transform-origin": "center"
+      });
     }
 
     $("#zoomSlider").on("input", function () {
       currentScale = parseFloat($(this).val());
+      updateModalImageTransform();
+    });
+
+    // Fallback: aplica também em 'change' para cenários onde 'input' não dispara corretamente
+    $("#zoomSlider").on("change", function () {
+      currentScale = parseFloat($(this).val());
+      updateModalImageTransform();
+    });
+
+    // Evita que eventos do slider sejam capturados pelo container de arrasto
+    $("#zoomSlider, #rotateSlider").on("mousedown touchstart", function (e) {
+      e.stopPropagation();
+    });
+
+    $("#rotateSlider").on("input", function () {
+      const val = parseInt($(this).val(), 10);
+      currentRotation = isNaN(val) ? 0 : val;
+      updateModalImageTransform();
+    });
+
+    $("#rotateSlider").on("change", function () {
+      const val = parseInt($(this).val(), 10);
+      currentRotation = isNaN(val) ? 0 : val;
+      updateModalImageTransform();
+    });
+
+    function normalizeRotation(deg) {
+      // Normaliza para o intervalo [-180, 180]
+      deg = ((deg % 360) + 360) % 360; // [0, 360)
+      if (deg > 180) deg -= 360; // [-180, 180]
+      return deg;
+    }
+
+    $("#rotateLeft90").on("click", function () {
+      currentRotation = normalizeRotation(currentRotation - 90);
+      $("#rotateSlider").val(currentRotation);
+      updateModalImageTransform();
+    });
+
+    $("#rotateRight90").on("click", function () {
+      currentRotation = normalizeRotation(currentRotation + 90);
+      $("#rotateSlider").val(currentRotation);
       updateModalImageTransform();
     });
 
@@ -417,11 +583,15 @@ $(document).ready(function () {
       currentAdjustments[activeImageIndex] = {
         x: currentX,
         y: currentY,
-        scale: currentScale
+        scale: currentScale,
+        rotate: currentRotation
       };
 
       const $img = $(`.carousel-image[data-index='${activeImageIndex}']`);
-      $img.css("transform", `translate(${currentX}px, ${currentY}px) scale(${currentScale})`);
+      $img.css({
+        "transform": `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotation}deg)`,
+        "transform-origin": "center"
+      });
 
       $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
 
@@ -437,7 +607,8 @@ $(document).ready(function () {
     // Background Preview
     $("#backgroundSelector").on("change", function () {
       const bg = $(this).val();
-      $("body").removeClass((i, c) => (c.match(/(^|\s)gradient_\S+/g) || []).join(' '));
+      // Remove qualquer classe de tema anterior (gradiente_*, texture_*) para evitar conflito
+      $("body").removeClass((i, c) => (c.match(/(^|\s)(gradient_|texture_)\S+/g) || []).join(' '));
       if (bg) $("body").addClass(bg);
     });
 
@@ -502,7 +673,39 @@ $(document).ready(function () {
     });
   }
 
-  $("#createForm").on("submit", function () {
+  $("#createForm").on("submit", function (e) {
+    const mode = $("input[name='counter_mode']:checked").val();
+    const d = $("#event_date").val();
+    const t = $("#event_time").val();
+
+    // Validação cliente: evita enviar se data/hora não combina com modo
+    if (d && t) {
+      const eventDt = new Date(`${d}T${t}:00`);
+      const now = new Date();
+      const isFuture = eventDt.getTime() > now.getTime();
+      const isPastOrNow = eventDt.getTime() <= now.getTime();
+
+      if ((mode === "since" && !isPastOrNow) || (mode === "until" && !isFuture)) {
+        e.preventDefault();
+        // Feedback visual sem perder dados
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Verifique a data e o modo',
+            text: mode === 'since'
+              ? "Para 'Tempo desde...', escolha uma data que já passou."
+              : "Para 'Contagem para...', escolha uma data futura.",
+            confirmButtonText: 'Ok'
+          });
+        } else {
+          alert(mode === 'since'
+            ? "Para 'Tempo desde...', escolha uma data que já passou."
+            : "Para 'Contagem para...', escolha uma data futura.");
+        }
+        return; // não desabilita o botão; mantém estado
+      }
+    }
+
     const $btn = $("#submitBtn");
     $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Criando...');
   });

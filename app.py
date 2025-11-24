@@ -686,9 +686,8 @@ def create_couple_page():
         if youtubelink:
             video_id = extract_video_id(youtubelink)
             if not video_id:
-                flash("Não parece ser um link de video válido do youtube")
-                # return redirect(request.url)
-                return render_template("index.html")
+                flash("Não parece ser um link válido do YouTube.")
+                return redirect(url_for("index"))
         else:
             video_id = None
         # Verificar se há imagens e salvá-las
