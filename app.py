@@ -254,6 +254,16 @@ def edit_user(email, page_url):
                 f"{new_date}T{new_time}:00.000Z"  # Formato completo de timestamp
             )
 
+            # Atualiza expires_at se fornecido (Data/Hora de Expiração)
+            exp_date = request.form.get("expires_at")
+            exp_time = request.form.get("expires_time")
+            if exp_date or exp_time:
+                if not exp_date:
+                    exp_date = user.get("expires_at", "")[:10] or new_date
+                if not exp_time:
+                    exp_time = (user.get("expires_at", "")[11:16]) or "00:00"
+                user["expires_at"] = f"{exp_date}T{exp_time}:00.000Z"
+
             # Captura o valor da checkbox (se marcada, é 'on', caso contrário não está presente)
             user["paid"] = (
                 "paid" in request.form
@@ -737,6 +747,9 @@ def create_couple_page():
             "paid": False,
             "created_at": datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
+            # Define validade inicial: 1h a partir da criação para páginas não pagas
+            "expires_at": (datetime.now(timezone) + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            + "Z",
             "video_id": video_id,
             "counter_mode": counter_mode,
             "image_adjustments": image_adjustments_dict,  # Adiciona ajustes de foto
@@ -830,7 +843,7 @@ def index():
 
 import os
 from flask import render_template
-from datetime import datetime
+from datetime import datetime, timedelta
 from boto3.dynamodb.conditions import Key
 
 
@@ -843,11 +856,8 @@ import pytz
 @app.route("/couple_page/<string:page_url>")
 def couple_page(page_url):
 
+    # Exibe a seção de pagamento apenas se ainda não estiver pago
     show_payment_link = False
-
-    # Verifica se o marcador "pagar" está presente na URL
-
-    show_payment_link = True
 
     response = table.scan(FilterExpression=Key("page_url").eq(page_url))
     items = response.get("Items", [])
@@ -857,6 +867,9 @@ def couple_page(page_url):
         return render_template("not_found.html"), 404
 
     couple = items[0]
+
+    # Oculta a seção "Extensão de validade" quando já estiver pago
+    show_payment_link = not couple.get("paid", False)
 
     # Verifica se o campo event_time existe no banco de dados
     event_date_str = couple[
@@ -889,6 +902,36 @@ def couple_page(page_url):
     days = (time_diff.days % 365) % 30
     hours, remainder = divmod(time_diff.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
+
+    # Validade baseada em expires_at (persistida). Fallback: created_at + delta.
+    valid_until_str = None
+    is_expired = False
+    try:
+        valid_until_dt = None
+        expires_str = couple.get("expires_at")
+        if expires_str:
+            base = expires_str.replace("Z", "")
+            if "." in base:
+                base = base.split(".")[0]
+            exp_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
+            valid_until_dt = timezone.localize(exp_naive)
+        else:
+            created_at_str = couple.get("created_at")
+            if created_at_str:
+                base = created_at_str.replace("Z", "")
+                if "." in base:
+                    base = base.split(".")[0]
+                created_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
+                created_local = timezone.localize(created_naive)
+                delta = timedelta(days=30) if couple.get("paid", False) else timedelta(hours=1)
+                valid_until_dt = created_local + delta
+
+        if valid_until_dt is not None:
+            valid_until_str = valid_until_dt.strftime("%d/%m/%Y %H:%M")
+            is_expired = now >= valid_until_dt
+    except Exception:
+        valid_until_str = None
+        is_expired = False
 
     # Verifica a existência de um vídeo
     has_video = couple.get("video_id") is not None
@@ -962,6 +1005,8 @@ def couple_page(page_url):
         page_title=page_title,
         image_adjustments=convert_decimal_to_float(couple.get("image_adjustments", {})),  # Passa ajustes para template
         body_class=couple.get("background_type", ""),
+        is_expired=is_expired,
+        valid_until_str=valid_until_str,
     )
 
 @app.route("/robots.txt")
@@ -1020,6 +1065,14 @@ from flask import redirect, url_for
 
 ASAAS_API_URL = "https://api.asaas.com/v3/paymentLinks"
 
+# Catálogo de planos progressivos: duração e preço
+PLANS = {
+    "30d": {"days": 30, "price": 9.90, "label": "30 dias"},
+    "90d": {"days": 90, "price": 24.90, "label": "90 dias"},
+    "180d": {"days": 180, "price": 39.90, "label": "6 meses"},
+    "365d": {"days": 365, "price": 69.90, "label": "1 ano"},
+}
+
 
 @app.route("/pay/<string:id>", methods=["POST"])
 def pay(id):
@@ -1029,12 +1082,16 @@ def pay(id):
         return "Página não encontrada", 404
     couple = items[0]
 
+    # Plano escolhido (default 30d)
+    plan_code = request.form.get("plan", "30d")
+    plan = PLANS.get(plan_code, PLANS["30d"])
+
     payload = {
         "billingType": "PIX",
         "chargeType": "DETACHED",
-        "name": "Meu Evento Especial 30 dias",
-        "description": "Extensão da duração da página para 30 dias",
-        "value": 9.90,
+        "name": f"Meu Evento Especial — {plan['label']}",
+        "description": f"Extensão de validade: PLAN={plan_code}",
+        "value": plan["price"],
         "dueDateLimitDays": 1,
         "notificationEnabled": False,
         "externalReference": couple["page_url"],
@@ -1116,15 +1173,68 @@ def payment_success(page_url):
 
     couple = items[0]
 
-    # Passo 2: atualizar status como pago
-    table.update_item(
-        Key={
-            "email": couple["email"],
-            "page_url": couple["page_url"]
-        },
-        UpdateExpression="SET paid = :v",
-        ExpressionAttributeValues={":v": True}
-    )
+    # Passo 2: marcar pago e estender expires_at conforme plano
+    try:
+        import pytz
+        from datetime import datetime, timedelta
+        timezone = pytz.timezone("America/Manaus")
+        now_dt = datetime.now(timezone)
+
+        # Determina plano via description (PLAN=code) ou valor
+        desc = pagamento.get("description", "") or ""
+        plan_code = None
+        if "PLAN=" in desc:
+            try:
+                plan_code = desc.split("PLAN=")[-1].split()[0].strip()
+            except Exception:
+                plan_code = None
+        if plan_code not in PLANS:
+            # Fallback por valor
+            val = float(pagamento.get("value", 0) or 0)
+            for code, p in PLANS.items():
+                if abs(p["price"] - val) < 0.01:
+                    plan_code = code
+                    break
+        plan = PLANS.get(plan_code, PLANS["30d"])  # inclui days/price/label
+        plan_days = plan["days"]
+
+        # Calcula nova validade: se já tem expires_at futura, soma +plan_days a partir dela; caso contrário, agora +plan_days
+        new_expires_dt = None
+        expires_str = couple.get("expires_at")
+        if expires_str:
+            base = expires_str.replace("Z", "")
+            if "." in base:
+                base = base.split(".")[0]
+            exp_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
+            exp_local = timezone.localize(exp_naive)
+            if now_dt < exp_local:
+                new_expires_dt = exp_local + timedelta(days=plan_days)
+            else:
+                new_expires_dt = now_dt + timedelta(days=plan_days)
+        else:
+            new_expires_dt = now_dt + timedelta(days=plan_days)
+
+        new_expires_str = new_expires_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        last_payment_at = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+        table.update_item(
+            Key={
+                "email": couple["email"],
+                "page_url": couple["page_url"]
+            },
+            UpdateExpression="SET paid = :v, expires_at = :e, last_plan_code = :p, last_plan_price = :pr, last_payment_at = :t",
+            ExpressionAttributeValues={":v": True, ":e": new_expires_str, ":p": plan_code or "30d", ":pr": plan["price"], ":t": last_payment_at}
+        )
+    except Exception:
+        # Fallback: garante marcação como pago
+        table.update_item(
+            Key={
+                "email": couple["email"],
+                "page_url": couple["page_url"]
+            },
+            UpdateExpression="SET paid = :v",
+            ExpressionAttributeValues={":v": True}
+        )
 
     return redirect(url_for("couple_page", page_url=page_url))
 
@@ -1159,14 +1269,52 @@ def asaas_webhook():
         couple = items[0]
         couple["paid"] = True
 
-        from datetime import datetime
+        from datetime import datetime, timedelta
         import pytz
 
-        # Timestamp de pagamento
         timezone = pytz.timezone("America/Manaus")
-        couple["created_at"] = (
-            datetime.now(timezone).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        )
+        now_dt = datetime.now(timezone)
+
+        # Determina plano via description (PLAN=code) ou valor
+        desc = payment.get("description", "") or ""
+        plan_code = None
+        if "PLAN=" in desc:
+            try:
+                plan_code = desc.split("PLAN=")[-1].split()[0].strip()
+            except Exception:
+                plan_code = None
+        if plan_code not in PLANS:
+            val = float(payment.get("value", 0) or 0)
+            for code, p in PLANS.items():
+                if abs(p["price"] - val) < 0.01:
+                    plan_code = code
+                    break
+        plan_days = PLANS.get(plan_code, PLANS["30d"])["days"]
+
+        # Estende validade por +plan_days. Se já existir expires_at futura, soma a partir dela; senão, a partir de agora.
+        expires_str = couple.get("expires_at")
+        try:
+            if expires_str:
+                base = expires_str.replace("Z", "")
+                if "." in base:
+                    base = base.split(".")[0]
+                exp_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
+                exp_local = timezone.localize(exp_naive)
+                if now_dt < exp_local:
+                    new_expires_dt = exp_local + timedelta(days=plan_days)
+                else:
+                    new_expires_dt = now_dt + timedelta(days=plan_days)
+            else:
+                new_expires_dt = now_dt + timedelta(days=plan_days)
+            couple["expires_at"] = new_expires_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        except Exception:
+            # Garantia mínima: define validade a partir de agora por 30 dias
+            couple["expires_at"] = (now_dt + timedelta(days=plan_days)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+        # Persiste informações do último pagamento para estatísticas
+        couple["last_plan_code"] = plan_code or "30d"
+        couple["last_plan_price"] = PLANS.get(plan_code, PLANS["30d"])["price"]
+        couple["last_payment_at"] = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         table.put_item(Item=couple)
 

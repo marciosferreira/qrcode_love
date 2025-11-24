@@ -123,28 +123,108 @@
     </div>
   </div>
 
-  {% if show_payment_link %}
+  {% if valid_until_str %}
+  <div class="section-card" style="text-align: center;">
+    <p style="margin: 0; color: var(--text-muted);">Esta página estará ativa até:</p>
+    <h4 style="margin: .25rem 0; color: white;">{{ valid_until_str }}</h4>
+  </div>
+  {% endif %}
+
+  {% if show_payment_link and not couple.paid %}
   <div class="section-card">
     <div class="section-title">Extensão de validade</div>
-    {% if not couple.paid %}
     <div style="text-align: left;">
-            <h4 style="margin:0; color:white;">Teste esta página a vontade por 1 hora.</h4>
-
-      <h4 style="margin:0; color:white;">Deseja manter esta página ativa e esconder este aviso?</h4>
-      <p style="margin:.25rem 0 .75rem; color:#bbb; font-size:.95rem;">Estenda por 30 dias com um pagamento via PIX.</p>
-      <form action="{{ url_for('pay', id=couple.page_url) }}" method="post">
-        <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: .6rem 1rem; font-weight: 600;">
-          Estender por 30 dias — R$ 5,00
+      <h4 style="margin:0; color:white;">Teste esta página à vontade por 1 hora.</h4>
+      <p style="margin:.25rem 0 .75rem; color:#bbb; font-size:.95rem;">Deseja manter esta página ativa e esconder este aviso?</p>
+      <div>
+        <button id="openPlanModalBtn" type="button" class="btn btn-primary" style="border-radius: 12px; padding: .6rem 1rem; font-weight: 600;">
+          Estender a partir de R$ 9,90
         </button>
         <span style="margin-left: .75rem; color:#aaa; font-size:.9rem;">Pagamento seguro via Asaas (PIX)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de seleção de planos -->
+  <div id="planModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; display: none; align-items: center; justify-content: center;">
+    <div style="background: #1f1f1f; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 24px; max-width: 560px; width: 92%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px;">
+        <h3 style="color: white; margin: 0;">Escolha um plano</h3>
+        <button id="closePlanModalBtn" type="button" style="background: transparent; border: none; color: #ccc; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <p style="color: #bbb; margin: 0 0 16px;">Selecione a validade desejada e prossiga com o pagamento:</p>
+      <form action="{{ url_for('pay', id=couple.page_url) }}" method="post" style="display:flex; flex-direction:column; gap:.5rem;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:.5rem; text-align:left;">
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="30d" checked> 30 dias — R$ 9,90
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="90d"> 90 dias — R$ 24,90 (economize 16%)
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="180d"> 6 meses — R$ 39,90 (economize 33%)
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="365d"> 1 ano — R$ 69,90 (economize 41%)
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: .6rem 1rem; font-weight: 600; margin-top:.5rem;">Avançar para o pagamento</button>
       </form>
     </div>
-    {% else %}
-    <div class="glass-card" style="padding: .75rem; background: rgba(0,255,0,0.06); border: 1px solid rgba(0,255,0,0.15);">
-      <p style="margin:0; color:#b6fcb6;">Pagamento confirmado! Sua página está ativa por 30 dias 🎉</p>
-    </div>
-    {% endif %}
   </div>
+
+  <script>
+    (function(){
+      var openBtn = document.getElementById('openPlanModalBtn');
+      var modal = document.getElementById('planModal');
+      var closeBtn = document.getElementById('closePlanModalBtn');
+      if(openBtn && modal){
+        openBtn.addEventListener('click', function(){ modal.style.display = 'flex'; });
+      }
+      if(closeBtn && modal){
+        closeBtn.addEventListener('click', function(){ modal.style.display = 'none'; });
+      }
+      // Fecha ao clicar fora do conteúdo
+      if(modal){
+        modal.addEventListener('click', function(e){
+          if(e.target === modal){ modal.style.display = 'none'; }
+        });
+      }
+    })();
+  </script>
+  {% endif %}
+
+  {% if is_expired %}
+  <!-- Modal bloqueante de expiração -->
+  <div id="expiredOverlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div style="background: #1f1f1f; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 24px; max-width: 560px; width: 92%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+      <h3 style="color: white; margin: 0 0 8px;">Página expirada</h3>
+      <p style="color: #bbb; margin: 0 0 16px;">Para continuar, renove a validade escolhendo um plano:</p>
+      <form action="{{ url_for('pay', id=couple.page_url) }}" method="post" style="display:flex; flex-direction:column; gap:.5rem; margin-top: 8px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:.5rem; text-align:left;">
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="30d" checked> 30 dias — R$ 9,90
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="90d"> 90 dias — R$ 24,90 (economize 16%)
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="180d"> 6 meses — R$ 39,90 (economize 33%)
+          </label>
+          <label style="background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.6rem; border-radius:10px;">
+            <input type="radio" name="plan" value="365d"> 1 ano — R$ 69,90 (economize 41%)
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: .6rem 1rem; font-weight: 600;">Pagar e renovar</button>
+        <p style="color:#888; font-size:.9rem; margin-top:10px;">Pagamento seguro via Asaas (PIX)</p>
+      </form>
+    </div>
+  </div>
+  <script>
+    // Bloqueia rolagem enquanto expirada
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  </script>
   {% endif %}
 
   <input type="hidden" id="imageEffectSelector" value="{{ couple.effect_type }}">
