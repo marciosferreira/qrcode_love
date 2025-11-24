@@ -1034,7 +1034,7 @@ def pay(id):
         "chargeType": "DETACHED",
         "name": "Meu Evento Especial 30 dias",
         "description": "Extensão da duração da página para 30 dias",
-        "value": 5.0,
+        "value": 9.90,
         "dueDateLimitDays": 1,
         "notificationEnabled": False,
         "externalReference": couple["page_url"],
