@@ -437,12 +437,40 @@ $(document).ready(function () {
       inputEl.value = "";
     });
 
-    // Envia formulário via fetch garantindo anexos do buffer de fotos
+    // Envia formulário via fetch garantindo anexos do buffer de fotos, com validação de data/modo
     $("#createForm").on("submit", async function (e) {
       e.preventDefault();
       const formEl = this;
-      const formData = new FormData(formEl);
 
+      // Validação cliente: evita enviar se data/hora não combina com modo
+      const mode = $("input[name='counter_mode']:checked").val();
+      const d = $("#event_date").val();
+      const t = $("#event_time").val();
+      if (d && t) {
+        const eventDt = new Date(`${d}T${t}:00`);
+        const now = new Date();
+        const isFuture = eventDt.getTime() > now.getTime();
+        const isPastOrNow = eventDt.getTime() <= now.getTime();
+        if ((mode === "since" && !isPastOrNow) || (mode === "until" && !isFuture)) {
+          if (window.Swal) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Verifique a data e o modo',
+              text: mode === 'since'
+                ? "Para 'Tempo desde...', escolha uma data que já passou."
+                : "Para 'Contagem para...', escolha uma data futura.",
+              confirmButtonText: 'Ok'
+            });
+          } else {
+            alert(mode === 'since'
+              ? "Para 'Tempo desde...', escolha uma data que já passou."
+              : "Para 'Contagem para...', escolha uma data futura.");
+          }
+          return; // mantém estado do formulário sem enviar
+        }
+      }
+
+      const formData = new FormData(formEl);
       // Atualiza campos que podem estar somente na UI
       formData.set("image_adjustments", JSON.stringify(currentAdjustments));
       const msgVal = $("#message").val();
@@ -457,6 +485,12 @@ $(document).ready(function () {
         : accumulatedFiles;
       filesForSubmit.slice(0, 3).forEach((file) => formData.append("images", file));
 
+      // Feedback de carregamento
+      const $btn = $("#submitBtn");
+      if ($btn.length) {
+        $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Criando...');
+      }
+
       try {
         const resp = await fetch(formEl.action || "/create", {
           method: "POST",
@@ -464,13 +498,22 @@ $(document).ready(function () {
           redirect: "follow",
         });
         if (resp.ok) {
-          // Redireciona para a página final (após follow em 302)
           window.location.href = resp.url || (formEl.action || "/");
         } else {
-          alert("Erro ao criar a página. Tente novamente.");
+          if (window.Swal) {
+            Swal.fire({ icon: 'error', title: 'Erro ao criar a página', text: 'Tente novamente.' });
+          } else {
+            alert("Erro ao criar a página. Tente novamente.");
+          }
+          if ($btn.length) $btn.prop("disabled", false).text('Criar Página');
         }
       } catch (err) {
-        alert("Falha de rede ao criar a página. Verifique sua conexão.");
+        if (window.Swal) {
+          Swal.fire({ icon: 'error', title: 'Falha de rede', text: 'Verifique sua conexão.' });
+        } else {
+          alert("Falha de rede ao criar a página. Verifique sua conexão.");
+        }
+        if ($btn.length) $btn.prop("disabled", false).text('Criar Página');
       }
     });
 
@@ -673,40 +716,5 @@ $(document).ready(function () {
     });
   }
 
-  $("#createForm").on("submit", function (e) {
-    const mode = $("input[name='counter_mode']:checked").val();
-    const d = $("#event_date").val();
-    const t = $("#event_time").val();
-
-    // Validação cliente: evita enviar se data/hora não combina com modo
-    if (d && t) {
-      const eventDt = new Date(`${d}T${t}:00`);
-      const now = new Date();
-      const isFuture = eventDt.getTime() > now.getTime();
-      const isPastOrNow = eventDt.getTime() <= now.getTime();
-
-      if ((mode === "since" && !isPastOrNow) || (mode === "until" && !isFuture)) {
-        e.preventDefault();
-        // Feedback visual sem perder dados
-        if (window.Swal) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Verifique a data e o modo',
-            text: mode === 'since'
-              ? "Para 'Tempo desde...', escolha uma data que já passou."
-              : "Para 'Contagem para...', escolha uma data futura.",
-            confirmButtonText: 'Ok'
-          });
-        } else {
-          alert(mode === 'since'
-            ? "Para 'Tempo desde...', escolha uma data que já passou."
-            : "Para 'Contagem para...', escolha uma data futura.");
-        }
-        return; // não desabilita o botão; mantém estado
-      }
-    }
-
-    const $btn = $("#submitBtn");
-    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Criando...');
-  });
+  // (handler removido — validação e submit agora estão integrados ao handler de fetch)
 });
