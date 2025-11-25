@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="glass-card">
+  <h2>Pagamento confirmado</h2>
+  <p style="margin-bottom:1rem; color: var(--text-muted);">
+    Obrigado! Seu pagamento foi processado.
+  </p>
+  <p style="margin-bottom:1rem;">Você será redirecionado em instantes…</p>
+  <a href="{{ redirect_url }}" class="btn btn-primary">Ir agora</a>
+</div>
+
+{% if aw_id and aw_label %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ aw_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);} 
+    gtag('js', new Date());
+    gtag('config', '{{ aw_id }}');
+    gtag('event', 'conversion', {
+      'send_to': '{{ aw_id }}/{{ aw_label }}',
+      'value': {{ conv_value|tojson }},
+      'currency': 'BRL'
+    });
+    setTimeout(function(){ window.location.href = {{ redirect_url|tojson }}; }, 1000);
+  </script>
+{% endif %}
+{% endblock %}

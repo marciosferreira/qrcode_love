@@ -46,6 +46,16 @@ timezone = pytz.timezone("America/Manaus")
 # Configurações iniciais
 app = Flask(__name__)
 
+# Injeta IDs de tracking globalmente nos templates
+@app.context_processor
+def inject_tracking_ids():
+    return {
+        "GTM_CONTAINER_ID": os.getenv("GTM_CONTAINER_ID"),
+        # IDs para Google tag (gtag.js)
+        "GOOGLE_TAG_ID": os.getenv("GOOGLE_TAG_ID"),
+        "GA_MEASUREMENT_ID": os.getenv("GA_MEASUREMENT_ID"),
+    }
+
 # Sanitização de HTML básico para mensagens (permite apenas poucas tags)
 from html import escape
 from html.parser import HTMLParser
@@ -1101,10 +1111,10 @@ ASAAS_API_URL = "https://api.asaas.com/v3/paymentLinks"
 
 # Catálogo de planos progressivos: duração e preço
 PLANS = {
-    "30d": {"days": 30, "price": 9.90, "label": "30 dias"},
-    "90d": {"days": 90, "price": 24.90, "label": "90 dias"},
-    "180d": {"days": 180, "price": 39.90, "label": "6 meses"},
-    "365d": {"days": 365, "price": 69.90, "label": "1 ano"},
+    "30d": {"days": 30, "price": 5.00, "label": "30 dias"}, # 9.90
+    "90d": {"days": 90, "price": 6.00, "label": "90 dias"}, # 24.90
+    "180d": {"days": 180, "price": 7.00, "label": "6 meses"}, # 39.90
+    "365d": {"days": 365, "price": 8.00, "label": "1 ano"}, # 69.90
 }
 
 
@@ -1130,7 +1140,12 @@ def pay(id):
         "notificationEnabled": False,
         "externalReference": couple["page_url"],
         "callback": {
-            "successUrl": url_for("payment_success", page_url=couple["page_url"], _external=True)
+            # Adiciona parâmetros na URL para leitura pelo GTM (GA4):
+            # v=<valor>, plan=<código>, ref=<page_url>
+            "successUrl": (
+                f"{url_for('payment_success', page_url=couple['page_url'], _external=True)}"
+                f"?v={plan['price']:.2f}&plan={plan_code}&ref={couple['page_url']}"
+            )
         },
         "isAddressRequired": False
     }
@@ -1270,7 +1285,23 @@ def payment_success(page_url):
             ExpressionAttributeValues={":v": True}
         )
 
-    return redirect(url_for("couple_page", page_url=page_url))
+    # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
+    try:
+        conv_value = float(pagamento.get("value", 0) or 0)
+    except Exception:
+        conv_value = float(plan.get("price", 0))
+
+    redirect_url = url_for("couple_page", page_url=page_url)
+    aw_id = os.getenv("AW_CONVERSION_ID")
+    aw_label = os.getenv("AW_CONVERSION_LABEL")
+
+    return render_template(
+        "payment_success.html",
+        conv_value=conv_value,
+        redirect_url=redirect_url,
+        aw_id=aw_id,
+        aw_label=aw_label,
+    )
 
 
 
