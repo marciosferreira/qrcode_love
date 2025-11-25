@@ -215,10 +215,19 @@ body {
     align-items: center;
     gap: 12px;
     transition: transform var(--transition-base);
+    text-decoration: none;
 }
 
 .logo-area:hover {
     transform: scale(1.02);
+}
+
+/* Garantir que o link do logo nunca tenha sublinhado em quaisquer estados */
+.logo-area:link,
+.logo-area:visited,
+.logo-area:hover,
+.logo-area:active {
+    text-decoration: none;
 }
 
 .logo-img {
@@ -758,9 +767,48 @@ body.gradient_love .background-ambient::after {
     pointer-events: none;
 }
 
+/* Darker Black-Red (Crimson) Theme */
+body.gradient_dark_crimson .background-ambient {
+    background: radial-gradient(circle at 20% 20%, #0a0a0f 0%, #0a0a0f 25%, transparent 26%),
+                radial-gradient(circle at 80% 10%, #1a0c12 0%, #1a0c12 20%, transparent 21%),
+                linear-gradient(135deg, #0a0a0f 0%, #1a0c12 35%, #2a0015 65%, #3a0018 100%);
+}
+
+body.gradient_dark_crimson .background-ambient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+/* Tones down ambient lights for darker theme */
+body.gradient_dark_crimson .orb {
+    opacity: 0.35;
+    filter: blur(120px);
+}
+
+body.gradient_dark_crimson .orb-1 {
+    background: radial-gradient(circle, rgba(120, 0, 20, 0.9) 0%, transparent 70%);
+}
+
+body.gradient_dark_crimson .orb-2 {
+    background: radial-gradient(circle, rgba(80, 0, 10, 0.9) 0%, transparent 70%);
+}
+
+body.gradient_dark_crimson .orb-3 {
+    background: radial-gradient(circle, rgba(180, 0, 30, 0.8) 0%, transparent 70%);
+}
+
+body.gradient_dark_crimson .ambient-particles .particle {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
+}
+
 body.texture_rainbow .background-ambient {
     background: url('../texturas/textura_arco_iris.png') no-repeat center center fixed;
     background-size: cover;
+    animation: none;
 }
 
 body.texture_rainbow .background-ambient::after {
@@ -774,11 +822,13 @@ body.texture_rainbow .background-ambient::after {
 body.texture_marble .background-ambient {
     background: url('../texturas/textura_marmorizada.png') no-repeat center center fixed;
     background-size: cover;
+    animation: none;
 }
 
 body.texture_paper .background-ambient {
     background: url('../texturas/textura_papel_antigo.png') no-repeat center center fixed;
     background-size: cover;
+    animation: none;
 }
 
 body.texture_paper .background-ambient::after {
@@ -787,6 +837,16 @@ body.texture_paper .background-ambient::after {
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     pointer-events: none;
+}
+
+/* Desativa luzes/partículas sobre texturas para não encobrir imagem */
+body.texture_rainbow .orb,
+body.texture_rainbow .ambient-particles,
+body.texture_marble .orb,
+body.texture_marble .ambient-particles,
+body.texture_paper .orb,
+body.texture_paper .ambient-particles {
+    display: none;
 }
 
 /* ============================================
@@ -814,3 +874,140 @@ body.texture_paper .background-ambient::after {
         gap: 1.5rem;
     }
 }
+/* Roxo/Azul Profundo: fundo bem escuro com tons indigo/púrpura */
+body.gradient_dark_purple_deep .background-ambient {
+  background:
+    radial-gradient(1200px 800px at 50% 40%, rgba(34, 40, 72, 0.50) 0%, rgba(26, 32, 64, 0.45) 40%, rgba(18, 22, 48, 0.40) 65%, rgba(12, 16, 36, 0.35) 85%),
+    linear-gradient(180deg, #171e3e 0%, #1f2560 35%, #2a1f4d 70%, #141a33 100%);
+  background-attachment: fixed;
+}
+
+body.gradient_dark_purple_deep .background-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(1000px 600px at 50% 30%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.22) 60%, rgba(0,0,0,0.26) 100%);
+}
+
+/* Orbs com tons púrpura/indigo, discretos para leitura */
+body.gradient_dark_purple_deep .orb {
+  background: radial-gradient(circle at 30% 30%, rgba(98, 48, 132, 0.18), rgba(30, 56, 102, 0.16));
+  filter: blur(18px) saturate(115%);
+}
+
+body.gradient_dark_purple_deep .orb:nth-child(2) {
+  background: radial-gradient(circle at 70% 40%, rgba(74, 36, 120, 0.16), rgba(24, 38, 76, 0.14));
+}
+
+/* Partículas sutis para dar vida sem poluir */
+body.gradient_dark_purple_deep .ambient-particles .particle {
+  background: rgba(210, 220, 255, 0.16);
+}
+/* Branco/Cinza estilo convite: limpo, elegante, com textura sutil via gradientes */
+body.gradient_wedding_silver .background-ambient {
+  background: #ffffff;
+  background-attachment: fixed;
+}
+
+body.gradient_wedding_silver .background-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Sem vinheta para um branco realmente puro */
+  background: none;
+}
+
+/* Visual minimalista: orbs e partículas desativados para manter o branco puro */
+body.gradient_wedding_silver .orb { display: none; }
+body.gradient_wedding_silver .ambient-particles { display: none; }
+
+/* Tema Branco Puro: texto escuro e bordas salientes sem cartões cinza */
+body.gradient_wedding_silver {
+  --text-color: #2f2f2f;
+  --text-muted: rgba(0,0,0,0.6);
+  --text-dim: rgba(0,0,0,0.4);
+  --glass-bg: transparent;
+  --glass-bg-hover: transparent;
+  --glass-border: rgba(0,0,0,0.18);
+}
+
+body.gradient_wedding_silver .glass-header,
+body.gradient_wedding_silver .glass-footer,
+body.gradient_wedding_silver .glass-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+body.gradient_wedding_silver .glass-header { border-bottom: 2px solid rgba(0,0,0,0.2); }
+body.gradient_wedding_silver .glass-footer { border-top: 2px solid rgba(0,0,0,0.2); }
+body.gradient_wedding_silver .glass-card { border-width: 2px; }
+
+/* Formulários em branco puro com texto escuro */
+body.gradient_wedding_silver .form-control {
+  background: #ffffff;
+  color: #2f2f2f;
+  border: 2px solid rgba(0,0,0,0.18);
+}
+body.gradient_wedding_silver .form-control::placeholder { color: rgba(0,0,0,0.5); }
+body.gradient_wedding_silver .form-control:focus {
+  background: #ffffff;
+  border-color: #666666;
+  box-shadow: 0 0 0 4px rgba(100,100,100,0.15), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Opções do select com fundo branco e texto escuro */
+body.gradient_wedding_silver select.form-control option,
+body.gradient_wedding_silver select.form-control optgroup {
+  background-color: #ffffff;
+  color: #2f2f2f;
+}
+
+/* Botões secundários e ícones em estilo contorno no branco puro */
+body.gradient_wedding_silver .btn-secondary {
+  background: transparent;
+  color: #2f2f2f;
+  border: 2px solid rgba(0,0,0,0.25);
+}
+body.gradient_wedding_silver .btn-glass-icon {
+  background: transparent;
+  border: 2px solid rgba(0,0,0,0.25);
+  color: #2f2f2f;
+  box-shadow: none;
+}
+
+/* Caixas do contador no estilo borda apenas */
+body.gradient_wedding_silver .time-box {
+  background: transparent;
+  border: 2px solid rgba(0,0,0,0.2);
+  box-shadow: none;
+}
+
+/* Preto/Cinza escuro estilo gótico: contrastado e sóbrio */
+body.gradient_gothic_charcoal .background-ambient {
+  background:
+    radial-gradient(1200px 800px at 50% 40%, rgba(10, 10, 12, 0.85) 0%, rgba(14, 14, 16, 0.80) 45%, rgba(20, 20, 22, 0.75) 80%),
+    linear-gradient(180deg, #0a0a0c 0%, #121214 40%, #1a1a1d 70%, #0e0e10 100%);
+  background-attachment: fixed;
+}
+
+body.gradient_gothic_charcoal .background-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Vinheta mais marcada para estética gótica */
+  background: radial-gradient(1100px 750px at 50% 30%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.28) 60%, rgba(0,0,0,0.32) 100%);
+}
+
+/* Orbs discretos em cinza carvão; partículas leves para textura de fundo */
+body.gradient_gothic_charcoal .orb {
+  background: radial-gradient(circle at 30% 30%, rgba(60, 60, 65, 0.14), rgba(30, 30, 34, 0.12));
+  filter: blur(18px) saturate(100%);
+}
+body.gradient_gothic_charcoal .orb:nth-child(2) {
+  background: radial-gradient(circle at 70% 40%, rgba(70, 70, 75, 0.12), rgba(35, 35, 39, 0.10));
+}
+
+body.gradient_gothic_charcoal .ambient-particles .particle { background: rgba(200, 200, 210, 0.12); }

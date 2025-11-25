@@ -1417,5 +1417,71 @@ def generate_qr_code(url, unique_code, box_size=20, border=4):
         return None
 
 
+# ----------------------
+# Contato via AWS SES
+# ----------------------
+def send_contact_email_via_ses(name: str, email: str, subject: str, message: str) -> bool:
+     """Envia e-mail de contato ao administrador usando AWS SES.
+     Retorna True em caso de sucesso, False caso contrário.
+     """
+     try:
+         region = os.environ.get("AWS_SES_REGION", "us-east-1")
+         admin_email = os.environ.get("ADMIN_EMAIL", "contato@meueventoespecial.com.br")
+         sender_email = os.environ.get("AWS_SES_SENDER", admin_email)
+
+         ses_client = boto3.client("ses", region_name=region)
+
+         body_text = (
+             f"Mensagem de contato\n\n"
+             f"Nome: {name}\n"
+             f"E-mail: {email}\n"
+             f"Assunto: {subject}\n\n"
+             f"Mensagem:\n{message}\n"
+         )
+         body_html = (
+             f"<h3>Mensagem de contato</h3>"
+             f"<p><strong>Nome:</strong> {name}</p>"
+             f"<p><strong>E-mail:</strong> {email}</p>"
+             f"<p><strong>Assunto:</strong> {subject}</p>"
+             f"<p style='white-space:pre-wrap'><strong>Mensagem:</strong><br>{message}</p>"
+         )
+
+         ses_client.send_email(
+             Source=sender_email,
+             Destination={"ToAddresses": [admin_email]},
+             Message={
+                 "Subject": {"Data": subject, "Charset": "UTF-8"},
+                 "Body": {
+                     "Text": {"Data": body_text, "Charset": "UTF-8"},
+                     "Html": {"Data": body_html, "Charset": "UTF-8"},
+                 },
+             },
+             ReplyToAddresses=[email] if email else [],
+         )
+         return True
+     except Exception as e:
+         print(f"Erro ao enviar e-mail via SES: {e}")
+         return False
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+     if request.method == "POST":
+         name = request.form.get("name", "").strip()
+         email = request.form.get("email", "").strip()
+         subject = sanitize_html(request.form.get("subject", "").strip())
+         message = sanitize_html(request.form.get("message", "").strip())
+
+         if not name or not email or not subject or not message:
+             flash("Por favor, preencha todos os campos.", "error")
+             return redirect(url_for("contact"))
+
+         if send_contact_email_via_ses(name, email, subject, message):
+             flash("Mensagem enviada com sucesso!", "success")
+         else:
+             flash("Não foi possível enviar sua mensagem. Tente novamente.", "error")
+         return redirect(url_for("contact"))
+
+     return render_template("contact.html")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

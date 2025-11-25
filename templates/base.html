@@ -67,14 +67,14 @@
 
     <div class="app-container">
         <header class="glass-header">
-            <div class="logo-area">
+            <a href="{{ url_for('index') }}" class="logo-area" aria-label="Ir para a página inicial">
                 <img src="{{ url_for('static', filename='images/logo_qrcode_heart_transparent.png') }}" alt="Logo"
                     class="logo-img">
                 <span class="logo-text">Meu Evento Especial</span>
-            </div>
+            </a>
             <nav class="nav-actions">
                 {% block nav_actions %}
-                <a href="mailto:contato@meueventoespecial.com.br" class="nav-link" title="Contato">
+                <a href="{{ url_for('contact') }}" class="nav-link" title="Contato">
                     <i class="bi bi-envelope-fill"></i>
                 </a>
                 {% endblock %}
