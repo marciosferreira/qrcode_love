@@ -10,14 +10,25 @@
 {% endblock %}
 
 {% block scripts %}
+  <script id="purchase-data" type="application/json">
+    {{ {'event':'purchase','value': conv_value|default(0), 'currency':'BRL'}|tojson }}
+  </script>
   <script>
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event: 'purchase',
-      value: Number({{ conv_value|default(0)|tojson }}),
-      currency: 'BRL'
-      // transaction_id: 'INSERIR_ID_UNICO_SE_DISPONIVEL'
-    });
+    (function(){
+      var el = document.getElementById('purchase-data');
+      var payload = { event: 'purchase', value: 0, currency: 'BRL' };
+      try {
+        var parsed = JSON.parse((el && el.textContent) || '{}');
+        if (parsed && typeof parsed === 'object') {
+          payload = parsed;
+          if (typeof payload.value === 'string') {
+            payload.value = parseFloat(payload.value) || 0;
+          }
+        }
+      } catch (e) {}
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(payload);
+    })();
   </script>
 {% if aw_id and aw_label %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ aw_id }}"></script>
