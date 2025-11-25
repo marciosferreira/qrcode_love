@@ -27,4 +27,26 @@
     });
   </script>
 {% endif %}
+
+{% if GA_MEASUREMENT_ID %}
+  <script>
+    (function(){
+      // Se gtag não estiver carregado (por não haver AW ID), carrega gtag para GA4
+      if (typeof gtag === 'undefined') {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);} 
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id={{ GA_MEASUREMENT_ID }}';
+        document.head.appendChild(s);
+        gtag('js', new Date());
+      }
+      // Habilita debug_mode no GA4 quando a URL tiver ?debug=1 (ou _dbg/debug_mode)
+      var params = new URLSearchParams(window.location.search);
+      var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
+      gtag('config', '{{ GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
+      // Observação: o 'config' do GA4 dispara um page_view automaticamente
+    })();
+  </script>
+{% endif %}
 {% endblock %}
