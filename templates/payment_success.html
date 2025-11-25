@@ -8,10 +8,12 @@
   <p style="margin-bottom:1rem;">Você será redirecionado em instantes…</p>
   <a href="{{ redirect_url }}" class="btn btn-primary">Ir agora</a>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
   // Redireciona sempre após 1 segundo, independentemente de integrações de Ads
-  setTimeout(function(){ window.location.href = {{ redirect_url|tojson }}; }, 1000);
+  setTimeout(function(){ window.location.href = "{{ redirect_url }}"; }, 1000);
 </script>
 
 {% if aw_id and aw_label %}
@@ -23,7 +25,7 @@
     gtag('config', '{{ aw_id }}');
     gtag('event', 'conversion', {
       'send_to': '{{ aw_id }}/{{ aw_label }}',
-      'value': {{ conv_value|tojson }},
+      'value': Number("{{ conv_value|default(0) }}"),
       'currency': 'BRL'
     });
   </script>
