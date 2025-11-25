@@ -27,7 +27,18 @@
         }
       } catch (e) {}
       window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push(payload);
+      var val = Number(payload.value) || 0;
+      if (val <= 0) {
+        var params = new URLSearchParams(location.search || '');
+        var qv = params.get('v');
+        var qn = Number(qv || 0);
+        if (!isNaN(qn) && qn > 0) { val = qn; }
+      }
+      if (val > 0) {
+        payload.value = val;
+        // Opcional: se tiver transaction_id disponível no template, inclua-o no JSON
+        window.dataLayer.push(payload);
+      }
     })();
   </script>
 {% if aw_id and aw_label %}
@@ -39,11 +50,14 @@
     gtag('config', '{{ aw_id }}');
     // Dispara a conversão do Google Ads com segurança
     setTimeout(function() {
-      gtag('event', 'conversion', {
-        send_to: '{{ aw_id }}/{{ aw_label }}',
-        value: Number("{{ conv_value|default(0) }}"),
-        currency: 'BRL'
-      });
+      var v = Number("{{ conv_value|default(0) }}") || 0;
+      if (v > 0) {
+        gtag('event', 'conversion', {
+          send_to: '{{ aw_id }}/{{ aw_label }}',
+          value: v,
+          currency: 'BRL'
+        });
+      }
     }, 0);
   </script>
 {% endif %}
