@@ -11,53 +11,21 @@
 {% endblock %}
 
 {% block scripts %}
-{% set gtag_id = GA_MEASUREMENT_ID or aw_id %}
-{% if gtag_id %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ gtag_id }}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-23RSZ1SMRX"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);} 
   gtag('js', new Date());
+  gtag('config', 'G-23RSZ1SMRX', { 'debug_mode': true });
   
-  (function() {
-    var params = new URLSearchParams(window.location.search);
-    var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
-    
-    var ga4Id = '{{ GA_MEASUREMENT_ID|default("") }}';
-    var awId = '{{ aw_id|default("") }}';
-    var awLabel = '{{ aw_label|default("") }}';
-    var convValue = '{{ conv_value|default("0") }}';
-    
-    if (ga4Id) {
-      gtag('config', ga4Id, { 'debug_mode': debug });
-    }
-    
-    if (awId) {
-      gtag('config', awId);
-    }
-    
-    var v = Number(convValue);
-    if (!v || v <= 0) {
-      var vq = params.get('v');
-      if (vq) v = Number(vq.replace(',', '.'));
-    }
-    v = (isFinite(v) && v > 0) ? v : 0;
-    
-    if (ga4Id) {
-      gtag('event', 'purchase', {
-        value: v,
-        currency: 'BRL'
-      });
-    }
-    
-    if (awId && awLabel) {
-      gtag('event', 'conversion', {
-        'send_to': awId + '/' + awLabel,
-        'value': v,
-        'currency': 'BRL'
-      });
-    }
-  })();
+  var params = new URLSearchParams(window.location.search);
+  var v = parseFloat(params.get('v')) || 0;
+  
+  gtag('event', 'purchase', {
+    value: v,
+    currency: 'BRL'
+  });
+  
+  console.log('GA4 purchase enviado:', v);
 </script>
-{% endif %}
 {% endblock %}
