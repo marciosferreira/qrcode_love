@@ -11,11 +11,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  // Redireciona sempre após 1 segundo, independentemente de integrações de Ads
-  setTimeout(function(){ window.location.href = "{{ redirect_url }}"; }, 1000);
-</script>
-
 {% if aw_id and aw_label %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ aw_id }}"></script>
   <script>
