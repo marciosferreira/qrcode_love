@@ -10,6 +10,15 @@
 {% endblock %}
 
 {% block scripts %}
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'purchase',
+      value: Number({{ conv_value|default(0)|tojson }}),
+      currency: 'BRL'
+      // transaction_id: 'INSERIR_ID_UNICO_SE_DISPONIVEL'
+    });
+  </script>
 {% if aw_id and aw_label %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ aw_id }}"></script>
   <script>
@@ -17,11 +26,14 @@
     function gtag(){dataLayer.push(arguments);} 
     gtag('js', new Date());
     gtag('config', '{{ aw_id }}');
-    gtag('event', 'conversion', {
-      'send_to': '{{ aw_id }}/{{ aw_label }}',
-      'value': Number("{{ conv_value|default(0) }}"),
-      'currency': 'BRL'
-    });
+    // Dispara a conversão do Google Ads com segurança
+    setTimeout(function() {
+      gtag('event', 'conversion', {
+        send_to: '{{ aw_id }}/{{ aw_label }}',
+        value: Number("{{ conv_value|default(0) }}"),
+        currency: 'BRL'
+      });
+    }, 0);
   </script>
 {% endif %}
 {% endblock %}
