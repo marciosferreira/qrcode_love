@@ -5,16 +5,13 @@
   <p style="margin-bottom:1rem; color: var(--text-muted);">
     Obrigado! Seu pagamento foi processado.
   </p>
-  <p style="margin-bottom:1rem;">Você será redirecionado em instantes…</p>
+  <p style="margin-bottom:1rem;">Você pode continuar pelo botão abaixo.</p>
   <a href="{{ redirect_url }}" class="btn btn-primary">Ir agora</a>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-  // Redireciona sempre após 1 segundo, independentemente de integrações de Ads
-  setTimeout(function(){ window.location.href = "{{ redirect_url }}"; }, 1000);
-</script>
+<!-- Redirecionamento automático removido por solicitação -->
 
 {% if aw_id and aw_label %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ aw_id }}"></script>
