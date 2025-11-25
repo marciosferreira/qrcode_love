@@ -46,6 +46,20 @@
       var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
       gtag('config', '{{ GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
       // Observação: o 'config' do GA4 dispara um page_view automaticamente
+
+      // Envia um evento explícito de purchase para facilitar visualização no DebugView
+      var v = Number("{{ conv_value|default(0) }}");
+      if (!v || v <= 0) {
+        var vq = params.get('v');
+        if (vq) {
+          v = Number((vq || '').replace(',', '.'));
+        }
+      }
+      gtag('event', 'purchase', {
+        value: (isFinite(v) && v > 0) ? v : 0,
+        currency: 'BRL',
+        debug_mode: debug
+      });
     })();
   </script>
 {% endif %}
