@@ -33,6 +33,18 @@
         var qv = params.get('v');
         var qn = Number(qv || 0);
         if (!isNaN(qn) && qn > 0) { val = qn; }
+        // Fallback adicional: tentar ler o parâmetro `v` do link de redirecionamento
+        if (val <= 0) {
+          try {
+            var link = document.querySelector('a.btn.btn-primary[href]');
+            if (link && link.href) {
+              var hrefParams = new URL(link.href).searchParams;
+              var hv = hrefParams.get('v');
+              var hn = Number(hv || 0);
+              if (!isNaN(hn) && hn > 0) { val = hn; }
+            }
+          } catch (e) {}
+        }
       }
       if (val > 0) {
         payload.value = val;
