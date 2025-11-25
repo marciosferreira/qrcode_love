@@ -1286,6 +1286,7 @@ def payment_success(page_url):
         )
 
     # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
+    # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
     try:
         conv_value = float(pagamento.get("value", 0) or 0)
     except Exception:
@@ -1303,6 +1304,7 @@ def payment_success(page_url):
         aw_id=aw_id,
         aw_label=aw_label,
         GA_MEASUREMENT_ID=ga4_id,
+        GTM_CONTAINER_ID='',  # Desativa GTM nesta página
     )
 
 
