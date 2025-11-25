@@ -1292,8 +1292,9 @@ def payment_success(page_url):
         conv_value = float(plan.get("price", 0))
 
     redirect_url = url_for("couple_page", page_url=page_url)
-    aw_id = os.getenv("AW_CONVERSION_ID")
-    aw_label = os.getenv("AW_CONVERSION_LABEL")
+    aw_id = os.getenv("AW_CONVERSION_ID") or ''
+    aw_label = os.getenv("AW_CONVERSION_LABEL") or ''
+    ga4_id = os.getenv("GA_MEASUREMENT_ID") or ''
 
     return render_template(
         "payment_success.html",
@@ -1301,6 +1302,7 @@ def payment_success(page_url):
         redirect_url=redirect_url,
         aw_id=aw_id,
         aw_label=aw_label,
+        GA_MEASUREMENT_ID=ga4_id,
     )
 
 
