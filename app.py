@@ -34,6 +34,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 from datetime import datetime, timedelta
+from decimal import Decimal
 import pytz
 from boto3.dynamodb.conditions import Key
 import random
@@ -242,7 +243,8 @@ def edit_user(email, page_url):
             user["event_time"] = request.form["event_time"]
             user["email"] = request.form["email"]
             user["optional_message"] = sanitize_html(request.form.get("optional_message", ""))
-            user["video_id"] = request.form["video_id"]
+            # video_id removido do formulário; manter valor existente se houver
+            # user["video_id"] permanece inalterado
             user["counter_mode"] = request.form.get("counter_mode", "since")
 
             # Obtenha a nova data e hora do formulário
@@ -264,6 +266,32 @@ def edit_user(email, page_url):
                     exp_time = (user.get("expires_at", "")[11:16]) or "00:00"
                 user["expires_at"] = f"{exp_date}T{exp_time}:00.000Z"
 
+            # Campos de plano (opcionais)
+            user["last_plan_code"] = request.form.get("last_plan_code", user.get("last_plan_code", ""))
+            price_str = request.form.get("last_plan_price")
+            if price_str is not None and price_str.strip() != "":
+                try:
+                    normalized = price_str.strip()
+                    # Remove possível prefixo de moeda
+                    if normalized.startswith("R$"):
+                        normalized = normalized.replace("R$", "").strip()
+                    # Se houver vírgula, trata como separador decimal e remove pontos como milhares
+                    if "," in normalized:
+                        normalized = normalized.replace(".", "")
+                        normalized = normalized.replace(",", ".")
+                    # Usa Decimal para salvar no DynamoDB como número preciso
+                    user["last_plan_price"] = Decimal(normalized)
+                except Exception as e:
+                    print(f"Erro ao converter last_plan_price '{price_str}': {e}")
+            lp = request.form.get("last_payment_at")
+            if lp:
+                # esperado: YYYY-MM-DDTHH:MM
+                try:
+                    if len(lp) >= 16:
+                        user["last_payment_at"] = f"{lp}:00.000Z"
+                except Exception:
+                    pass
+
             # Captura o valor da checkbox (se marcada, é 'on', caso contrário não está presente)
             user["paid"] = (
                 "paid" in request.form
@@ -272,6 +300,12 @@ def edit_user(email, page_url):
 
             # Atualizar o item no DynamoDB
             table.put_item(Item=user)
+
+            # Feedback de sucesso
+            try:
+                flash("Alterações salvas com sucesso.", "success")
+            except Exception:
+                pass
 
             # Após salvar, redireciona para a lista de itens
             return redirect(url_for("list_dynamo_items"))

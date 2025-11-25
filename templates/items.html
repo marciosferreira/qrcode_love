@@ -39,6 +39,7 @@
           <option value="90d">90d</option>
           <option value="180d">180d</option>
           <option value="365d">365d</option>
+          <option value="trial">trial</option>
         </select>
         <button id="clearFilters">Limpar</button>
       </div>
@@ -57,7 +58,6 @@
             <th>Último Pgto</th>
             <th>Criado</th>
             <th>Validade</th>
-            <th>Video</th>
             <th>Ações</th>
           </tr>
 
@@ -68,7 +68,8 @@
               data-name1="{{ item['name1'] }}"
               data-name2="{{ item['name2'] }}"
               data-paid="{{ item['paid'] }}"
-              data-plan="{{ item.get('last_plan_code', '') }}">
+              data-plan="{{ item.get('last_plan_code', '') or ('trial' if not item['paid'] else '') }}"
+              data-expires="{{ item.get('expires_at','') }}">
             <td>{{ item['email'] }}</td>
             <td>{{ item['page_url'] }}</td>
             <td>{{ item['name1'] }} &amp; {{ item['name2'] }}</td>
@@ -80,12 +81,26 @@
                 <span class="badge unpaid">Pendente</span>
               {% endif %}
             </td>
-            <td><span class="badge plan">{{ item.get('last_plan_code', '') }}</span></td>
-            <td>R$ {{ '%.2f' % (item.get('last_plan_price', 0) or 0) }}</td>
-            <td>{{ item.get('last_payment_at', '') }}</td>
+            <td><span class="badge plan plan-badge">
+              {% if item.get('last_plan_code') %}
+                {{ item.get('last_plan_code') }}
+              {% elif not item['paid'] %}
+                trial
+              {% else %}
+                
+              {% endif %}
+            </span></td>
+            <td>
+              {% set raw_price = (item.get('last_plan_price', 0) or 0) | float %}
+              {% set price_fmt = '%.2f' % raw_price %}
+              R$ {{ price_fmt.replace('.', ',') }}
+            </td>
+            <td>
+              {% set lp = item.get('last_payment_at','') %}
+              {% if lp %}{{ lp[8:10] }}/{{ lp[5:7] }}/{{ lp[0:4] }} {{ lp[11:16] }}{% endif %}
+            </td>
             <td>{{ item['created_at'] }}</td>
             <td>{{ item.get('expires_at', '') }}</td>
-            <td>{{ item['video_id'] }}</td>
             <td>
               <div class="actions">
                 <a href="https://meueventoespecial.com.br/couple_page/{{ item['page_url'] }}" target="_blank" class="btn">Abrir</a>
@@ -109,7 +124,8 @@
              data-name1="{{ item['name1'] }}"
              data-name2="{{ item['name2'] }}"
              data-paid="{{ item['paid'] }}"
-             data-plan="{{ item.get('last_plan_code', '') }}">
+             data-plan="{{ item.get('last_plan_code', '') or ('trial' if not item['paid'] else '') }}"
+             data-expires="{{ item.get('expires_at','') }}">
           <div class="card-row">
             <div>
               <div class="card-label">Email</div>
@@ -139,17 +155,28 @@
             </div>
             <div>
               <div class="card-label">Plano</div>
-              <div class="card-value"><span class="badge plan">{{ item.get('last_plan_code', '') }}</span></div>
+              <div class="card-value"><span class="badge plan plan-badge">
+                {% if item.get('last_plan_code') %}
+                  {{ item.get('last_plan_code') }}
+                {% elif not item['paid'] %}
+                  trial
+                {% else %}
+                  
+                {% endif %}
+              </span></div>
             </div>
           </div>
           <div class="card-row">
             <div>
               <div class="card-label">Preço</div>
-              <div class="card-value">R$ {{ '%.2f' % (item.get('last_plan_price', 0) or 0) }}</div>
+              {% set raw_price2 = (item.get('last_plan_price', 0) or 0) | float %}
+              {% set price2 = '%.2f' % raw_price2 %}
+              <div class="card-value">R$ {{ price2.replace('.', ',') }}</div>
             </div>
             <div>
               <div class="card-label">Último Pgto</div>
-              <div class="card-value">{{ item.get('last_payment_at', '') }}</div>
+              {% set lp2 = item.get('last_payment_at','') %}
+              <div class="card-value">{% if lp2 %}{{ lp2[8:10] }}/{{ lp2[5:7] }}/{{ lp2[0:4] }} {{ lp2[11:16] }}{% endif %}</div>
             </div>
           </div>
           <div class="card-row">
@@ -160,12 +187,6 @@
             <div>
               <div class="card-label">Validade</div>
               <div class="card-value">{{ item.get('expires_at', '') }}</div>
-            </div>
-          </div>
-          <div class="card-row">
-            <div>
-              <div class="card-label">Video</div>
-              <div class="card-value">{{ item['video_id'] }}</div>
             </div>
           </div>
           <div class="card-actions">
@@ -235,8 +256,42 @@
         applyFilters();
       });
 
+      function updatePlanStates() {
+        const now = new Date();
+        const rows = Array.from(document.querySelectorAll('tr.item-row'));
+        const cards = Array.from(document.querySelectorAll('.item-card'));
+
+        function setState(container) {
+          const plan = (container.dataset.plan || '').toLowerCase();
+          const expires = container.dataset.expires || '';
+          const badge = container.querySelector('.plan-badge');
+          if (!badge) return;
+          // limpar estados anteriores
+          badge.classList.remove('active','expired');
+          const text = (badge.textContent || '').trim().toLowerCase();
+
+          // Só colorimos quando é trial
+          if (text === 'trial' || plan === 'trial') {
+            let expDate = null;
+            try { expDate = expires ? new Date(expires) : null; } catch (e) { expDate = null; }
+            if (expDate && expDate.getTime() > now.getTime()) {
+              badge.classList.add('active');
+            } else {
+              badge.classList.add('expired');
+            }
+          }
+        }
+
+        rows.forEach(setState);
+        cards.forEach(setState);
+      }
+
       // init
       applyFilters();
+      updatePlanStates();
+      // re-aplicar após filtros
+      [searchInput, paidFilter, planFilter].forEach(el => el.addEventListener('input', updatePlanStates));
+      [paidFilter, planFilter].forEach(el => el.addEventListener('change', updatePlanStates));
     </script>
   </body>
 </html>

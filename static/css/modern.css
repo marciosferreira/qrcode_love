@@ -147,6 +147,32 @@ body {
     animation-delay: -15s;
 }
 
+/* Ambient Particles */
+.ambient-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ambient-particles .particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    animation: particleFloat 18s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .background-ambient { animation: none; }
+    .orb { animation: none; }
+    .ambient-particles .particle { animation: none; }
+}
+
 /* ============================================
    LAYOUT STRUCTURE
    ============================================ */

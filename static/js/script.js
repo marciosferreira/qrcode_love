@@ -56,10 +56,25 @@ $(document).ready(function () {
       timeDiff = currentDate.getTime() - eventDate.getTime();
     }
 
-    // Countdown finished
+    // Countdown finished: show message with exact date/time and keep counter zeroed
+    let finishedMsg = "";
     if (counterMode === "until" && timeDiff <= 0) {
-      $counterContainer.html('<div class="glass-card" style="padding: 1rem;"><h3 style="margin:0;">❤️ O evento chegou! ❤️</h3></div>');
-      return;
+      // Force zero values in the boxes
+      timeDiff = 0;
+
+      // Format event date/time in Manaus timezone as dd/mm/yy às hh:mm
+      const parts = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Manaus",
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(eventDate);
+      const getPart = (t) => (parts.find((p) => p.type === t) || {}).value || "";
+      const whenStr = `${getPart("day")}/${getPart("month")}/${getPart("year")} às ${getPart("hour")}:${getPart("minute")}`;
+      finishedMsg = `<div class="glass-card" style="padding: 1rem; margin-bottom: .5rem;"><h3 style="margin:0;">O evento chegou em ${whenStr}</h3></div>`;
     }
 
     if (timeDiff < 0) timeDiff = Math.abs(timeDiff);
@@ -94,7 +109,13 @@ $(document).ready(function () {
     html += buildBox(dMinutes, "Minutos");
     html += buildBox(dSeconds, "Segundos");
 
+    // Render only the counter boxes
     $counterContainer.html(html);
+    // Place the finish message at the end (after description), if present
+    const $finish = $("#finish-message");
+    if ($finish.length) {
+      $finish.html(finishedMsg);
+    }
   }
 
   // Start Timer
@@ -122,6 +143,37 @@ $(document).ready(function () {
   }
 
   startCarousel();
+
+  /* =========================================
+     AMBIENT PARTICLES GENERATOR
+     ========================================= */
+  (function generateAmbientParticles() {
+    const $ambient = $("#ambientParticles");
+    if (!$ambient.length) return;
+    const count = 24;
+    for (let i = 0; i < count; i++) {
+      const size = 4 + Math.floor(Math.random() * 10); // 4..14px
+      const x = Math.floor(Math.random() * 100); // percent
+      const y = Math.floor(Math.random() * 100); // percent
+      const tx = (Math.random() * 200 - 100).toFixed(0); // -100..100px
+      const ty = (Math.random() * 200 - 100).toFixed(0); // -100..100px
+      const dur = 14 + Math.floor(Math.random() * 10); // 14..24s
+      const delay = -Math.floor(Math.random() * dur);
+
+      const $p = $('<span class="particle"></span>');
+      $p.css({
+        width: size + "px",
+        height: size + "px",
+        left: x + "%",
+        top: y + "%",
+        "--tx": tx + "px",
+        "--ty": ty + "px",
+        animationDuration: dur + "s",
+        animationDelay: delay + "s",
+      });
+      $ambient.append($p);
+    }
+  })();
 
   /* =========================================
      EFFECTS LOGIC

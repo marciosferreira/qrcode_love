@@ -55,10 +55,18 @@
       <div id="event-data" data-event-date="{{ couple.event_date }}" data-event-time="{{ couple.event_time }}"
         data-counter-mode="{{ display_counter_mode }}" style="display: none;"></div>
 
+      <h3 class="special-text" style="font-size: 1.8rem; margin-top: 1rem;">
+        {% if display_counter_mode == 'until' %}
+        para {{ couple.event_description }}
+        {% else %}
+        desde que {{ couple.event_description }}
+        {% endif %}
+      </h3>
+
       {% if display_counter_mode == 'until' %}
-      <h3>Faltam:</h3>
+      <h3 style="margin-top: .5rem;">Faltam:</h3>
       {% else %}
-      <h3>Já se passaram:</h3>
+      <h3 style="margin-top: .5rem;">Já se passaram:</h3>
       {% endif %}
 
       <div class="counter-wrapper" id="meu-contador">
@@ -67,13 +75,7 @@
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Dias</span></div>
       </div>
 
-      <h3 class="special-text" style="font-size: 1.8rem; margin-top: 1rem;">
-        {% if display_counter_mode == 'until' %}
-        para {{ couple.event_description }}
-        {% else %}
-        desde que {{ couple.event_description }}
-        {% endif %}
-      </h3>
+      <div id="finish-message" style="margin-top:.5rem;"></div>
     </div>
   </div>
 

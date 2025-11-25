@@ -66,6 +66,8 @@ td { font-size: 14px; }
 .badge.paid { background: rgba(34,197,94,0.15); color: #86efac; border-color: rgba(34,197,94,0.4); }
 .badge.unpaid { background: rgba(239,68,68,0.15); color: #fecaca; border-color: rgba(239,68,68,0.4); }
 .badge.plan { background: rgba(59,130,246,0.12); color: #bfdbfe; border-color: rgba(59,130,246,0.35); }
+.badge.active { background: rgba(34,197,94,0.15); color: #86efac; border-color: rgba(34,197,94,0.4); }
+.badge.expired { background: rgba(156,163,175,0.12); color: #d1d5db; border-color: rgba(156,163,175,0.35); }
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: #0b1220; color: var(--text); font-size: 13px; cursor: pointer; }
@@ -75,11 +77,14 @@ td { font-size: 14px; }
 
 .counter { font-size: 12px; color: var(--muted); }
 
+/* Por padrão, exibir apenas tabela no desktop */
+.cards { display: none; }
+
 /* Mobile cards */
 @media (max-width: 768px) {
   .admin-header { flex-direction: column; align-items: flex-start; }
   .toolbar { grid-template-columns: 1fr; }
-  .table-wrap { background: transparent; border: none; }
+  .table-wrap { display: none; }
   table { display: none; }
 
   .cards {
@@ -99,4 +104,3 @@ td { font-size: 14px; }
   .card-value { font-size: 14px; }
   .card-actions { display: flex; gap: 8px; margin-top: 10px; }
 }
-

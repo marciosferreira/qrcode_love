@@ -117,8 +117,23 @@
         <label for="optional_message">Mensagem Opcional:</label>
         <textarea id="optional_message" name="optional_message">{{ user['optional_message'] }}</textarea>
 
-        <label for="video_id">Video Id:</label>
-        <input type="text" id="video_id" name="video_id" value="{{ user['video_id'] }}">
+        <!-- Campos de plano -->
+        <label for="last_plan_code">Tipo de Plano:</label>
+        <select id="last_plan_code" name="last_plan_code">
+            <option value="" {% if not user.get('last_plan_code') %}selected{% endif %}>—</option>
+            <option value="30d" {% if user.get('last_plan_code')=='30d' %}selected{% endif %}>30 dias</option>
+            <option value="90d" {% if user.get('last_plan_code')=='90d' %}selected{% endif %}>90 dias</option>
+            <option value="180d" {% if user.get('last_plan_code')=='180d' %}selected{% endif %}>6 meses</option>
+            <option value="365d" {% if user.get('last_plan_code')=='365d' %}selected{% endif %}>1 ano</option>
+        </select>
+
+        <label for="last_plan_price">Preço do Plano (R$):</label>
+        {% set lpv = user.get('last_plan_price') %}
+        {% set lpv_float = (lpv if lpv is not none else 0) | float %}
+        <input type="text" inputmode="decimal" id="last_plan_price" name="last_plan_price" placeholder="ex.: 9,90" value="{% if lpv is not none %}{{ ('%.2f' % lpv_float).replace('.', ',') }}{% endif %}">
+
+        <label for="last_payment_at">Último Pagamento:</label>
+        <input type="datetime-local" id="last_payment_at" name="last_payment_at" value="{{ (user.get('last_payment_at','')[:16]) }}">
 
         <label for="created_at">Data de Criação:</label>
         <input type="date" id="created_at" name="created_at" value="{{ user['created_at'][:10] }}">
@@ -139,6 +154,30 @@
     </form>
 
     <a href="{{ url_for('list_dynamo_items') }}">Cancelar</a>
+
+    <script>
+      (function(){
+        var form = document.querySelector('form');
+        if(!form) return;
+        form.addEventListener('submit', function(e){
+          var priceEl = document.getElementById('last_plan_price');
+          if(priceEl){
+            var raw = (priceEl.value || '').trim();
+            if(raw){
+              // Remove prefixo de moeda e espaços
+              raw = raw.replace(/^R\$/i, '').trim();
+              // Trata separadores: vírgula como decimal, ponto como milhar
+              if(raw.indexOf(',') !== -1){
+                raw = raw.replace(/\./g, '');
+                raw = raw.replace(',', '.');
+              }
+              priceEl.value = raw;
+            }
+          }
+          // datetime-local já usa formato ISO parcial (YYYY-MM-DDTHH:MM); nada a fazer aqui
+        });
+      })();
+    </script>
 </body>
 
 </html>
