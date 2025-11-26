@@ -35,6 +35,14 @@
       debug_mode: debug
     };
 
+    // Chaves de deduplicação por sessão (evita disparos repetidos em recarregamentos)
+    var txnId = payload.transaction_id || '';
+    var ss = window.sessionStorage;
+    var gaKey = 'ga4_purchase_' + txnId;
+    var adsKey = 'ads_conv_' + txnId;
+    var gaAlready = !!(ss && ss.getItem(gaKey) === '1');
+    var adsAlready = !!(ss && ss.getItem(adsKey) === '1');
+
     var sent = false;
     var attempts = 0;
     function sendPurchase(){
@@ -47,9 +55,14 @@
               console.log('GA4 purchase callback confirmado');
             }
           });
-          gtag('event', 'purchase', eventPayload);
-          sent = true;
-          console.log('GA4 purchase enviado (tentativa ' + attempts + '):', payload);
+          if (!gaAlready) {
+            gtag('event', 'purchase', eventPayload);
+            sent = true;
+            console.log('GA4 purchase enviado (tentativa ' + attempts + '):', payload);
+            try { if (ss) ss.setItem(gaKey, '1'); } catch(e) {}
+          } else {
+            console.log('GA4 purchase já enviado anteriormente para txn_id:', txnId);
+          }
         } catch(e){
           console.warn('Falha ao enviar GA4 purchase:', e);
         }
@@ -58,13 +71,18 @@
         var awId = '{{ aw_id|default("") }}';
         var awLabel = '{{ aw_label|default("") }}';
         if (awId && awLabel) {
-          gtag('event', 'conversion', {
-            send_to: awId + '/' + awLabel,
-            value: payload.value,
-            currency: payload.currency,
-            transaction_id: payload.transaction_id
-          });
-          console.log('Google Ads conversion enviada:', awId + '/' + awLabel, payload.value);
+          if (!adsAlready) {
+            gtag('event', 'conversion', {
+              send_to: awId + '/' + awLabel,
+              value: payload.value,
+              currency: payload.currency,
+              transaction_id: payload.transaction_id
+            });
+            console.log('Google Ads conversion enviada:', awId + '/' + awLabel, payload.value);
+            try { if (ss) ss.setItem(adsKey, '1'); } catch(e) {}
+          } else {
+            console.log('Google Ads conversion já enviada anteriormente para txn_id:', txnId);
+          }
         } else {
           console.log('AW IDs não configurados; conversão Ads não enviada');
         }

@@ -1654,14 +1654,65 @@ def asaas_webhook():
 
         # Persiste informações do último pagamento para estatísticas
         couple["last_plan_code"] = plan_code or "30d"
-        couple["last_plan_price"] = PLANS.get(plan_code, PLANS["30d"])["price"]
+        # DynamoDB não aceita float: usa Decimal
+        try:
+            couple["last_plan_price"] = Decimal(str(PLANS.get(plan_code, PLANS["30d"]) ["price"]))
+        except Exception:
+            couple["last_plan_price"] = Decimal("0")
         couple["last_payment_at"] = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         try:
-            table.put_item(Item=couple)
+            # Converte qualquer número restante para Decimal antes de salvar
+            couple_to_save = convert_numbers_to_decimal(couple)
+            table.put_item(Item=couple_to_save)
         except Exception as e:
             print("[webhook] erro ao persistir pagamento no DynamoDB:", e)
             return jsonify({"received": True, "error": "persist_error"})
+
+        # GA4 Measurement Protocol: envia 'purchase' server-side para cobrir casos sem redirecionamento
+        try:
+            ga_api_secret = os.getenv("GA_API_SECRET")
+            ga4_id = os.getenv("GA_MEASUREMENT_ID")
+            if ga_api_secret and ga4_id:
+                print(f"[webhook] GA4 MP configurado (measurement_id={ga4_id})")
+                import uuid
+                client_id = str(uuid.uuid4())
+                mp_url = f"https://www.google-analytics.com/mp/collect?measurement_id={ga4_id}&api_secret={ga_api_secret}"
+                try:
+                    conv_value = float(payment.get("value", 0) or 0)
+                except Exception:
+                    conv_value = float(PLANS.get(plan_code or "30d", PLANS["30d"])['price'])
+                txn_id = payment.get("id") or page_url
+                mp_payload = {
+                    "client_id": client_id,
+                    "events": [
+                        {
+                            "name": "purchase",
+                            "params": {
+                                "currency": "BRL",
+                                "value": float(conv_value or 0),
+                                "transaction_id": txn_id,
+                                "items": [
+                                    {
+                                        "item_id": plan_code or "unknown",
+                                        "item_name": f"Plano {plan_code or 'unknown'}",
+                                        "price": float(conv_value or 0),
+                                        "quantity": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+                try:
+                    r = requests.post(mp_url, json=mp_payload, timeout=3)
+                    print("[webhook] GA4 MP purchase status:", r.status_code, r.text[:200])
+                except Exception as e:
+                    print("[webhook] Falha ao enviar GA4 MP purchase:", e)
+            else:
+                print("[webhook] GA4 MP NÃO configurado: faltam GA_MEASUREMENT_ID ou GA_API_SECRET")
+        except Exception as e:
+            print("[webhook] Erro no bloco GA4 Measurement Protocol:", e)
 
         # (opcional) Envio de email de confirmação
         try:
