@@ -146,6 +146,22 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Detecta suporte a background-clip: text e habilita a classe global
+        (function(){
+            try {
+                var supports = (window.CSS && CSS.supports && (CSS.supports('background-clip','text') || CSS.supports('-webkit-background-clip','text')));
+                var root = document.documentElement; // aplica no <html>
+                if (supports) {
+                    root.classList.add('supports-text-clip');
+                } else {
+                    root.classList.remove('supports-text-clip');
+                }
+            } catch(e) {
+                // Em caso de erro, não quebra a página
+            }
+        })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 

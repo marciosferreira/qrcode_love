@@ -1062,3 +1062,25 @@ body.gradient_gothic_charcoal .orb:nth-child(2) {
 }
 
 body.gradient_gothic_charcoal .ambient-particles .particle { background: rgba(200, 200, 210, 0.12); }
+/* Neutraliza tema/gradiente nos emojis dentro de textos tematizados */
+[class*='text_theme_'] .emoji {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
+  color: unset !important; /* evita color: transparent herdado */
+  filter: none !important;
+  opacity: 1 !important;
+}
+/* Refina neutralização em contexto de gradiente clipado */
+.supports-text-clip .special-text[class*='text_theme_'] .emoji {
+  -webkit-text-fill-color: initial !important;
+  color: inherit !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+[id="optional_message_text"] .special-text {
+  display: inline;
+  background-color: transparent !important;
+}

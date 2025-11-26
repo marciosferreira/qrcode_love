@@ -118,6 +118,36 @@ $(document).ready(function () {
     }
   }
 
+  // Atualiza prévia da data selecionada em formato brasileiro
+  function updateSelectedDateHint() {
+    const d = $("#event_date").val();
+    const t = $("#event_time").val();
+    const $hint = $("#eventDateHint");
+    if (!$hint.length) return;
+    if (!d) {
+      $hint.text("Formato: dia/mês/ano");
+      return;
+    }
+    try {
+      const dt = new Date(`${d}T${t || "00:00"}:00`);
+      const parts = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Manaus",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(dt);
+      const get = (k) => (parts.find((p) => p.type === k) || {}).value || "";
+      const dateStr = `${get("day")}/${get("month")}/${get("year")}`;
+      const timeStr = t ? `${get("hour")}:${get("minute")}` : "";
+      $hint.text(timeStr ? `Selecionado: ${dateStr} às ${timeStr}` : `Selecionado: ${dateStr}`);
+    } catch (e) {
+      $hint.text("Selecionado: "+ d);
+    }
+  }
+
   // Start Timer
   setInterval(updateCounter, 1000);
   updateCounter();
@@ -129,20 +159,161 @@ $(document).ready(function () {
   function startCarousel() {
     if (carouselInterval) clearInterval(carouselInterval);
 
-    carouselInterval = setInterval(() => {
+    const advance = () => {
       const $images = $(".carousel-image");
       if ($images.length <= 1) return;
-
       const $active = $images.filter(".active");
-      let $next = $active.next("img");
-      if ($next.length === 0) $next = $images.first();
+      const currentIdx = $images.index($active);
+      const nextIdx = (currentIdx + 1) % $images.length;
+      setActiveIndex(nextIdx);
+    };
 
-      $active.removeClass("active").css("opacity", 0);
-      $next.addClass("active").css("opacity", 1);
-    }, 3000);
+    carouselInterval = setInterval(advance, 3000);
   }
 
   startCarousel();
+
+  // Helpers de navegação do carrossel
+  function setActiveIndex(idx) {
+    const $images = $(".carousel-image");
+    if ($images.length === 0) return;
+    idx = Math.max(0, Math.min(idx, $images.length - 1));
+    const $target = $images.eq(idx);
+    $images.removeClass("active").css("opacity", 0);
+    $target.addClass("active").css("opacity", 1);
+    try { activeImageIndex = idx; } catch(e) {}
+    updateCarouselDots();
+    updateCarouselControlsVisibility();
+  }
+
+  function nextImage() {
+    const $images = $(".carousel-image");
+    if ($images.length <= 1) return;
+    const currentIdx = $images.index($images.filter('.active'));
+    setActiveIndex((currentIdx + 1) % $images.length);
+    startCarousel();
+  }
+
+  function prevImage() {
+    const $images = $(".carousel-image");
+    if ($images.length <= 1) return;
+    const currentIdx = $images.index($images.filter('.active'));
+    setActiveIndex((currentIdx - 1 + $images.length) % $images.length);
+    startCarousel();
+  }
+
+  function rebuildCarouselDots() {
+    const $dots = $("#carouselDots");
+    if ($dots.length === 0) return;
+    const $images = $(".carousel-image");
+    $dots.empty();
+    $images.each(function(i){
+      const $d = $('<span class="dot" data-idx="'+i+'" style="width:10px;height:10px;border-radius:50%;background: currentColor; opacity: .35; display:inline-block; cursor:pointer;"></span>');
+      $d.on('click', function(){ setActiveIndex(i); startCarousel(); });
+      $dots.append($d);
+    });
+    updateCarouselDots();
+  }
+
+  function updateCarouselDots() {
+    const $dots = $("#carouselDots .dot");
+    if ($dots.length === 0) return;
+    const currentIdx = $(".carousel-image").index($(".carousel-image.active"));
+    $dots.css({ background: 'currentColor', opacity: .35 });
+    $dots.eq(currentIdx).css({ background: 'currentColor', opacity: 1 });
+  }
+
+  // Eventos de botões
+  $(document).on('click', '#nextPhotoBtn', nextImage);
+  $(document).on('click', '#prevPhotoBtn', prevImage);
+
+  // Oculta/mostra controles conforme quantidade de fotos
+  function updateCarouselControlsVisibility() {
+    const count = $(".carousel-image").length;
+    const $controls = $("#carouselControls");
+    if (!$controls.length) return;
+    if (count <= 1) {
+      $controls.css('opacity', .6);
+      $("#prevPhotoBtn, #nextPhotoBtn").attr('disabled', true).css('pointer-events','none');
+    } else {
+      $controls.css('opacity', 1);
+      $("#prevPhotoBtn, #nextPhotoBtn").attr('disabled', false).css('pointer-events','auto');
+    }
+  }
+
+  // Swipe em mobile para navegar no carrossel
+  (function initCarouselSwipe(){
+    let touchStartX = null;
+    let touchEndX = null;
+    const threshold = 30; // px
+    $(document).on('touchstart', '#carousel', function(e){
+      if (!e.originalEvent || !e.originalEvent.touches || e.originalEvent.touches.length === 0) return;
+      touchStartX = e.originalEvent.touches[0].clientX;
+    });
+    $(document).on('touchend', '#carousel', function(e){
+      const t = e.originalEvent && e.originalEvent.changedTouches && e.originalEvent.changedTouches[0];
+      if (!t || touchStartX === null) return;
+      touchEndX = t.clientX;
+      const dx = touchEndX - touchStartX;
+      if (Math.abs(dx) > threshold) { dx < 0 ? nextImage() : prevImage(); }
+      touchStartX = null; touchEndX = null;
+    });
+  })();
+
+  // Teclado: setas para navegar e Delete para excluir (na prévia)
+  $(document).on('keydown', '#carousel', function(e){
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevImage(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); nextImage(); }
+    else if (e.key === 'Delete') { $("#deletePhotoBtn").trigger('click'); }
+  });
+
+  // Excluir foto ativa na prévia (index)
+  $(document).on('click', '#deletePhotoBtn', function(){
+    const $carousel = $('#carousel');
+    const $images = $carousel.find('.carousel-image');
+    if ($images.length === 0) return;
+    const $active = $carousel.find('.carousel-image.active');
+    if ($active.length === 0) return;
+    const currentIdx = $images.index($active);
+
+    // Remove do buffer de arquivos
+    const imagesInput = document.getElementById('images');
+    const isPlaceholder = (($active.attr('src') || '').includes('placeholder.png'));
+    if (!isPlaceholder) {
+      const $userImages = $carousel.find('.carousel-image[data-index]');
+      const userIdx = $userImages.index($active);
+      const hasDT = (typeof imagesDT !== 'undefined') && imagesDT && imagesDT.files && imagesDT.files.length > 0;
+      const hasAcc = (typeof accumulatedFiles !== 'undefined') && Array.isArray(accumulatedFiles) && accumulatedFiles.length > 0;
+      if (hasDT) {
+        const newDT = new DataTransfer();
+        Array.from(imagesDT.files).forEach((file,i) => { if (i !== userIdx) newDT.items.add(file); });
+        imagesDT = newDT;
+        if (imagesInput) imagesInput.files = imagesDT.files;
+      } else if (hasAcc) {
+        accumulatedFiles.splice(userIdx, 1);
+      }
+    }
+
+    // Remove do DOM e reindexa
+    $active.remove();
+    const $remaining = $carousel.find('.carousel-image');
+    // Reindexa somente fotos do usuário (não define data-index no placeholder)
+    $remaining.filter('[data-index]').each(function(i){ $(this).attr('data-index', i); });
+    if ($remaining.length === 0) {
+      $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
+    } else {
+      setActiveIndex(Math.max(0, currentIdx - 1));
+    }
+
+    rebuildCarouselDots();
+    updateCarouselControlsVisibility();
+    const hasDTCount = (typeof imagesDT !== 'undefined') && imagesDT && imagesDT.files;
+    const hasAccCount = (typeof accumulatedFiles !== 'undefined') && Array.isArray(accumulatedFiles);
+    const totalBuffered = hasDTCount ? imagesDT.files.length : (hasAccCount ? accumulatedFiles.length : 0);
+    updatePhotosCountInfo(totalBuffered, 3);
+    updateEditButtonVisibility();
+    updateDeleteButtonVisibility();
+  });
 
   /* =========================================
      AMBIENT PARTICLES GENERATOR
@@ -236,14 +407,27 @@ $(document).ready(function () {
         eventDate = new Date(`${d}T${t}:00`);
         updateCounter();
       }
+      updateSelectedDateHint();
     });
 
     // Update Names
     $("#name1, #name2").on("input", function () {
-      const n1 = $("#name1").val() || "Nome 1";
-      const n2 = $("#name2").val();
+      const n1 = $("#name1").val().trim();
+      const n2 = $("#name2").val().trim();
 
-      $("#couple_name1").text(n1);
+      if (!n1 && !n2) {
+        $("#couple_name1").text("Paula");
+        $("#couple_name2").text("Cleber").show();
+        $("#e_comercial").show();
+        return;
+      }
+
+      if (n1) {
+        $("#couple_name1").text(n1);
+      } else {
+        $("#couple_name1").text("");
+      }
+
       if (n2) {
         $("#couple_name2").text(n2).show();
         $("#e_comercial").show();
@@ -252,6 +436,19 @@ $(document).ready(function () {
         $("#e_comercial").hide();
       }
     });
+
+    // Inicializa nomes padrão apenas na PRÉVIA (inputs vazios)
+    (function initNamesDefaults(){
+      const n1 = $("#name1").val().trim();
+      const n2 = $("#name2").val().trim();
+      if (!n1 && !n2) {
+        $("#couple_name1").text("Paula");
+        $("#couple_name2").text("Cleber").show();
+        $("#e_comercial").show();
+      } else {
+        $("#name1, #name2").trigger("input");
+      }
+    })();
 
     // Event Options
     const eventOptions = {
@@ -381,9 +578,48 @@ $(document).ready(function () {
 
     $("#customPhraseToggle, #eventSelect, #customPhraseInput").on("change input", updateDescriptionAndMode);
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+    function isEmojiChar(ch) {
+      const cp = ch.codePointAt(0);
+      return (
+        (cp >= 0x1F300 && cp <= 0x1FAFF) || // emojis principais
+        (cp >= 0x2600 && cp <= 0x27BF) ||   // símbolos diversos
+        cp === 0x2764 ||                    // ❤
+        cp === 0x1F970 ||                   // 🥰
+        cp === 0x1F48D ||                   // 💍
+        cp === 0x1F4F8 ||                   // 📸
+        cp === 0x1F3B5 ||                   // 🎵
+        cp === 0x2600                       // ☀
+      );
+    }
+    function renderMessageWithEmojiIsolation(text) {
+      let out = "";
+      let buffer = "";
+      for (const ch of text || "") {
+        if (isEmojiChar(ch)) {
+          if (buffer) {
+            out += `<span class="themed-text special-text">${escapeHtml(buffer)}</span>`;
+            buffer = "";
+          }
+          out += `<span class="emoji">${escapeHtml(ch)}</span>`;
+        } else {
+          buffer += ch;
+        }
+      }
+      if (buffer) {
+        out += `<span class="themed-text special-text">${escapeHtml(buffer)}</span>`;
+      }
+      return out || `<span class="themed-text special-text">Sua mensagem aparecerá aqui...</span>`;
+    }
     $("#message").on("input", function () {
       const msg = $(this).val();
-      $("#optional_message_text").text(msg || "Sua mensagem aparecerá aqui...");
+      const html = renderMessageWithEmojiIsolation(msg);
+      $("#optional_message_text").html(html);
     });
 
     // Inicializa descrição com base no modo atual e primeira opção
@@ -395,13 +631,13 @@ $(document).ready(function () {
 
     // Photo Adjustment
     // Buffer de arquivos para acumular seleções múltiplas do input
-    let imagesDT;
+    var imagesDT;
     try {
       imagesDT = new DataTransfer();
     } catch (e) {
       imagesDT = null; // fallback para navegadores sem DataTransfer
     }
-    const accumulatedFiles = [];
+    var accumulatedFiles = [];
     let currentAdjustments = {};
     let isDragging = false;
     let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotation = 0;
@@ -437,29 +673,40 @@ $(document).ready(function () {
       const currentCountDT = imagesDT ? imagesDT.files.length : 0;
       const currentCountAcc = accumulatedFiles.length;
 
+      let ignoredCount = 0;
       incomingFiles.forEach((file) => {
         // Respeita limite somando buffer atual
-        const totalCount = (imagesDT ? imagesDT.files.length : 0) + accumulatedFiles.length;
-        if (totalCount >= maxPhotos) return;
+        const totalCount = imagesDT ? imagesDT.files.length : accumulatedFiles.length;
+        if (totalCount >= maxPhotos) { ignoredCount++; return; }
         // Evita duplicados
         const isDupDT = imagesDT ? Array.from(imagesDT.files).some(
           (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
         ) : false;
-        const isDupAcc = accumulatedFiles.some(
+        const isDupAcc = (!imagesDT) && accumulatedFiles.some(
           (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
         );
         if (isDupDT || isDupAcc) return;
 
         // Adiciona ao buffer disponível
-        if (imagesDT && imagesDT.items) imagesDT.items.add(file);
-        accumulatedFiles.push(file);
+        if (imagesDT && imagesDT.items) {
+          imagesDT.items.add(file);
+        } else {
+          accumulatedFiles.push(file);
+        }
         filesToAppend.push(file);
       });
       // Garante que o formulário enviará todas as fotos acumuladas
       const imagesInput = document.getElementById("images");
       if (imagesInput && imagesDT) imagesInput.files = imagesDT.files;
 
-      const totalBuffered = (imagesDT ? imagesDT.files.length : 0) + accumulatedFiles.length;
+      const totalBuffered = imagesDT ? imagesDT.files.length : accumulatedFiles.length;
+      // Atualiza contador visual (se existir)
+      updatePhotosCountInfo(totalBuffered, maxPhotos);
+      if (ignoredCount > 0) {
+        if (window.Swal) {
+          Swal.fire({ icon: 'info', title: 'Limite de fotos', text: 'Você pode enviar até 3 fotos. Remova alguma para adicionar outra.' });
+        }
+      }
       if (totalBuffered === 0 && existingCount === 0) {
         $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
         updateEditButtonVisibility();
@@ -485,7 +732,10 @@ $(document).ready(function () {
             // Atualiza campo oculto com ajustes atuais (preservados)
             $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
             startCarousel();
+            rebuildCarouselDots();
             updateEditButtonVisibility();
+            updateDeleteButtonVisibility();
+            updateCarouselControlsVisibility();
           }
         };
         reader.readAsDataURL(file);
@@ -493,6 +743,32 @@ $(document).ready(function () {
 
       // Limpa valor do input para permitir adicionar novamente o mesmo arquivo se desejado
       inputEl.value = "";
+    });
+
+    function updatePhotosCountInfo(total, max) {
+      const el = document.getElementById('photosLimitInfo');
+      if (!el) return;
+      el.textContent = `${total}/${max} selecionadas`;
+      el.style.color = total >= max ? '#ffd166' : 'var(--text-muted)';
+    }
+
+    function updateDeleteButtonVisibility() {
+      const hasUserPhotosDOM = $('#carousel .carousel-image[data-index]').length > 0;
+      if (hasUserPhotosDOM) {
+        $("#deletePhotoBtn").fadeIn();
+      } else {
+        $("#deletePhotoBtn").hide();
+      }
+    }
+
+    // Inicializa dots e contador na carga da página
+    $(function(){
+      rebuildCarouselDots();
+      const $carousel = $("#carousel");
+      const existingCount = $carousel.find('.carousel-image[data-index]').length;
+      updatePhotosCountInfo(existingCount, 3);
+      updateDeleteButtonVisibility();
+      updateCarouselControlsVisibility();
     });
 
     // Envia formulário via fetch garantindo anexos do buffer de fotos, com validação de data/modo
@@ -744,21 +1020,41 @@ $(document).ready(function () {
     // Text Theme Preview (aplica classe nos elementos especiais)
     $("#textThemeSelector").on("change", function () {
       const theme = $(this).val();
-      const $targets = $("#e_comercial, #event_description_text, #optional_message_text");
+      const $targets = $("#e_comercial, #event_description_text, #carouselDots");
+      const $msgTargets = $("#optional_message_text .themed-text");
       // Remove classes anteriores de tema
-      $targets.removeClass(function (i, c) {
+      $targets.add($msgTargets).removeClass(function (i, c) {
         return (c.match(/(^|\s)text_theme_\S+/g) || []).join(' ');
       });
-      if (theme) $targets.addClass(theme);
+      if (theme) {
+        $targets.addClass(theme);
+        $msgTargets.addClass(theme);
+      }
     });
     // Inicializa tema de texto na prévia
     (function initTextTheme() {
       const theme = $("#textThemeSelector").val() || $("#textThemeSelector").attr("value");
-      const $targets = $("#e_comercial, #event_description_text, #optional_message_text");
-      $targets.removeClass(function (i, c) {
+      const $targets = $("#e_comercial, #event_description_text, #carouselDots");
+      const $msgTargets = $("#optional_message_text .themed-text");
+      $targets.add($msgTargets).removeClass(function (i, c) {
         return (c.match(/(^|\s)text_theme_\S+/g) || []).join(' ');
       });
-      if (theme) $targets.addClass(theme);
+      if (theme) {
+        $targets.addClass(theme);
+        $msgTargets.addClass(theme);
+      }
+    })();
+
+    // Mensagem opcional padrão na prévia
+    (function initDefaultMessage(){
+      const defaultMsgRaw = "💞 Paula e Cleber, dois corações, uma história. 🌙 Promessas, ☀️ alegria; 📸 memórias, 🎵 melodia; 💍 amor que cresce a cada dia.";
+      const $msg = $("#message");
+      const $preview = $("#optional_message_text");
+      if (!$msg.val()) {
+        $msg.val(defaultMsgRaw);
+      }
+      const html = renderMessageWithEmojiIsolation($msg.val());
+      $preview.html(html);
     })();
 
     // YouTube Preview
@@ -807,12 +1103,17 @@ $(document).ready(function () {
         );
 
         $cover.on("click", function () {
-          const iframe = $(`<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&loop=0" 
+          const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&playsinline=1`;
+          const iframe = $(`<iframe src="${embedUrl}" 
                                   frameborder="0" 
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                  referrerpolicy="strict-origin-when-cross-origin"
                                   allowfullscreen
                                   style="width: 100%; height: 300px; border: none;"></iframe>`);
           $videoContainer.empty().append(iframe);
+          // Link de fallback caso o vídeo não permita incorporação
+          const $fallback = $(`<div style="margin-top: 8px; text-align: center;"><a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener" style="color:#0077ff;">Abrir no YouTube</a></div>`);
+          $videoContainer.append($fallback);
         });
 
         $videoContainer.append($cover).show();
@@ -820,6 +1121,16 @@ $(document).ready(function () {
         $videoContainer.hide();
       }
     });
+    // Inicializa vídeo do YouTube padrão na prévia
+    (function initYouTubeDefault(){
+      const defaultUrl = "https://youtu.be/xJNKT9HAXRc?si=ZkNk6Mg536qAAzzc";
+      const $yt = $("#youtubeLink");
+      if (!$yt.val()) { $yt.val(defaultUrl); }
+      $yt.trigger("input");
+    })();
+
+    // Inicializa prévia da data selecionada
+    updateSelectedDateHint();
   }
 
   // (handler removido — validação e submit agora estão integrados ao handler de fetch)
