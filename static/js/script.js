@@ -677,11 +677,28 @@ $(document).ready(function () {
     });
 
     // Inicializa descrição com base no modo atual e primeira opção
-    (function initDescription() {
-      const initMode = $("input[name='counter_mode']:checked").val();
-      updateEventSelectOptions(initMode);
-      updateDescriptionAndMode();
-    })();
+(function initDescription() {
+  const initMode = $("input[name='counter_mode']:checked").val();
+  updateEventSelectOptions(initMode);
+  updateDescriptionAndMode();
+})();
+
+    // Date Picker (Flatpickr) - mostra dd/mm/aaaa, envia Y-m-d
+    document.addEventListener('DOMContentLoaded', function () {
+      try {
+        if (window.flatpickr && document.querySelector('#event_date')) {
+          flatpickr('#event_date', {
+            dateFormat: 'Y-m-d',       // valor real enviado ao backend
+            altInput: true,            // mostra um input amigável
+            altFormat: 'd/m/Y',        // formato brasileiro visível
+            allowInput: true,
+            locale: (window.flatpickr?.l10ns?.pt) || 'pt'
+          });
+        }
+      } catch (e) {
+        console.warn('Falha ao inicializar Flatpickr:', e);
+      }
+    });
 
     // Photo Adjustment
     // Buffer de arquivos para acumular seleções múltiplas do input
