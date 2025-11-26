@@ -738,39 +738,35 @@ $(document).ready(function () {
 
       const existingCount = $carousel.find(".carousel-image").length;
 
-      // Adiciona os novos arquivos ao buffer (máximo 3), evitando duplicados
+      // Adiciona os novos arquivos ao buffer acumulado (máximo 3), evitando duplicados
       const maxPhotos = 3;
       const filesToAppend = [];
-      const currentCountDT = imagesDT ? imagesDT.files.length : 0;
-      const currentCountAcc = accumulatedFiles.length;
-
       let ignoredCount = 0;
       incomingFiles.forEach((file) => {
-        // Respeita limite somando buffer atual
-        const totalCount = imagesDT ? imagesDT.files.length : accumulatedFiles.length;
-        if (totalCount >= maxPhotos) { ignoredCount++; return; }
-        // Evita duplicados
-        const isDupDT = imagesDT ? Array.from(imagesDT.files).some(
-          (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
-        ) : false;
-        const isDupAcc = (!imagesDT) && accumulatedFiles.some(
+        if (accumulatedFiles.length >= maxPhotos) { ignoredCount++; return; }
+        const isDupAcc = accumulatedFiles.some(
           (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
         );
-        if (isDupDT || isDupAcc) return;
-
-        // Adiciona ao buffer disponível
-        if (imagesDT && imagesDT.items) {
-          imagesDT.items.add(file);
-        } else {
-          accumulatedFiles.push(file);
-        }
+        if (isDupAcc) return;
+        accumulatedFiles.push(file);
         filesToAppend.push(file);
       });
-      // Garante que o formulário enviará todas as fotos acumuladas
-      const imagesInput = document.getElementById("images");
-      if (imagesInput && imagesDT) imagesInput.files = imagesDT.files;
 
-      const totalBuffered = imagesDT ? imagesDT.files.length : accumulatedFiles.length;
+      // Se possível, espelha o buffer acumulado em DataTransfer para atualizar o input.files
+      const imagesInput = document.getElementById("images");
+      if (imagesInput && imagesDT) {
+        try {
+          const dt = new DataTransfer();
+          accumulatedFiles.slice(0, maxPhotos).forEach((f)=> dt.items.add(f));
+          imagesDT = dt;
+          imagesInput.files = imagesDT.files;
+        } catch (e) {
+          // Fallback: se falhar, mantém apenas accumulatedFiles para envio via FormData
+          console.warn('[images change] DataTransfer add falhou, usando accumulatedFiles apenas');
+        }
+      }
+
+      const totalBuffered = accumulatedFiles.length;
       // Atualiza contador visual (se existir)
       updatePhotosCountInfo(totalBuffered, maxPhotos);
       if (ignoredCount > 0) {
@@ -813,7 +809,16 @@ $(document).ready(function () {
       });
 
       // Limpa valor do input para permitir adicionar novamente o mesmo arquivo se desejado
-      inputEl.value = "";
+      // Somente se DataTransfer existir; caso contrário, manter os arquivos no input
+      if (imagesDT) {
+        inputEl.value = "";
+      }
+      try {
+        console.log('[images change] buffered=', accumulatedFiles.length,
+          'DT=', imagesDT ? imagesDT.files.length : 'n/a',
+          'ACC=', accumulatedFiles.length,
+          'incoming=', incomingFiles.length);
+      } catch(e){ /* no-op */ }
     });
 
     function updatePhotosCountInfo(total, max) {
@@ -888,6 +893,9 @@ $(document).ready(function () {
       const filesForSubmit = imagesDT && imagesDT.files && imagesDT.files.length > 0
         ? Array.from(imagesDT.files)
         : accumulatedFiles;
+      try {
+        console.log('[createForm] submit: filesForSubmit=', filesForSubmit.map(f => ({name: f.name, size: f.size, type: f.type})));
+      } catch(e) { /* no-op */ }
       filesForSubmit.slice(0, 3).forEach((file) => formData.append("images", file));
 
       // Feedback de carregamento

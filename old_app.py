@@ -54,8 +54,6 @@ def inject_tracking_ids():
         # IDs para Google tag (gtag.js)
         "GOOGLE_TAG_ID": os.getenv("GOOGLE_TAG_ID"),
         "GA_MEASUREMENT_ID": os.getenv("GA_MEASUREMENT_ID"),
-        # ID de conversão do Google Ads (opcional, para detecção e remarketing)
-        "AW_CONVERSION_ID": os.getenv("AW_CONVERSION_ID"),
     }
 
 # Sanitização de HTML básico para mensagens (permite apenas poucas tags)
@@ -335,125 +333,16 @@ def edit_user(email, page_url):
 @login_required  # Protege a rota para exigir login
 def list_dynamo_items():
     try:
-        # Parâmetros de paginação
-        page = int(request.args.get("page", 1))
-        if page < 1:
-            page = 1
-        # Fixar 10 itens por página
-        per_page = 10
-
         # Recupera todos os itens da tabela DynamoDB
         response = table.scan()
         items = response.get("Items", [])
 
-        # Ordena por data de criação (mais recentes primeiro) se disponível
-        def parse_created_at(it):
-            created = it.get("created_at")
-            if not created:
-                return datetime.min
-            try:
-                # Formato padrão com milissegundos e sufixo Z
-                return datetime.strptime(created, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except Exception:
-                # Tenta um formato sem milissegundos
-                try:
-                    return datetime.strptime(created, "%Y-%m-%dT%H:%M:%SZ")
-                except Exception:
-                    return datetime.min
-
-        try:
-            items.sort(key=parse_created_at, reverse=True)
-        except Exception:
-            # Se algo falhar na ordenação, seguimos sem ordenar
-            pass
-
-        # Classificação de fase: teste (1h), expirado, liberado
-        # Usa horário local configurado (America/Manaus) para evitar marcar
-        # como expirado indevidamente quando datas foram gravadas no fuso local
-        # porém com sufixo "Z".
-        now_local_naive = datetime.now(timezone).replace(tzinfo=None)
-
-        def parse_iso(dt_str):
-            if not dt_str:
-                return None
-            for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
-                try:
-                    return datetime.strptime(dt_str, fmt)
-                except Exception:
-                    continue
-            return None
-
-        for it in items:
-            paid = bool(it.get("paid", False))
-            exp_dt = parse_iso(it.get("expires_at"))
-            created_dt = parse_iso(it.get("created_at"))
-
-            status = "liberado"
-            if exp_dt:
-                # Comparação baseada no horário local (naive) para coerência com
-                # datas gravadas no fuso local.
-                if exp_dt <= now_local_naive:
-                    status = "expirado"
-                else:
-                    status = "liberado" if paid else "teste"
-            else:
-                if not paid:
-                    if created_dt:
-                        status = "teste" if (created_dt + timedelta(hours=1)) > now_local_naive else "expirado"
-                    else:
-                        status = "teste"
-                else:
-                    status = "liberado"
-
-            it["status_phase"] = status
-
-        # Formatação BR das datas para exibição (dd/mm/yyyy HH:MM)
-        def format_br(dt):
-            if not dt:
-                return ""
-            try:
-                return dt.strftime("%d/%m/%Y %H:%M")
-            except Exception:
-                return ""
-
-        for it in items:
-            it["created_br"] = format_br(parse_iso(it.get("created_at")))
-            it["expires_br"] = format_br(parse_iso(it.get("expires_at")))
-            # Evento: combinar event_date (YYYY-MM-DD) + event_time (HH:MM)
-            ev_date = it.get("event_date")
-            ev_time = it.get("event_time")
-            ev_dt = None
-            if ev_date and ev_time:
-                try:
-                    ev_dt = datetime.strptime(f"{ev_date} {ev_time}", "%Y-%m-%d %H:%M")
-                except Exception:
-                    ev_dt = None
-            elif ev_date:
-                try:
-                    ev_dt = datetime.strptime(ev_date, "%Y-%m-%d")
-                except Exception:
-                    ev_dt = None
-            it["event_br"] = format_br(ev_dt) if ev_dt else (ev_date or "")
-            # Último pagamento
-            it["last_payment_br"] = format_br(parse_iso(it.get("last_payment_at")))
-
-        total = len(items)
-        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
-        if page > total_pages:
-            page = total_pages
-        start = (page - 1) * per_page
-        end = start + per_page
-        page_items = items[start:end]
-
-        # Renderiza com contexto de paginação
-        return render_template(
-            "items.html",
-            items=page_items,
-            page=page,
-            per_page=per_page,
-            total=total,
-            total_pages=total_pages,
-        )
+        if items:
+            return render_template("items.html", items=items)
+        else:
+            flash("Nenhum item encontrado na tabela.")
+            # Em vez de redirecionar, renderize a página com a lista vazia
+            return render_template("items.html", items=[])
     except Exception as e:
         flash(f"Erro ao recuperar itens do DynamoDB: {e}")
         return redirect(url_for("login"))
@@ -765,19 +654,16 @@ def compress_image(image, max_size=(1600, 1600), quality=80):
     output = io.BytesIO()
     if img.format == "PNG":
         img.save(output, format="PNG", optimize=True)
+        content_type = "image/png"
+        ext = "png"
     else:
         img = img.convert("RGB")  # Evita erros com imagens .webp etc
         img.save(output, format="JPEG", quality=quality, optimize=True)
+        content_type = "image/jpeg"
+        ext = "jpg"
 
     output.seek(0)
-    return output
-
-# Mapeia extensão para Content-Type correto
-def get_content_type(ext: str) -> str:
-    if ext.lower() == "png":
-        return "image/png"
-    # Trata jpg e jpeg como image/jpeg
-    return "image/jpeg"
+    return output, content_type, ext
 
 @app.route("/create", methods=["GET", "POST"])
 def create_couple_page():
@@ -785,13 +671,6 @@ def create_couple_page():
         if request.method == "GET":
             return redirect(url_for("index"))
         # Capturando os valores do formulário
-        try:
-            print("[create] Content-Type:", request.headers.get("Content-Type"))
-            print("[create] content_length:", request.content_length)
-            print("[create] files len:", len(request.files or {}))
-            print("[create] files keys:", list(request.files.keys()))
-        except Exception:
-            pass
         name1 = request.form["name1"]
         name2 = request.form["name2"]
         event_date = request.form["event_date"]
@@ -814,7 +693,6 @@ def create_couple_page():
 
         effect_type = request.form.get("effect_type", "none")
         background_type = request.form.get("background_type", "default")
-        text_theme = request.form.get("text_theme", "text_theme_pink")
         counter_mode = request.form.get("counter_mode", "since")
 
         # Validação: modo "Tempo desde..." não pode ter data futura
@@ -854,8 +732,9 @@ def create_couple_page():
         # Converte números em Decimal para salvar no DynamoDB
         image_adjustments_dict = convert_numbers_to_decimal(image_adjustments_dict)
 
-        # Gera um código alfanumérico único para a URL da página (garante unicidade ANTES de usar)
+        # Gera um código alfanumérico único para a URL da página
         unique_code = generate_unique_code()
+        # Garante unicidade ANTES de enviar fotos ao S3
         while table.scan(FilterExpression=Key("page_url").eq(unique_code))["Count"] > 0:
             unique_code = generate_unique_code()
 
@@ -876,43 +755,25 @@ def create_couple_page():
         images = [
             image for image in request.files.getlist("images") if image.filename != ""
         ]
-        try:
-            print("[create] unique_code:", unique_code)
-            print("[create] imagens recebidas:", [img.filename for img in images])
-            # Diagnóstico adicional: se não houver arquivos, inspeciona raw keys
-            if not images:
-                try:
-                    print("[create] getlist('images') len:", len(request.files.getlist("images")))
-                    for k in request.files.keys():
-                        f = request.files.get(k)
-                        if f:
-                            print(f"[create] file key={k} name={getattr(f,'filename',None)} type={getattr(f,'content_type',None)} size? unknown")
-                except Exception:
-                    pass
-        except Exception:
-            pass
         if len(images) > 3:
             flash("Você pode enviar no máximo 3 imagens.")
             return redirect(request.url)
 
         for i, image in enumerate(images):
             if image and allowed_file(image.filename):
-                # Usa extensão consistente com o conteúdo
-                orig_ext = image.filename.rsplit(".", 1)[1].lower()
-                ext = "png" if orig_ext == "png" else "jpg"
+                # redimensiona se muito grande e obtém tipo de conteúdo e extensão
+                resized_image, content_type, ext = compress_image(image)
                 filename = secure_filename(f"{i+1}.{ext}")
                 s3_key = f"pictures/{unique_code}/{filename}"
                 try:
-                    # redimensiona se muito grande
-                    resized_image = compress_image(image)
-
-                    # Enviar imagem ao S3
-                    content_type = get_content_type(ext)
-                    print("[create] uploading:", s3_key, content_type)
-                    # Buckets com ACL desativada não aceitam ACL; manter apenas ContentType
-                    s3_client.upload_fileobj(resized_image, S3_BUCKET, s3_key, ExtraArgs={"ContentType": content_type})
+                    # Enviar imagem ao S3 com ACL pública e ContentType correto
+                    s3_client.upload_fileobj(
+                        resized_image,
+                        S3_BUCKET,
+                        s3_key,
+                        ExtraArgs={"ACL": "public-read", "ContentType": content_type},
+                    )
                 except Exception as e:
-                    print("[create] erro upload:", e)
                     return str(e), 500
             else:
                 flash("Imagens devem estar no formato PNG ou JPEG.")
@@ -929,7 +790,6 @@ def create_couple_page():
             "event_description": final_description,
             "effect_type": effect_type,
             "background_type": background_type,
-            "text_theme": text_theme,
             "page_url": unique_code,
             "optional_message": optional_message,
             "email": email,
@@ -1125,41 +985,21 @@ def couple_page(page_url):
     # Verifica a existência de um vídeo
     has_video = couple.get("video_id") is not None
 
-    # Verifica as imagens disponíveis no S3 em múltiplos prefixos possíveis
-    images = []
-    prefixes_to_check = [
-        f"pictures/{page_url}/",
-        f"pictures/{page_url}/originals/",
-        f"pictures/{page_url}/photos/",
-    ]
-    for pref in prefixes_to_check:
-        try:
-            resp = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=pref)
-            if "Contents" in resp:
-                keys = [obj["Key"] for obj in resp["Contents"]]
-                valid = [
-                    k for k in keys
-                    if not k.endswith("/") and k.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"))
-                ]
-                if valid:
-                    print(f"Imagens encontradas em '{pref}':")
-                    for k in valid:
-                        print(k)
-                images.extend(valid)
-        except Exception as e:
-            print(f"Erro ao listar objetos no prefixo {pref}: {e}")
+    # Verifica as imagens disponíveis no diretório S3
+    response = s3_client.list_objects_v2(
+        Bucket="qrcodelove-pictures", Prefix=f"pictures/{page_url}/"
+    )
 
-    # Remove duplicados mantendo a ordem
-    seen = set()
-    dedup_images = []
-    for k in images:
-        if k not in seen:
-            seen.add(k)
-            dedup_images.append(k)
-    images = dedup_images
-    image_exists = len(images) > 0
-    if not image_exists:
-        print("Nenhuma imagem válida encontrada em quaisquer prefixos.")
+    if "Contents" in response:
+        image_exists = True
+        images = [obj["Key"] for obj in response["Contents"]]
+        print("Objetos encontrados:")
+        for key in images:
+            print(key)
+    else:
+        print("Nenhum objeto encontrado no prefixo especificado.")
+        image_exists = False
+        images = []
 
     # Gera o caminho do QR code
     import boto3
@@ -1192,9 +1032,6 @@ def couple_page(page_url):
 
     page_title = couple["name1"] + (f" & {couple['name2']}" if couple.get("name2") else "")
 
-    # Base URL de imagens no S3 com região correta
-    s3_base_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com"
-
     return render_template(
         "couple_page.html",
         has_video=has_video,
@@ -1219,9 +1056,6 @@ def couple_page(page_url):
         body_class=couple.get("background_type", ""),
         is_expired=is_expired,
         valid_until_str=valid_until_str,
-        # Flag server-side: somente administradores logados recebem esta indicação
-        is_admin_view=current_user.is_authenticated,
-        s3_base_url=s3_base_url,
     )
 
 @app.route("/robots.txt")
@@ -1282,10 +1116,10 @@ ASAAS_API_URL = "https://api.asaas.com/v3/paymentLinks"
 
 # Catálogo de planos progressivos: duração e preço
 PLANS = {
-    "30d": {"days": 30, "price": 9.90, "label": "30 dias"}, # 9.90
-    "90d": {"days": 90, "price": 24.90, "label": "90 dias"}, # 24.90
-    "180d": {"days": 180, "price": 39.90, "label": "6 meses"}, # 39.90
-    "365d": {"days": 365, "price": 69.90, "label": "1 ano"}, # 69.90
+    "30d": {"days": 30, "price": 5.00, "label": "30 dias"}, # 9.90
+    "90d": {"days": 90, "price": 6.00, "label": "90 dias"}, # 24.90
+    "180d": {"days": 180, "price": 7.00, "label": "6 meses"}, # 39.90
+    "365d": {"days": 365, "price": 8.00, "label": "1 ano"}, # 69.90
 }
 
 
@@ -1457,77 +1291,14 @@ def payment_success(page_url):
         )
 
     # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
-    # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
     try:
         conv_value = float(pagamento.get("value", 0) or 0)
     except Exception:
         conv_value = float(plan.get("price", 0))
 
     redirect_url = url_for("couple_page", page_url=page_url)
-    aw_id = os.getenv("AW_CONVERSION_ID") or ''
-    aw_label = os.getenv("AW_CONVERSION_LABEL") or ''
-    ga4_id = os.getenv("GA_MEASUREMENT_ID") or ''
-
-    # Envio server-side (Measurement Protocol) para maior robustez
-    try:
-        ga_api_secret = os.getenv("GA_API_SECRET")
-        if ga_api_secret and ga4_id:
-            # Extrai client_id do cookie _ga (GA1.1.xxx.yyy) ou gera UUID
-            import uuid
-            ga_cookie = request.cookies.get('_ga')
-            client_id = None
-            if ga_cookie:
-                try:
-                    parts = ga_cookie.split('.')
-                    if len(parts) >= 4:
-                        client_id = parts[-2] + '.' + parts[-1]
-                except Exception:
-                    client_id = None
-            if not client_id:
-                client_id = str(uuid.uuid4())
-
-            mp_url = f"https://www.google-analytics.com/mp/collect?measurement_id={ga4_id}&api_secret={ga_api_secret}"
-            # Ativa modo de depuração para Measurement Protocol quando a URL contém sinalizadores
-            dbg_param = request.args.get('debug') or request.args.get('_dbg') or request.args.get('debug_mode')
-            dbg_flag = True if dbg_param is not None else False
-
-            # Garante um transaction_id válido mesmo quando pagamento não está no contexto
-            try:
-                txn_id = pagamento.get("id")
-            except Exception:
-                txn_id = page_url
-
-            mp_payload = {
-                "client_id": client_id,
-                "events": [
-                    {
-                        "name": "purchase",
-                        "params": {
-                            "currency": "BRL",
-                            "value": float(conv_value or 0),
-                            "transaction_id": txn_id,
-                            # Inclui debug_mode quando solicitado para aparecer no DebugView
-                            **({"debug_mode": True} if dbg_flag else {}),
-                            "items": [
-                                {
-                                    "item_id": plan_code or "unknown",
-                                    "item_name": f"Plano {plan_code or 'unknown'}",
-                                    "price": float(conv_value or 0),
-                                    "quantity": 1
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-            try:
-                r = requests.post(mp_url, json=mp_payload, timeout=3)
-                print("GA4 MP purchase status:", r.status_code, r.text[:200])
-            except Exception as e:
-                print("Falha ao enviar GA4 MP purchase:", e)
-    except Exception as e:
-        # Não bloqueia a página em caso de erro de MP
-        print("Erro no bloco GA4 Measurement Protocol:", e)
+    aw_id = os.getenv("AW_CONVERSION_ID")
+    aw_label = os.getenv("AW_CONVERSION_LABEL")
 
     return render_template(
         "payment_success.html",
@@ -1535,11 +1306,6 @@ def payment_success(page_url):
         redirect_url=redirect_url,
         aw_id=aw_id,
         aw_label=aw_label,
-        plan_code=plan_code,
-        transaction_id=pagamento.get("id"),
-        page_url=page_url,
-        GA_MEASUREMENT_ID=ga4_id,
-        GTM_CONTAINER_ID='',  # Desativa GTM nesta página
     )
 
 
@@ -1672,12 +1438,12 @@ def generate_qr_code(url, unique_code, box_size=20, border=4):
             0
         )  # Certifique-se de que o ponteiro do BytesIO esteja no início
 
-        # Enviar imagem ao S3 com ContentType correto (sem ACL, compatível com buckets com ACL desativada)
+        # Enviar imagem ao S3 com ACL pública e ContentType correto
         s3_client.upload_fileobj(
             image_bytes_for_s3,
             S3_BUCKET,
             s3_key,
-            ExtraArgs={"ContentType": "image/png"},
+            ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
         )
         print("QR code enviado ao S3 com sucesso.")
 
