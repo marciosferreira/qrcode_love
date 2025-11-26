@@ -35,10 +35,24 @@
       debug_mode: debug
     };
 
+    var sent = false;
+    var attempts = 0;
     function sendPurchase(){
+      if (sent) { return; }
+      attempts++;
       if (typeof gtag === 'function') {
-        gtag('event', 'purchase', payload);
-        console.log('GA4 purchase enviado:', payload);
+        try {
+          var eventPayload = Object.assign({}, payload, {
+            event_callback: function(){
+              console.log('GA4 purchase callback confirmado');
+            }
+          });
+          gtag('event', 'purchase', eventPayload);
+          sent = true;
+          console.log('GA4 purchase enviado (tentativa ' + attempts + '):', payload);
+        } catch(e){
+          console.warn('Falha ao enviar GA4 purchase:', e);
+        }
 
         // Disparo de conversão do Google Ads (se IDs existirem)
         var awId = '{{ aw_id|default("") }}';
@@ -55,14 +69,20 @@
           console.log('AW IDs não configurados; conversão Ads não enviada');
         }
       } else {
-        console.warn('gtag não disponível ainda; tentando novamente...');
-        setTimeout(sendPurchase, 500);
+        if (attempts <= 5) {
+          console.warn('gtag não disponível ainda; tentando novamente... (tentativa ' + attempts + ')');
+          setTimeout(sendPurchase, 400);
+        } else {
+          console.error('Não foi possível enviar GA4 purchase: gtag indisponível após múltiplas tentativas');
+        }
       }
     }
 
     // Aguarda o carregamento e aplica um pequeno atraso para garantir config
     window.addEventListener('load', function(){
       setTimeout(sendPurchase, 300);
+      // Tentativa extra para casos de inicialização lenta
+      setTimeout(function(){ if(!sent) sendPurchase(); }, 1200);
     });
   })();
 </script>
