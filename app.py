@@ -335,16 +335,120 @@ def edit_user(email, page_url):
 @login_required  # Protege a rota para exigir login
 def list_dynamo_items():
     try:
+        # Parâmetros de paginação
+        page = int(request.args.get("page", 1))
+        if page < 1:
+            page = 1
+        # Fixar 10 itens por página
+        per_page = 10
+
         # Recupera todos os itens da tabela DynamoDB
         response = table.scan()
         items = response.get("Items", [])
 
-        if items:
-            return render_template("items.html", items=items)
-        else:
-            flash("Nenhum item encontrado na tabela.")
-            # Em vez de redirecionar, renderize a página com a lista vazia
-            return render_template("items.html", items=[])
+        # Ordena por data de criação (mais recentes primeiro) se disponível
+        def parse_created_at(it):
+            created = it.get("created_at")
+            if not created:
+                return datetime.min
+            try:
+                # Formato padrão com milissegundos e sufixo Z
+                return datetime.strptime(created, "%Y-%m-%dT%H:%M:%S.%fZ")
+            except Exception:
+                # Tenta um formato sem milissegundos
+                try:
+                    return datetime.strptime(created, "%Y-%m-%dT%H:%M:%SZ")
+                except Exception:
+                    return datetime.min
+
+        try:
+            items.sort(key=parse_created_at, reverse=True)
+        except Exception:
+            # Se algo falhar na ordenação, seguimos sem ordenar
+            pass
+
+        # Classificação de fase: teste (1h), expirado, liberado
+        now_utc = datetime.utcnow()
+
+        def parse_iso(dt_str):
+            if not dt_str:
+                return None
+            for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
+                try:
+                    return datetime.strptime(dt_str, fmt)
+                except Exception:
+                    continue
+            return None
+
+        for it in items:
+            paid = bool(it.get("paid", False))
+            exp_dt = parse_iso(it.get("expires_at"))
+            created_dt = parse_iso(it.get("created_at"))
+
+            status = "liberado"
+            if exp_dt:
+                if exp_dt <= now_utc:
+                    status = "expirado"
+                else:
+                    status = "liberado" if paid else "teste"
+            else:
+                if not paid:
+                    if created_dt:
+                        status = "teste" if (created_dt + timedelta(hours=1)) > now_utc else "expirado"
+                    else:
+                        status = "teste"
+                else:
+                    status = "liberado"
+
+            it["status_phase"] = status
+
+        # Formatação BR das datas para exibição (dd/mm/yyyy HH:MM)
+        def format_br(dt):
+            if not dt:
+                return ""
+            try:
+                return dt.strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                return ""
+
+        for it in items:
+            it["created_br"] = format_br(parse_iso(it.get("created_at")))
+            it["expires_br"] = format_br(parse_iso(it.get("expires_at")))
+            # Evento: combinar event_date (YYYY-MM-DD) + event_time (HH:MM)
+            ev_date = it.get("event_date")
+            ev_time = it.get("event_time")
+            ev_dt = None
+            if ev_date and ev_time:
+                try:
+                    ev_dt = datetime.strptime(f"{ev_date} {ev_time}", "%Y-%m-%d %H:%M")
+                except Exception:
+                    ev_dt = None
+            elif ev_date:
+                try:
+                    ev_dt = datetime.strptime(ev_date, "%Y-%m-%d")
+                except Exception:
+                    ev_dt = None
+            it["event_br"] = format_br(ev_dt) if ev_dt else (ev_date or "")
+            # Último pagamento
+            it["last_payment_br"] = format_br(parse_iso(it.get("last_payment_at")))
+
+        total = len(items)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        if page > total_pages:
+            page = total_pages
+        start = (page - 1) * per_page
+        end = start + per_page
+        page_items = items[start:end]
+
+        # Renderiza com contexto de paginação
+        return render_template(
+            "items.html",
+            items=page_items,
+            page=page,
+            per_page=per_page,
+            total=total,
+            total_pages=total_pages,
+        )
     except Exception as e:
         flash(f"Erro ao recuperar itens do DynamoDB: {e}")
         return redirect(url_for("login"))
@@ -1053,6 +1157,8 @@ def couple_page(page_url):
         body_class=couple.get("background_type", ""),
         is_expired=is_expired,
         valid_until_str=valid_until_str,
+        # Flag server-side: somente administradores logados recebem esta indicação
+        is_admin_view=current_user.is_authenticated,
     )
 
 @app.route("/robots.txt")

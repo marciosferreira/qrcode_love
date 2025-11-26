@@ -196,7 +196,7 @@
   </script>
   {% endif %}
 
-  {% if is_expired %}
+  {% if is_expired and not is_admin_view %}
   <!-- Modal bloqueante de expiração -->
   <div id="expiredOverlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; display: flex; align-items: center; justify-content: center;">
     <div style="background: #1f1f1f; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 24px; max-width: 560px; width: 92%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">

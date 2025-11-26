@@ -14,8 +14,10 @@
           <div class="admin-title">Lista de Itens do DynamoDB</div>
           <div class="admin-sub">Gerencie páginas de casal, pagamentos e validade</div>
         </div>
-        <div class="counter"><span id="counter">0</span> itens visíveis</div>
+        <div class="counter"><span id="counter">0</span> itens visíveis{% if total is defined and page is defined and total_pages is defined %} — Página {{ page }} de {{ total_pages }} ({{ total }} no total){% endif %}</div>
       </div>
+
+      
 
       <!-- Mensagens flash -->
       {% with messages = get_flashed_messages() %} {% if messages %}
@@ -41,25 +43,51 @@
           <option value="365d">365d</option>
           <option value="trial">trial</option>
         </select>
+        <select id="phaseFilter">
+          <option value="">Fase: Todas</option>
+          <option value="teste">Teste</option>
+          <option value="liberado">Liberado</option>
+          <option value="expirado">Expirado</option>
+        </select>
         <button id="clearFilters">Limpar</button>
       </div>
+
+      {% if total_pages is defined and total_pages > 1 %}
+      <div class="actions desktop-only" style="margin: 10px 0;">
+        {% if page > 1 %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page - 1 }}">« Anterior</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">« Anterior</span>
+        {% endif %}
+        <span class="counter">Página {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page + 1 }}">Próxima »</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">Próxima »</span>
+        {% endif %}
+      </div>
+      {% endif %}
 
       <!-- Tabela desktop -->
       <div class="table-wrap">
         <table>
+          <thead>
           <tr>
             <th>Email</th>
             <th>URL</th>
             <th>Nomes</th>
             <th>Evento</th>
-            <th>Pago</th>
-            <th>Plano</th>
+          <th>Pago</th>
+          <th>Fase</th>
+          <th>Plano</th>
             <th>Preço</th>
             <th>Último Pgto</th>
             <th>Criado</th>
             <th>Validade</th>
             <th>Ações</th>
           </tr>
+          </thead>
+          <tbody>
 
           {% for item in items %}
           <tr class="item-row"
@@ -69,16 +97,29 @@
               data-name2="{{ item['name2'] }}"
               data-paid="{{ item['paid'] }}"
               data-plan="{{ item.get('last_plan_code', '') or ('trial' if not item['paid'] else '') }}"
-              data-expires="{{ item.get('expires_at','') }}">
+              data-expires="{{ item.get('expires_at','') }}"
+              data-phase="{{ item.get('status_phase','') }}">
             <td>{{ item['email'] }}</td>
             <td>{{ item['page_url'] }}</td>
             <td>{{ item['name1'] }} &amp; {{ item['name2'] }}</td>
-            <td>{{ item['event_date'] }} {{ item['event_time'] }}</td>
+            <td>{{ item.get('event_br', '') }}</td>
             <td>
               {% if item['paid'] %}
                 <span class="badge paid">Pago</span>
               {% else %}
                 <span class="badge unpaid">Pendente</span>
+              {% endif %}
+            </td>
+            <td>
+              {% set phase = item.get('status_phase') %}
+              {% if phase == 'teste' %}
+                <span class="badge trial">Teste</span>
+              {% elif phase == 'liberado' %}
+                <span class="badge released">Liberado</span>
+              {% elif phase == 'expirado' %}
+                <span class="badge expired">Expirado</span>
+              {% else %}
+                <span class="badge">—</span>
               {% endif %}
             </td>
             <td><span class="badge plan plan-badge">
@@ -96,14 +137,13 @@
               R$ {{ price_fmt.replace('.', ',') }}
             </td>
             <td>
-              {% set lp = item.get('last_payment_at','') %}
-              {% if lp %}{{ lp[8:10] }}/{{ lp[5:7] }}/{{ lp[0:4] }} {{ lp[11:16] }}{% endif %}
+              {{ item.get('last_payment_br', '') }}
             </td>
-            <td>{{ item['created_at'] }}</td>
-            <td>{{ item.get('expires_at', '') }}</td>
+            <td>{{ item.get('created_br', '') }}</td>
+            <td>{{ item.get('expires_br', '') }}</td>
             <td>
               <div class="actions">
-                <a href="https://meueventoespecial.com.br/couple_page/{{ item['page_url'] }}" target="_blank" class="btn">Abrir</a>
+                <a href="{{ url_for('couple_page', page_url=item['page_url']) }}" target="_blank" class="btn">Abrir</a>
                 <a href="{{ url_for('edit_user', email=item['email'], page_url=item['page_url']) }}" class="btn primary">Editar</a>
                 <form method="POST" action="{{ url_for('delete_item', email=item['email'], page_url=item['page_url']) }}" style="display:inline">
                   <button type="submit" class="btn danger" onclick="return confirm('Tem certeza que deseja deletar este item?')">Excluir</button>
@@ -112,8 +152,25 @@
             </td>
           </tr>
           {% endfor %}
+          </tbody>
         </table>
       </div>
+
+      {% if total_pages is defined and total_pages > 1 %}
+      <div class="actions mobile-only" style="margin: 10px 0;">
+        {% if page > 1 %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page - 1 }}">« Anterior</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">« Anterior</span>
+        {% endif %}
+        <span class="counter">Página {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page + 1 }}">Próxima »</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">Próxima »</span>
+        {% endif %}
+      </div>
+      {% endif %}
 
       <!-- Cards mobile -->
       <div class="cards" id="cardsContainer">
@@ -125,7 +182,8 @@
              data-name2="{{ item['name2'] }}"
              data-paid="{{ item['paid'] }}"
              data-plan="{{ item.get('last_plan_code', '') or ('trial' if not item['paid'] else '') }}"
-             data-expires="{{ item.get('expires_at','') }}">
+             data-expires="{{ item.get('expires_at','') }}"
+             data-phase="{{ item.get('status_phase','') }}">
           <div class="card-row">
             <div>
               <div class="card-label">Email</div>
@@ -143,7 +201,7 @@
             </div>
             <div>
               <div class="card-label">Evento</div>
-              <div class="card-value">{{ item['event_date'] }} {{ item['event_time'] }}</div>
+              <div class="card-value">{{ item.get('event_br', '') }}</div>
             </div>
           </div>
           <div class="card-row">
@@ -151,6 +209,21 @@
               <div class="card-label">Status</div>
               <div class="card-value">
                 {% if item['paid'] %}<span class="badge paid">Pago</span>{% else %}<span class="badge unpaid">Pendente</span>{% endif %}
+              </div>
+            </div>
+            <div>
+              <div class="card-label">Fase</div>
+              <div class="card-value">
+                {% set phase2 = item.get('status_phase') %}
+                {% if phase2 == 'teste' %}
+                  <span class="badge trial">Teste</span>
+                {% elif phase2 == 'liberado' %}
+                  <span class="badge released">Liberado</span>
+                {% elif phase2 == 'expirado' %}
+                  <span class="badge expired">Expirado</span>
+                {% else %}
+                  <span class="badge">—</span>
+                {% endif %}
               </div>
             </div>
             <div>
@@ -175,22 +248,21 @@
             </div>
             <div>
               <div class="card-label">Último Pgto</div>
-              {% set lp2 = item.get('last_payment_at','') %}
-              <div class="card-value">{% if lp2 %}{{ lp2[8:10] }}/{{ lp2[5:7] }}/{{ lp2[0:4] }} {{ lp2[11:16] }}{% endif %}</div>
+              <div class="card-value">{{ item.get('last_payment_br', '') }}</div>
             </div>
           </div>
           <div class="card-row">
             <div>
               <div class="card-label">Criado</div>
-              <div class="card-value">{{ item['created_at'] }}</div>
+              <div class="card-value">{{ item.get('created_br', '') }}</div>
             </div>
             <div>
               <div class="card-label">Validade</div>
-              <div class="card-value">{{ item.get('expires_at', '') }}</div>
+              <div class="card-value">{{ item.get('expires_br', '') }}</div>
             </div>
           </div>
           <div class="card-actions">
-            <a href="https://meueventoespecial.com.br/couple_page/{{ item['page_url'] }}" target="_blank" class="btn">Abrir</a>
+            <a href="{{ url_for('couple_page', page_url=item['page_url']) }}" target="_blank" class="btn">Abrir</a>
             <a href="{{ url_for('edit_user', email=item['email'], page_url=item['page_url']) }}" class="btn primary">Editar</a>
             <form method="POST" action="{{ url_for('delete_item', email=item['email'], page_url=item['page_url']) }}" style="display:inline">
               <button type="submit" class="btn danger" onclick="return confirm('Tem certeza que deseja deletar este item?')">Excluir</button>
@@ -199,6 +271,22 @@
         </div>
         {% endfor %}
       </div>
+
+      {% if total_pages is defined and total_pages > 1 %}
+      <div class="actions" style="margin: 10px 0;">
+        {% if page > 1 %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page - 1 }}">« Anterior</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">« Anterior</span>
+        {% endif %}
+        <span class="counter">Página {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn" href="{{ url_for('list_dynamo_items') }}?page={{ page + 1 }}">Próxima »</a>
+        {% else %}
+          <span class="btn" style="opacity:0.6; cursor:default;">Próxima »</span>
+        {% endif %}
+      </div>
+      {% endif %}
 
       <div style="margin-top:12px; display:flex; justify-content:flex-end;">
         <a href="{{ url_for('logout') }}" class="btn">Logout</a>
@@ -209,38 +297,42 @@
       const searchInput = document.getElementById('searchInput');
       const paidFilter = document.getElementById('paidFilter');
       const planFilter = document.getElementById('planFilter');
+      const phaseFilter = document.getElementById('phaseFilter');
       const clearBtn = document.getElementById('clearFilters');
       const counter = document.getElementById('counter');
 
-      function matches(row, query, paid, plan) {
+      function matches(row, query, paid, plan, phase) {
         const q = (query || '').toLowerCase();
         const isPaid = String(row.dataset.paid).toLowerCase();
         const rowPlan = (row.dataset.plan || '').toLowerCase();
+        const rowPhase = (row.dataset.phase || '').toLowerCase();
         const text = [row.dataset.email, row.dataset.url, row.dataset.name1, row.dataset.name2]
           .map(v => (v || '').toLowerCase()).join(' ');
 
         const paidOk = paid ? (isPaid === paid) : true;
         const planOk = plan ? (rowPlan === plan) : true;
+        const phaseOk = phase ? (rowPhase === phase) : true;
         const textOk = q ? text.includes(q) : true;
-        return paidOk && planOk && textOk;
+        return paidOk && planOk && phaseOk && textOk;
       }
 
       function applyFilters() {
         const q = searchInput.value.trim();
         const p = paidFilter.value.trim();
         const pl = planFilter.value.trim().toLowerCase();
+        const ph = phaseFilter.value.trim().toLowerCase();
 
         const rows = Array.from(document.querySelectorAll('tr.item-row'));
         const cards = Array.from(document.querySelectorAll('.item-card'));
         let visible = 0;
 
         rows.forEach(r => {
-          const show = matches(r, q, p, pl);
+          const show = matches(r, q, p, pl, ph);
           r.style.display = show ? '' : 'none';
           if (show) visible++;
         });
         cards.forEach(c => {
-          const show = matches(c, q, p, pl);
+          const show = matches(c, q, p, pl, ph);
           c.style.display = show ? '' : 'none';
         });
         counter.textContent = String(visible);
@@ -249,10 +341,12 @@
       searchInput.addEventListener('input', applyFilters);
       paidFilter.addEventListener('change', applyFilters);
       planFilter.addEventListener('change', applyFilters);
+      phaseFilter.addEventListener('change', applyFilters);
       clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         paidFilter.value = '';
         planFilter.value = '';
+        phaseFilter.value = '';
         applyFilters();
       });
 
