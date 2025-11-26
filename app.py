@@ -526,6 +526,19 @@ def send_email(to_address, subject, body):
     return response
 
 
+# Utilitário: saudação amigável em e-mails com 1 ou 2 nomes
+def build_email_greeting(name1: str, name2: str) -> str:
+    n1 = (name1 or "").strip()
+    n2 = (name2 or "").strip()
+    if n1 and n2:
+        return f"Olá {n1} e {n2},<br><br>"
+    if n1:
+        return f"Olá {n1},<br><br>"
+    if n2:
+        return f"Olá {n2},<br><br>"
+    return "Olá,<br><br>"
+
+
 @app.route("/delete_old_pages", methods=["GET", "POST"])
 def delete_old_pages():
     try:
@@ -954,7 +967,7 @@ def create_couple_page():
         # Corpo do e-mail
         email_subject = "Sua página foi criada!"
         email_body = f"""
-        Olá {name1} e {name2},<br><br>
+        {build_email_greeting(name1, name2)}
         Sua página foi criada com sucesso e estará ativa por 1 hora pra você testar à vontade! Acesse-a aqui: <a href='{url}'>{url}</a>.<br><br>
         Para estender para 1 mês e ter tempo suficiente para preparar sua surpesa, acesse o link no final da página e realize o pagamento. O aviso desparecerá após o pagamento.  
         Seu QR Code está anexado neste e-mail.<br><br>
@@ -1626,7 +1639,7 @@ def asaas_webhook():
         try:
             email_subject = "Pagamento confirmado!"
             email_body = f"""
-            Olá {couple['name1']} e {couple['name2']},<br><br>
+            {build_email_greeting(couple.get('name1'), couple.get('name2'))}
             Seu pagamento foi confirmado! Sua página ficará ativa por 30 dias.<br>
             Acesse: <a href='{url_for("couple_page", page_url=page_url, _external=True)}'>{url_for("couple_page", page_url=page_url, _external=True)}</a>
             """
