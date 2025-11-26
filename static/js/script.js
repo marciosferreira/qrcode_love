@@ -423,6 +423,32 @@ $(document).ready(function () {
      PREVIEW LOGIC (Index Page Only)
      ========================================= */
   if ($("#createForm").length) {
+    // Alternância de abas (Prévia / Crie a sua)
+    (function initTabs(){
+      const $btnPrev = $("#tabBtnPreview");
+      const $btnCreate = $("#tabBtnCreate");
+      const $panelPrev = $("#previewPanel");
+      const $panelCreate = $("#createPanel");
+      if (!$btnPrev.length || !$btnCreate.length || !$panelPrev.length || !$panelCreate.length) return;
+
+      function activate(tab){
+        const isPrev = tab === "preview";
+        $btnPrev.toggleClass("active", isPrev);
+        $btnCreate.toggleClass("active", !isPrev);
+        $panelPrev.toggleClass("active", isPrev);
+        $panelCreate.toggleClass("active", !isPrev);
+        if (isPrev) {
+          updateSelectedDateHint();
+          updateActiveUntilNow();
+          updateCounter();
+        }
+      }
+
+      $btnPrev.on("click", () => activate("preview"));
+      $btnCreate.on("click", () => activate("create"));
+      // Estado inicial: prévia ativa
+      activate("preview");
+    })();
     // Update Date/Time
     $("#event_date, #event_time").on("change", function () {
       const d = $("#event_date").val();

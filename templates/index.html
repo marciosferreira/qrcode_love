@@ -23,7 +23,7 @@
 </script>
 <style>
   /* Layout de seções modernas para destacar cada feature (alinha com página do casal) */
-  .page-wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+  .page-wrap { max-width: 800px; margin: 0 auto; padding: 24px; }
   .section-title { color: var(--text-muted); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 .75rem; }
   .section-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.25rem; margin: 1.25rem 0; box-shadow: 0 6px 24px rgba(0,0,0,0.30); }
   .section-sep {
@@ -33,6 +33,23 @@
     margin: 1.5rem 0;
     box-shadow: 0 0 10px rgba(255,255,255,0.12);
   }
+  /* Abas (tabs) para alternar entre Prévia e Criação */
+  .tab-bar { display: flex; gap: 8px; margin: 1rem 0; justify-content: center; align-items: center; }
+  .tab-btn {
+    padding: .5rem .9rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.35);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.35);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
   @media (max-width: 640px) { .page-wrap { padding: 12px; } }
 </style>
 {% endblock %}
@@ -46,9 +63,15 @@
   </p>
 </section>
 
-<div class="grid-2">
+<!-- Abas para alternar entre prévia e criação -->
+<div class="tab-bar">
+  <button type="button" id="tabBtnPreview" class="tab-btn active">Prévia</button>
+  <button type="button" id="tabBtnCreate" class="tab-btn">Crie a sua</button>
+</div>
+
+<div id="tabsPanels">
   <!-- Form Section -->
-  <section class="section-card">
+  <section id="createPanel" class="section-card tab-content">
     <h2>Personalize</h2>
     <form action="/create" method="POST" enctype="multipart/form-data" id="createForm">
 
@@ -198,7 +221,7 @@
   </section>
 
   <!-- Preview Section (espelhando os cards da página do casal) -->
-  <div>
+  <div id="previewPanel" class="tab-content active">
     <!-- Card: Nomes + Contador + Descrição -->
     <div class="section-card text-center">
       <div class="section-title">Prévia</div>
