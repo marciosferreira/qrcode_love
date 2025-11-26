@@ -29,6 +29,15 @@
             var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
             gtag('config', '{{ GOOGLE_TAG_ID or GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
             if (debug) { console.log('GA4 config com debug_mode ativo (base.html)'); }
+            // Se houver um ID de conversão do Google Ads, configura a tag para facilitar a detecção pelo Ads
+            {% if AW_CONVERSION_ID %}
+            try {
+                gtag('config', '{{ AW_CONVERSION_ID }}');
+                console.log('Google Ads config aplicado (base.html): {{ AW_CONVERSION_ID }}');
+            } catch(e) {
+                console.warn('Falha ao aplicar Google Ads config:', e);
+            }
+            {% endif %}
         })();
     </script>
     {% endif %}

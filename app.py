@@ -54,6 +54,8 @@ def inject_tracking_ids():
         # IDs para Google tag (gtag.js)
         "GOOGLE_TAG_ID": os.getenv("GOOGLE_TAG_ID"),
         "GA_MEASUREMENT_ID": os.getenv("GA_MEASUREMENT_ID"),
+        # ID de conversão do Google Ads (opcional, para detecção e remarketing)
+        "AW_CONVERSION_ID": os.getenv("AW_CONVERSION_ID"),
     }
 
 # Sanitização de HTML básico para mensagens (permite apenas poucas tags)
