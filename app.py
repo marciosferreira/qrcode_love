@@ -1113,10 +1113,10 @@ ASAAS_API_URL = "https://api.asaas.com/v3/paymentLinks"
 
 # Catálogo de planos progressivos: duração e preço
 PLANS = {
-    "30d": {"days": 30, "price": 5.00, "label": "30 dias"}, # 9.90
-    "90d": {"days": 90, "price": 6.00, "label": "90 dias"}, # 24.90
-    "180d": {"days": 180, "price": 7.00, "label": "6 meses"}, # 39.90
-    "365d": {"days": 365, "price": 8.00, "label": "1 ano"}, # 69.90
+    "30d": {"days": 30, "price": 9.90, "label": "30 dias"}, # 9.90
+    "90d": {"days": 90, "price": 24.90, "label": "90 dias"}, # 24.90
+    "180d": {"days": 180, "price": 39.90, "label": "6 meses"}, # 39.90
+    "365d": {"days": 365, "price": 69.90, "label": "1 ano"}, # 69.90
 }
 
 
