@@ -1297,6 +1297,61 @@ def payment_success(page_url):
     aw_label = os.getenv("AW_CONVERSION_LABEL") or ''
     ga4_id = os.getenv("GA_MEASUREMENT_ID") or ''
 
+    # Envio server-side (Measurement Protocol) para maior robustez
+    try:
+        ga_api_secret = os.getenv("GA_API_SECRET")
+        if ga_api_secret and ga4_id:
+            # Extrai client_id do cookie _ga (GA1.1.xxx.yyy) ou gera UUID
+            import uuid
+            ga_cookie = request.cookies.get('_ga')
+            client_id = None
+            if ga_cookie:
+                try:
+                    parts = ga_cookie.split('.')
+                    if len(parts) >= 4:
+                        client_id = parts[-2] + '.' + parts[-1]
+                except Exception:
+                    client_id = None
+            if not client_id:
+                client_id = str(uuid.uuid4())
+
+            mp_url = f"https://www.google-analytics.com/mp/collect?measurement_id={ga4_id}&api_secret={ga_api_secret}"
+            # Ativa modo de depuração para Measurement Protocol quando a URL contém sinalizadores
+            dbg_param = request.args.get('debug') or request.args.get('_dbg') or request.args.get('debug_mode')
+            dbg_flag = True if dbg_param is not None else False
+
+            mp_payload = {
+                "client_id": client_id,
+                "events": [
+                    {
+                        "name": "purchase",
+                        "params": {
+                            "currency": "BRL",
+                            "value": float(conv_value or 0),
+                            "transaction_id": pagamento.get("id") or page_url,
+                            # Inclui debug_mode quando solicitado para aparecer no DebugView
+                            **({"debug_mode": True} if dbg_flag else {}),
+                            "items": [
+                                {
+                                    "item_id": plan_code or "unknown",
+                                    "item_name": f"Plano {plan_code or 'unknown'}",
+                                    "price": float(conv_value or 0),
+                                    "quantity": 1
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+            try:
+                r = requests.post(mp_url, json=mp_payload, timeout=3)
+                print("GA4 MP purchase status:", r.status_code, r.text[:200])
+            except Exception as e:
+                print("Falha ao enviar GA4 MP purchase:", e)
+    except Exception as e:
+        # Não bloqueia a página em caso de erro de MP
+        print("Erro no bloco GA4 Measurement Protocol:", e)
+
     return render_template(
         "payment_success.html",
         conv_value=conv_value,

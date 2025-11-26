@@ -39,6 +39,21 @@
       if (typeof gtag === 'function') {
         gtag('event', 'purchase', payload);
         console.log('GA4 purchase enviado:', payload);
+
+        // Disparo de conversão do Google Ads (se IDs existirem)
+        var awId = '{{ aw_id|default("") }}';
+        var awLabel = '{{ aw_label|default("") }}';
+        if (awId && awLabel) {
+          gtag('event', 'conversion', {
+            send_to: awId + '/' + awLabel,
+            value: payload.value,
+            currency: payload.currency,
+            transaction_id: payload.transaction_id
+          });
+          console.log('Google Ads conversion enviada:', awId + '/' + awLabel, payload.value);
+        } else {
+          console.log('AW IDs não configurados; conversão Ads não enviada');
+        }
       } else {
         console.warn('gtag não disponível ainda; tentando novamente...');
         setTimeout(sendPurchase, 500);
