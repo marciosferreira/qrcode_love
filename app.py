@@ -1565,10 +1565,28 @@ from flask import jsonify, request
 
 @app.route('/webhook', methods=['POST'])
 def asaas_webhook():
-    body = request.json
+    # Robustez: captura JSON mesmo se Content-Type vier incorreto
+    body = request.get_json(silent=True)
+    if body is None:
+        try:
+            import json
+            body = json.loads(request.data or b"{}")
+        except Exception:
+            body = {}
 
-    if body.get("event") in ["PAYMENT_CREATED", "PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]:
-        payment = body.get("payment", {})
+    event = (body or {}).get("event")
+    payment = (body or {}).get("payment", {})
+    status = (payment or {}).get("status")
+    try:
+        print("[webhook] event:", event, "status:", status, "externalReference:", payment.get("externalReference"), "value:", payment.get("value"))
+    except Exception:
+        pass
+
+    if event in ["PAYMENT_CREATED", "PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]:
+        # Só processa atualização de pago quando status confirma recebimento
+        if status not in ["RECEIVED", "CONFIRMED"]:
+            return jsonify({"received": True, "ignored": True, "reason": "status_not_confirmed"})
+
         page_url = payment.get("externalReference")
         subscription = payment.get("subscription", "None")
 
@@ -1578,13 +1596,19 @@ def asaas_webhook():
         if not page_url:
             return "Referência externa não encontrada", 400
 
-        response = table.scan(FilterExpression=Key("page_url").eq(page_url))
-        items = response.get("Items", [])
-        if not items:
-            return "Casal não encontrado", 404
+        try:
+            response = table.scan(FilterExpression=Key("page_url").eq(page_url))
+            items = response.get("Items", [])
+            if not items:
+                # Não bloqueia o webhook; apenas reporta sem erro
+                print("[webhook] casal não encontrado para page_url:", page_url)
+                return jsonify({"received": True, "ignored": True, "reason": "page_not_found"})
 
-        couple = items[0]
-        couple["paid"] = True
+            couple = items[0]
+            couple["paid"] = True
+        except Exception as e:
+            print("[webhook] erro ao consultar/atualizar DynamoDB:", e)
+            return jsonify({"received": True, "error": "dynamodb_error"})
 
         from datetime import datetime, timedelta
         import pytz
@@ -1633,7 +1657,11 @@ def asaas_webhook():
         couple["last_plan_price"] = PLANS.get(plan_code, PLANS["30d"])["price"]
         couple["last_payment_at"] = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
-        table.put_item(Item=couple)
+        try:
+            table.put_item(Item=couple)
+        except Exception as e:
+            print("[webhook] erro ao persistir pagamento no DynamoDB:", e)
+            return jsonify({"received": True, "error": "persist_error"})
 
         # (opcional) Envio de email de confirmação
         try:
@@ -1643,9 +1671,9 @@ def asaas_webhook():
             Seu pagamento foi confirmado! Sua página ficará ativa por 30 dias.<br>
             Acesse: <a href='{url_for("couple_page", page_url=page_url, _external=True)}'>{url_for("couple_page", page_url=page_url, _external=True)}</a>
             """
-            send_email(couple["email"], email_subject, email_body)
+            send_email(couple.get("email"), email_subject, email_body)
         except Exception as e:
-            print(f"Erro ao enviar email: {e}")
+            print(f"[webhook] erro ao enviar email de confirmação: {e}")
 
     return jsonify({"received": True})
 
