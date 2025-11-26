@@ -368,7 +368,10 @@ def list_dynamo_items():
             pass
 
         # Classificação de fase: teste (1h), expirado, liberado
-        now_utc = datetime.utcnow()
+        # Usa horário local configurado (America/Manaus) para evitar marcar
+        # como expirado indevidamente quando datas foram gravadas no fuso local
+        # porém com sufixo "Z".
+        now_local_naive = datetime.now(timezone).replace(tzinfo=None)
 
         def parse_iso(dt_str):
             if not dt_str:
@@ -387,14 +390,16 @@ def list_dynamo_items():
 
             status = "liberado"
             if exp_dt:
-                if exp_dt <= now_utc:
+                # Comparação baseada no horário local (naive) para coerência com
+                # datas gravadas no fuso local.
+                if exp_dt <= now_local_naive:
                     status = "expirado"
                 else:
                     status = "liberado" if paid else "teste"
             else:
                 if not paid:
                     if created_dt:
-                        status = "teste" if (created_dt + timedelta(hours=1)) > now_utc else "expirado"
+                        status = "teste" if (created_dt + timedelta(hours=1)) > now_local_naive else "expirado"
                     else:
                         status = "teste"
                 else:
@@ -795,6 +800,7 @@ def create_couple_page():
 
         effect_type = request.form.get("effect_type", "none")
         background_type = request.form.get("background_type", "default")
+        text_theme = request.form.get("text_theme", "text_theme_pink")
         counter_mode = request.form.get("counter_mode", "since")
 
         # Validação: modo "Tempo desde..." não pode ter data futura
@@ -891,6 +897,7 @@ def create_couple_page():
             "event_description": final_description,
             "effect_type": effect_type,
             "background_type": background_type,
+            "text_theme": text_theme,
             "page_url": unique_code,
             "optional_message": optional_message,
             "email": email,

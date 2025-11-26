@@ -372,11 +372,60 @@ h3 {
 .special-text {
     font-family: var(--font-serif);
     font-style: italic;
-    background: linear-gradient(135deg, var(--primary-color), var(--soft-pink));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
     font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Temas de texto para elementos com .special-text */
+.special-text.text_theme_pink { color: #ff4b8b; }
+.special-text.text_theme_gold_light { color: #f6d365; }
+.special-text.text_theme_silver_light { color: #d7d7d7; }
+.special-text.text_theme_crimson_dark { color: #e52e71; }
+.special-text.text_theme_ocean_dark { color: #2c5364; }
+.special-text.text_theme_violet_dark { color: #8d00ff; }
+.special-text.text_theme_sunset_vibrant { color: #ff9966; }
+.special-text.text_theme_rainbow_vibrant { color: #ff4b1f; }
+
+/* Habilita gradiente clipado ao texto somente quando suportado (via classe JS) */
+.supports-text-clip .special-text.text_theme_pink {
+  background: linear-gradient(135deg, #ff4b8b, #ffb6d9);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_gold_light {
+  background: linear-gradient(135deg, #f6d365, #fda085);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_silver_light {
+  background: linear-gradient(135deg, #d7d7d7, #f0f0f0);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_crimson_dark {
+  background: linear-gradient(135deg, #8a0303, #e52e71);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_ocean_dark {
+  background: linear-gradient(135deg, #0f2027, #2c5364);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_violet_dark {
+  background: linear-gradient(135deg, #3a0ca3, #8d00ff);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_sunset_vibrant {
+  background: linear-gradient(135deg, #ff9966, #ff5e62);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.supports-text-clip .special-text.text_theme_rainbow_vibrant {
+  background: linear-gradient(135deg, #ff4b1f, #1fddff);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
 }
 
 .lead {
@@ -858,6 +907,8 @@ body.texture_paper .ambient-particles {
     height: 60vh !important;
     max-height: 500px !important;
     min-height: 300px !important;
+    /* Evita que gestos de toque acionem scroll/zoom do navegador durante o arrasto */
+    touch-action: none;
 }
 
 #adjustmentContainer:active {

@@ -208,7 +208,13 @@ $(document).ready(function () {
     if (effectInterval) clearInterval(effectInterval);
 
     const type = $("#imageEffectSelector").val() || $("#imageEffectSelector").attr("value");
-    if (!type || type === "none") return;
+    if (!type || type === "none") {
+      // Limpa quaisquer ícones existentes e evita continuar gerando
+      if ($effectContainer && $effectContainer.length) {
+        $effectContainer.empty();
+      }
+      return;
+    }
 
     effectInterval = setInterval(() => {
       createIcon(type);
@@ -674,6 +680,34 @@ $(document).ready(function () {
       }
     });
 
+    // Suporte a toque no mobile para arrastar a imagem dentro do container
+    $container.on("touchstart", function (e) {
+      if (!e.originalEvent || !e.originalEvent.touches || e.originalEvent.touches.length === 0) return;
+      const t = e.originalEvent.touches[0];
+      isDragging = true;
+      startX = t.clientX - currentX;
+      startY = t.clientY - currentY;
+      $(this).css("cursor", "grabbing");
+    });
+
+    $(document).on("touchmove", function (e) {
+      if (!isDragging) return;
+      if (!e.originalEvent || !e.originalEvent.touches || e.originalEvent.touches.length === 0) return;
+      const t = e.originalEvent.touches[0];
+      // Evita que a página role enquanto ajusta a imagem
+      e.preventDefault();
+      currentX = t.clientX - startX;
+      currentY = t.clientY - startY;
+      updateModalImageTransform();
+    });
+
+    $(document).on("touchend touchcancel", function () {
+      if (isDragging) {
+        isDragging = false;
+        $container.css("cursor", "grab");
+      }
+    });
+
     $("#saveAdjustmentBtn").on("click", function () {
       currentAdjustments[activeImageIndex] = {
         x: currentX,
@@ -706,6 +740,26 @@ $(document).ready(function () {
       $("body").removeClass((i, c) => (c.match(/(^|\s)(gradient_|texture_)\S+/g) || []).join(' '));
       if (bg) $("body").addClass(bg);
     });
+
+    // Text Theme Preview (aplica classe nos elementos especiais)
+    $("#textThemeSelector").on("change", function () {
+      const theme = $(this).val();
+      const $targets = $("#e_comercial, #event_description_text, #optional_message_text");
+      // Remove classes anteriores de tema
+      $targets.removeClass(function (i, c) {
+        return (c.match(/(^|\s)text_theme_\S+/g) || []).join(' ');
+      });
+      if (theme) $targets.addClass(theme);
+    });
+    // Inicializa tema de texto na prévia
+    (function initTextTheme() {
+      const theme = $("#textThemeSelector").val() || $("#textThemeSelector").attr("value");
+      const $targets = $("#e_comercial, #event_description_text, #optional_message_text");
+      $targets.removeClass(function (i, c) {
+        return (c.match(/(^|\s)text_theme_\S+/g) || []).join(' ');
+      });
+      if (theme) $targets.addClass(theme);
+    })();
 
     // YouTube Preview
     function extractYouTubeId(url) {
@@ -770,3 +824,20 @@ $(document).ready(function () {
 
   // (handler removido — validação e submit agora estão integrados ao handler de fetch)
 });
+
+// Detecta suporte a background-clip: text para habilitar gradiente no texto sem fundo retangular
+(function() {
+  try {
+    var supportsClip = false;
+    if (window.CSS && CSS.supports) {
+      supportsClip = CSS.supports('background-clip', 'text') || CSS.supports('-webkit-background-clip', 'text');
+    }
+    if (supportsClip) {
+      document.body.classList.add('supports-text-clip');
+    } else {
+      document.body.classList.remove('supports-text-clip');
+    }
+  } catch (e) {
+    document.body.classList.remove('supports-text-clip');
+  }
+})();

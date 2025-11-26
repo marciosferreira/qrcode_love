@@ -24,7 +24,13 @@
   .section-title { color: var(--text-muted); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 .75rem; }
   .section-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.25rem; margin: 1.25rem 0; box-shadow: 0 6px 24px rgba(0,0,0,0.30); }
   .section-card.message { text-align: center; }
-  .section-sep { height: 1px; border: none; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 1.5rem 0; }
+  .section-sep {
+    height: 2px;
+    border: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+    margin: 1.5rem 0;
+    box-shadow: 0 0 10px rgba(255,255,255,0.12);
+  }
   .names-display h1 { margin: 0 .5rem; }
   .counter-section .counter-wrapper { margin-top: .75rem; }
   .actions-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
@@ -40,11 +46,10 @@
 {% block content %}
 <div class="page-wrap">
   <div class="section-card text-center">
-    <h2 class="special-text">Homenagem a</h2>
     <div class="names-display" style="margin-bottom: 1rem; display:flex; justify-content:center; align-items:center;">
       <h1>{{ couple.name1 }}</h1>
       {% if couple.name2 %}
-      <span class="special-text" style="font-size: 2rem;">&</span>
+      <span class="special-text {{ couple.text_theme or 'text_theme_pink' }}" style="font-size: 2rem;">&</span>
       <h1>{{ couple.name2 }}</h1>
       {% endif %}
     </div>
@@ -69,7 +74,7 @@
 
       <div id="finish-message" style="margin-top:.5rem;"></div>
 
-      <h3 class="special-text" style="font-size: 1.8rem; margin-top: .75rem;">
+      <h3 class="special-text {{ couple.text_theme or 'text_theme_pink' }}" style="font-size: 1.8rem; margin-top: .75rem;">
         {% if display_counter_mode == 'until' %}
         para {{ couple.event_description }}
         {% else %}
@@ -103,9 +108,9 @@
 
   {% set msg_clean = (couple.optional_message or '') | striptags | trim %}
   {% if msg_clean %}
-  <div class="section-card message">
-    <div class="section-title">Mensagem especial</div>
-    <p style="font-style: italic; font-size: 1.2rem; white-space: pre-wrap;">{{ couple.optional_message | safe }}</p>
+    <div class="section-card message">
+      <div class="section-title">Mensagem especial</div>
+      <p class="special-text {{ couple.text_theme or 'text_theme_pink' }}" style="font-style: italic; font-size: 1.2rem; white-space: pre-wrap;">{{ couple.optional_message | safe }}</p>
   </div>
   {% endif %}
 
