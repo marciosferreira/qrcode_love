@@ -148,6 +148,30 @@ $(document).ready(function () {
     }
   }
 
+  // Atualiza o card de validade com a data/hora atual em pt-BR
+  function updateActiveUntilNow() {
+    const $val = $("#activeUntilValue");
+    if (!$val.length) return;
+    try {
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Manaus",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(now);
+      const get = (k) => (parts.find((p) => p.type === k) || {}).value || "";
+      const dateStr = `${get("day")}/${get("month")}/${get("year")}`;
+      const timeStr = `${get("hour")}:${get("minute")}`;
+      $val.text(`${dateStr} ${timeStr}`);
+    } catch (e) {
+      $val.text("--/--/---- --:--");
+    }
+  }
+
   // Start Timer
   setInterval(updateCounter, 1000);
   updateCounter();
@@ -409,6 +433,10 @@ $(document).ready(function () {
       }
       updateSelectedDateHint();
     });
+
+    // Inicializa card de validade com a data/hora atual e atualiza a cada minuto
+    updateActiveUntilNow();
+    setInterval(updateActiveUntilNow, 60 * 1000);
 
     // Update Names
     $("#name1, #name2").on("input", function () {
