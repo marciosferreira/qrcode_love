@@ -23,7 +23,13 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);} 
         gtag('js', new Date());
-        gtag('config', '{{ GOOGLE_TAG_ID or GA_MEASUREMENT_ID }}');
+        // Ativa debug_mode global quando a URL tiver ?debug=1
+        (function(){
+            var params = new URLSearchParams(location.search);
+            var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
+            gtag('config', '{{ GOOGLE_TAG_ID or GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
+            if (debug) { console.log('GA4 config com debug_mode ativo (base.html)'); }
+        })();
     </script>
     {% endif %}
 

@@ -1303,6 +1303,9 @@ def payment_success(page_url):
         redirect_url=redirect_url,
         aw_id=aw_id,
         aw_label=aw_label,
+        plan_code=plan_code,
+        transaction_id=pagamento.get("id"),
+        page_url=page_url,
         GA_MEASUREMENT_ID=ga4_id,
         GTM_CONTAINER_ID='',  # Desativa GTM nesta página
     )
