@@ -29,15 +29,16 @@
             var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
             gtag('config', '{{ GOOGLE_TAG_ID or GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
             if (debug) { console.log('GA4 config com debug_mode ativo (base.html)'); }
-            // Se houver um ID de conversão do Google Ads, configura a tag para facilitar a detecção pelo Ads
-            {% if AW_CONVERSION_ID %}
+            // Configuração opcional do Google Ads, sem tags Jinja de controle (evita erro de linter)
             try {
-                gtag('config', '{{ AW_CONVERSION_ID }}');
-                console.log('Google Ads config aplicado (base.html): {{ AW_CONVERSION_ID }}');
+                var awId = '{{ AW_CONVERSION_ID|default("", true) }}';
+                if (awId) {
+                    gtag('config', awId);
+                    console.log('Google Ads config aplicado (base.html): ' + awId);
+                }
             } catch(e) {
                 console.warn('Falha ao aplicar Google Ads config:', e);
             }
-            {% endif %}
         })();
     </script>
     {% endif %}
