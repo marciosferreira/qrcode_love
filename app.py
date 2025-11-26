@@ -1320,6 +1320,12 @@ def payment_success(page_url):
             dbg_param = request.args.get('debug') or request.args.get('_dbg') or request.args.get('debug_mode')
             dbg_flag = True if dbg_param is not None else False
 
+            # Garante um transaction_id válido mesmo quando pagamento não está no contexto
+            try:
+                txn_id = pagamento.get("id")
+            except Exception:
+                txn_id = page_url
+
             mp_payload = {
                 "client_id": client_id,
                 "events": [
@@ -1328,7 +1334,7 @@ def payment_success(page_url):
                         "params": {
                             "currency": "BRL",
                             "value": float(conv_value or 0),
-                            "transaction_id": pagamento.get("id") or page_url,
+                            "transaction_id": txn_id,
                             # Inclui debug_mode quando solicitado para aparecer no DebugView
                             **({"debug_mode": True} if dbg_flag else {}),
                             "items": [
