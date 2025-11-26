@@ -11,37 +11,44 @@
 {% endblock %}
 
 {% block scripts %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA_MEASUREMENT_ID }}"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);} 
-  gtag('js', new Date());
-  // Ativa debug_mode quando a URL tiver ?debug=1
-  var params = new URLSearchParams(window.location.search);
-  var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
-  gtag('config', '{{ GA_MEASUREMENT_ID }}', { 'debug_mode': debug });
+  (function(){
+    var params = new URLSearchParams(location.search);
+    var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
+    // Valor: começa pelo conv_value do servidor; se 0, tenta ?v= da URL
+    var v = Number("{{ conv_value|default(0) }}");
+    if (!v || v <= 0) {
+      var vq = params.get('v');
+      if (vq) { v = Number((vq || '').replace(',', '.')); }
+    }
 
-  // Valor: começa pelo conv_value do servidor; se 0, tenta ?v= da URL
-  var v = Number("{{ conv_value|default(0) }}");
-  if (!v || v <= 0) {
-    var vq = params.get('v');
-    if (vq) { v = Number((vq || '').replace(',', '.')); }
-  }
+    var payload = {
+      value: (isFinite(v) && v > 0) ? v : 0,
+      currency: 'BRL',
+      transaction_id: '{{ transaction_id|default(page_url) }}',
+      items: [{
+        item_id: '{{ plan_code|default("unknown") }}',
+        item_name: 'Plano {{ plan_code|default("unknown") }}',
+        price: (isFinite(v) && v > 0) ? v : 0,
+        quantity: 1
+      }],
+      debug_mode: debug
+    };
 
-  // Envia purchase com detalhes do plano e transaction_id
-  gtag('event', 'purchase', {
-    value: (isFinite(v) && v > 0) ? v : 0,
-    currency: 'BRL',
-    transaction_id: '{{ transaction_id|default(page_url) }}',
-    items: [{
-      item_id: '{{ plan_code|default("unknown") }}',
-      item_name: 'Plano {{ plan_code|default("unknown") }}',
-      price: (isFinite(v) && v > 0) ? v : 0,
-      quantity: 1
-    }],
-    debug_mode: debug
-  });
+    function sendPurchase(){
+      if (typeof gtag === 'function') {
+        gtag('event', 'purchase', payload);
+        console.log('GA4 purchase enviado:', payload);
+      } else {
+        console.warn('gtag não disponível ainda; tentando novamente...');
+        setTimeout(sendPurchase, 500);
+      }
+    }
 
-  console.log('GA4 purchase enviado:', v, 'plano:', '{{ plan_code|default("unknown") }}');
+    // Aguarda o carregamento e aplica um pequeno atraso para garantir config
+    window.addEventListener('load', function(){
+      setTimeout(sendPurchase, 300);
+    });
+  })();
 </script>
 {% endblock %}
