@@ -231,6 +231,8 @@ $(document).ready(function () {
   /* =========================================
      CAROUSEL LOGIC
      ========================================= */
+  // Ajustes de imagem (zoom/rotação) por índice do carrossel
+  let currentAdjustments = {};
   let carouselInterval;
   function startCarousel() {
     if (carouselInterval) clearInterval(carouselInterval);
@@ -251,6 +253,17 @@ $(document).ready(function () {
   startCarousel();
 
   // Helpers de navegação do carrossel
+  // Usa variáveis CSS para compor transform: user-ajuste + slideX
+  function applyAdjustmentVars(i, $el) {
+    const adj = (currentAdjustments && currentAdjustments[i]) || { x: 0, y: 0, scale: 1, rotate: 0 };
+    const rot = typeof adj.rotate === 'number' ? adj.rotate : 0;
+    $el.css({
+      '--tx': `${adj.x}px`,
+      '--ty': `${adj.y}px`,
+      '--scale': adj.scale,
+      '--rot': `${rot}deg`
+    });
+  }
   let isAnimating = false;
   function setActiveIndex(idx, direction) {
     const $images = $(".carousel-image");
@@ -258,35 +271,44 @@ $(document).ready(function () {
     idx = Math.max(0, Math.min(idx, $images.length - 1));
     const $current = $images.filter('.active');
     const currentIdx = $images.index($current);
+    const currentDataIdx = ($current.data('index') !== undefined) ? $current.data('index') : currentIdx;
     if (currentIdx === idx) return;
     const $next = $images.eq(idx);
+    const nextDataIdx = ($next.data('index') !== undefined) ? $next.data('index') : idx;
 
-    // Determina direção padrão se não fornecida
-    const forward = direction ? direction === 'forward' : (idx > currentIdx);
-
+    // Efeito apenas fade (sem slide)
     isAnimating = true;
 
-    // Preparação de estados iniciais
+    // Preparação de estados
     $images.css({ zIndex: 0 });
-    $current.css({ opacity: 1, transform: 'translateX(0)', zIndex: 1 });
-    $next.css({ opacity: 1, transform: forward ? 'translateX(100%)' : 'translateX(-100%)', zIndex: 2 });
+    applyAdjustmentVars(currentDataIdx, $current);
+    applyAdjustmentVars(nextDataIdx, $next);
+    $current.css({ opacity: 1, zIndex: 1 });
+    $next.css({ opacity: 0, zIndex: 2 });
     $next.addClass('active');
 
     // Força reflow antes de animar
     void $next[0].offsetWidth;
 
-    // Anima saída do atual e entrada do próximo
-    $current.css({ opacity: 0, transform: forward ? 'translateX(-100%)' : 'translateX(100%)' });
-    $next.css({ opacity: 1, transform: 'translateX(0)' });
+    // Anima somente opacidade
+    $current.css({ opacity: 0 });
+    $next.css({ opacity: 1 });
 
     setTimeout(() => {
       // Finaliza estados
-      $images.not($next).removeClass('active').css({ opacity: 0, transform: 'translateX(0)', zIndex: 0 });
+      $images.each(function(i){
+        if (i !== idx) {
+          const di = ($(this).data('index') !== undefined) ? $(this).data('index') : i;
+          const $el = $(this);
+          applyAdjustmentVars(di, $el);
+          $el.removeClass('active').css({ opacity: 0, zIndex: 0 });
+        }
+      });
       try { activeImageIndex = idx; } catch(e) {}
       updateCarouselDots();
       updateCarouselControlsVisibility();
       isAnimating = false;
-    }, 650); // ~0.6s + margem
+    }, 520); // ~0.5s + pequena margem
   }
 
   function nextImage() {
@@ -796,7 +818,6 @@ $(document).ready(function () {
       imagesDT = null; // fallback para navegadores sem DataTransfer
     }
     var accumulatedFiles = [];
-    let currentAdjustments = {};
     let isDragging = false;
     let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotation = 0;
     let activeImageIndex = 0;
@@ -812,16 +833,28 @@ $(document).ready(function () {
       placeholderSrcs.forEach((src, idx) => {
         const activeClass = idx === 0 ? ' active' : '';
         const opacity = idx === 0 ? 1 : 0;
-        $carousel.append(`<img src="${src}" class="carousel-image${activeClass}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${opacity}; transform: translateX(0); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
+    $carousel.append(`<img src="${src}" class="carousel-image${activeClass}" data-index="${idx}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${opacity}; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
       });
+      // Inicializa variáveis padrões para todos
+    $carousel.find('.carousel-image').each(function(i){ applyAdjustmentVars(i, $(this)); });
       setActiveIndex(0);
       rebuildCarouselDots();
       updateCarouselControlsVisibility();
       updateEditButtonVisibility();
     }
 
+    function hasUserPhotos() {
+      const $imgs = $('#carousel .carousel-image');
+      if ($imgs.length === 0) return false;
+      const count = $imgs.filter(function(){
+        const src = $(this).attr('src') || '';
+        return !src.includes('placeholder_');
+      }).length;
+      return count > 0;
+    }
+
     function updateEditButtonVisibility() {
-      if ($(".carousel-image").length > 0) {
+      if (hasUserPhotos()) {
         $("#editPhotoBtn").fadeIn();
       } else {
         $("#editPhotoBtn").hide();
@@ -896,8 +929,10 @@ $(document).ready(function () {
           const hasActive = $carousel.find(".carousel-image.active").length > 0;
           const activeClass = (!hasActive && index === 0) ? "active" : "";
           const initialOpacity = activeClass ? 1 : 0;
-          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transform: translateX(0); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
+    const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
           $carousel.append(img);
+          applyAdjustmentVars(dataIndex, img);
+    // fade-only: sem slideX
 
           loadedCount++;
           if (loadedCount === totalFiles) {
@@ -934,8 +969,7 @@ $(document).ready(function () {
     }
 
     function updateDeleteButtonVisibility() {
-      const hasUserPhotosDOM = $('#carousel .carousel-image[data-index]').length > 0;
-      if (hasUserPhotosDOM) {
+      if (hasUserPhotos()) {
         $("#deletePhotoBtn").fadeIn();
       } else {
         $("#deletePhotoBtn").hide();
@@ -946,8 +980,11 @@ $(document).ready(function () {
     $(function(){
       rebuildCarouselDots();
       const $carousel = $("#carousel");
-      const existingCount = $carousel.find('.carousel-image[data-index]').length;
-      updatePhotosCountInfo(existingCount, 3);
+      const initialUserCount = $carousel.find('.carousel-image').filter(function(){
+        const src = $(this).attr('src') || '';
+        return !src.includes('placeholder_');
+      }).length;
+      updatePhotosCountInfo(initialUserCount, 3);
       updateDeleteButtonVisibility();
       updateCarouselControlsVisibility();
     });
@@ -1189,10 +1226,8 @@ $(document).ready(function () {
       };
 
       const $img = $(`.carousel-image[data-index='${activeImageIndex}']`);
-      $img.css({
-        "transform": `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotation}deg)`,
-        "transform-origin": "center"
-      });
+      applyAdjustmentVars(activeImageIndex, $img);
+    $img.css({ "transform-origin": "center" });
 
       $("#imageAdjustments").val(JSON.stringify(currentAdjustments));
 
