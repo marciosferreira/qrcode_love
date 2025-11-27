@@ -10,14 +10,24 @@ $(document).ready(function () {
   let eventTimeStr = $eventData.data("event-time");
   let counterMode = $eventData.data("counter-mode") || "since";
 
-  // Default to current date if not provided (for preview)
-  if (!eventDateStr) {
-    const now = new Date();
-    eventDateStr = now.toISOString().split('T')[0];
-    eventTimeStr = "00:00";
+  // Preview mode: when there is no real date/time provided in the page
+  let isPreview = !eventDateStr;
+  // Fixed example starting value (resets on page reload)
+  const PREVIEW_FIXED = { days: 2, hours: 0, minutes: 0, seconds: 0 };
+  let previewSecondsLeft = (
+    (PREVIEW_FIXED.days || 0) * 24 * 3600 +
+    (PREVIEW_FIXED.hours || 0) * 3600 +
+    (PREVIEW_FIXED.minutes || 0) * 60 +
+    (PREVIEW_FIXED.seconds || 0)
+  );
+
+  // If there is a real date, keep original behavior
+  if (!isPreview) {
+    let eventDate = new Date(`${eventDateStr}T${eventTimeStr || "00:00"}:00`);
+    // Store globally for updateCounter
+    window.__eventDate__ = eventDate;
   }
 
-  let eventDate = new Date(`${eventDateStr}T${eventTimeStr}:00`);
 
   function getManausTime() {
     let now = new Date();
@@ -44,10 +54,56 @@ $(document).ready(function () {
      COUNTER LOGIC
      ========================================= */
   function updateCounter() {
+    let finishedMsg = "";
+
+    // Preview mode: always show a fixed starting value and decrement each second
+    if (isPreview) {
+      if (previewSecondsLeft < 0) previewSecondsLeft = 0;
+      const seconds = previewSecondsLeft % 60;
+      const minutesTotal = Math.floor(previewSecondsLeft / 60);
+      const minutes = minutesTotal % 60;
+      const hoursTotal = Math.floor(minutesTotal / 60);
+      const hours = hoursTotal % 24;
+      const days = Math.floor(hoursTotal / 24);
+
+      const dYears = 0;
+      const dMonths = 0;
+      const dDays = days;
+      const dHours = hours;
+      const dMinutes = minutes;
+      const dSeconds = seconds;
+
+      // Helper to build HTML
+      const buildBox = (val, label) => `
+            <div class="time-box">
+                <span class="time-value">${val}</span>
+                <span class="time-label">${val === 1 ? label.slice(0, -1) : label}</span>
+            </div>
+        `;
+
+      let html = "";
+      if (dYears > 0) html += buildBox(dYears, "Anos");
+      if (dMonths > 0 || dYears > 0) html += buildBox(dMonths, "Meses");
+      html += buildBox(dDays, "Dias");
+      html += buildBox(dHours, "Horas");
+      html += buildBox(dMinutes, "Minutos");
+      html += buildBox(dSeconds, "Segundos");
+
+      $counterContainer.html(html);
+      const $finish = $("#finish-message");
+      if ($finish.length) $finish.html("");
+
+      // Decrement after rendering (stops at zero)
+      if (previewSecondsLeft > 0) previewSecondsLeft -= 1;
+      return; // Do not run real counter logic
+    }
+
+    // Real date mode
     const currentDate = getManausTime();
+    const eventDate = window.__eventDate__;
     let timeDiff;
 
-    // Re-read mode from DOM in case it changed (preview)
+    // Re-read mode from DOM in case it changed
     counterMode = $eventData.data("counter-mode") || "since";
 
     if (counterMode === "until") {
@@ -57,12 +113,8 @@ $(document).ready(function () {
     }
 
     // Countdown finished: show message with exact date/time and keep counter zeroed
-    let finishedMsg = "";
     if (counterMode === "until" && timeDiff <= 0) {
-      // Force zero values in the boxes
       timeDiff = 0;
-
-      // Format event date/time in Manaus timezone as dd/mm/yy às hh:mm
       const parts = new Intl.DateTimeFormat("pt-BR", {
         timeZone: "America/Manaus",
         day: "2-digit",
@@ -189,32 +241,59 @@ $(document).ready(function () {
       const $active = $images.filter(".active");
       const currentIdx = $images.index($active);
       const nextIdx = (currentIdx + 1) % $images.length;
-      setActiveIndex(nextIdx);
+      setActiveIndex(nextIdx, 'forward');
     };
 
-    carouselInterval = setInterval(advance, 3000);
+    // Intervalo definido para 4 segundos por slide
+    carouselInterval = setInterval(advance, 4000);
   }
 
   startCarousel();
 
   // Helpers de navegação do carrossel
-  function setActiveIndex(idx) {
+  let isAnimating = false;
+  function setActiveIndex(idx, direction) {
     const $images = $(".carousel-image");
-    if ($images.length === 0) return;
+    if ($images.length === 0 || isAnimating) return;
     idx = Math.max(0, Math.min(idx, $images.length - 1));
-    const $target = $images.eq(idx);
-    $images.removeClass("active").css("opacity", 0);
-    $target.addClass("active").css("opacity", 1);
-    try { activeImageIndex = idx; } catch(e) {}
-    updateCarouselDots();
-    updateCarouselControlsVisibility();
+    const $current = $images.filter('.active');
+    const currentIdx = $images.index($current);
+    if (currentIdx === idx) return;
+    const $next = $images.eq(idx);
+
+    // Determina direção padrão se não fornecida
+    const forward = direction ? direction === 'forward' : (idx > currentIdx);
+
+    isAnimating = true;
+
+    // Preparação de estados iniciais
+    $images.css({ zIndex: 0 });
+    $current.css({ opacity: 1, transform: 'translateX(0)', zIndex: 1 });
+    $next.css({ opacity: 1, transform: forward ? 'translateX(100%)' : 'translateX(-100%)', zIndex: 2 });
+    $next.addClass('active');
+
+    // Força reflow antes de animar
+    void $next[0].offsetWidth;
+
+    // Anima saída do atual e entrada do próximo
+    $current.css({ opacity: 0, transform: forward ? 'translateX(-100%)' : 'translateX(100%)' });
+    $next.css({ opacity: 1, transform: 'translateX(0)' });
+
+    setTimeout(() => {
+      // Finaliza estados
+      $images.not($next).removeClass('active').css({ opacity: 0, transform: 'translateX(0)', zIndex: 0 });
+      try { activeImageIndex = idx; } catch(e) {}
+      updateCarouselDots();
+      updateCarouselControlsVisibility();
+      isAnimating = false;
+    }, 650); // ~0.6s + margem
   }
 
   function nextImage() {
     const $images = $(".carousel-image");
     if ($images.length <= 1) return;
     const currentIdx = $images.index($images.filter('.active'));
-    setActiveIndex((currentIdx + 1) % $images.length);
+    setActiveIndex((currentIdx + 1) % $images.length, 'forward');
     startCarousel();
   }
 
@@ -222,7 +301,7 @@ $(document).ready(function () {
     const $images = $(".carousel-image");
     if ($images.length <= 1) return;
     const currentIdx = $images.index($images.filter('.active'));
-    setActiveIndex((currentIdx - 1 + $images.length) % $images.length);
+    setActiveIndex((currentIdx - 1 + $images.length) % $images.length, 'backward');
     startCarousel();
   }
 
@@ -233,7 +312,11 @@ $(document).ready(function () {
     $dots.empty();
     $images.each(function(i){
       const $d = $('<span class="dot" data-idx="'+i+'" style="width:10px;height:10px;border-radius:50%;background: currentColor; opacity: .35; display:inline-block; cursor:pointer;"></span>');
-      $d.on('click', function(){ setActiveIndex(i); startCarousel(); });
+      $d.on('click', function(){
+        const currentIdx = $(".carousel-image").index($(".carousel-image.active"));
+        const dir = i > currentIdx ? 'forward' : 'backward';
+        setActiveIndex(i, dir); startCarousel();
+      });
       $dots.append($d);
     });
     updateCarouselDots();
@@ -302,7 +385,7 @@ $(document).ready(function () {
 
     // Remove do buffer de arquivos
     const imagesInput = document.getElementById('images');
-    const isPlaceholder = (($active.attr('src') || '').includes('placeholder.png'));
+    const isPlaceholder = (($active.attr('src') || '').includes('placeholder_'));
     if (!isPlaceholder) {
       const $userImages = $carousel.find('.carousel-image[data-index]');
       const userIdx = $userImages.index($active);
@@ -324,7 +407,7 @@ $(document).ready(function () {
     // Reindexa somente fotos do usuário (não define data-index no placeholder)
     $remaining.filter('[data-index]').each(function(i){ $(this).attr('data-index', i); });
     if ($remaining.length === 0) {
-      $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
+      addDefaultPlaceholders($carousel);
     } else {
       setActiveIndex(Math.max(0, currentIdx - 1));
     }
@@ -455,6 +538,8 @@ $(document).ready(function () {
       const t = $("#event_time").val();
       if (d && t) {
         eventDate = new Date(`${d}T${t}:00`);
+        window.__eventDate__ = eventDate;
+        isPreview = false;
         updateCounter();
       }
       updateSelectedDateHint();
@@ -554,7 +639,8 @@ $(document).ready(function () {
     function updateEventSelectOptions(mode) {
       const $select = $("#eventSelect");
       const currentVal = $select.val();
-      const hasSecondName = $("#name2").val().trim().length > 0;
+      // Considera plural quando houver segundo nome no input OU o segundo nome estiver visível na prévia
+      const hasSecondName = $("#name2").val().trim().length > 0 || $("#couple_name2").is(":visible");
       $select.empty();
 
       const groups = eventOptions[mode];
@@ -586,7 +672,8 @@ $(document).ready(function () {
       const mode = $("input[name='counter_mode']:checked").val();
       const useCustom = $("#customPhraseToggle").is(":checked");
       const customText = $("#customPhraseInput").val();
-      const selectText = $("#eventSelect").val();
+      // Para refletir corretamente singular/plural, usamos o texto da opção selecionada
+      const selectText = $("#eventSelect option:selected").text();
 
       $eventData.data("counter-mode", mode);
       $("#counter_prefix_text").text(mode === "until" ? "Faltam:" : "Já se passaram:");
@@ -714,6 +801,25 @@ $(document).ready(function () {
     let startX, startY, currentX = 0, currentY = 0, currentScale = 1, currentRotation = 0;
     let activeImageIndex = 0;
 
+    function addDefaultPlaceholders($carousel) {
+      const placeholderSrcs = [
+        '/static/images/placeholder_1.png',
+        '/static/images/placeholder_2.png',
+        '/static/images/placeholder_3.png',
+      ];
+      // Remove quaisquer existentes antes de adicionar novamente
+      $carousel.find('.carousel-image').remove();
+      placeholderSrcs.forEach((src, idx) => {
+        const activeClass = idx === 0 ? ' active' : '';
+        const opacity = idx === 0 ? 1 : 0;
+        $carousel.append(`<img src="${src}" class="carousel-image${activeClass}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${opacity}; transform: translateX(0); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
+      });
+      setActiveIndex(0);
+      rebuildCarouselDots();
+      updateCarouselControlsVisibility();
+      updateEditButtonVisibility();
+    }
+
     function updateEditButtonVisibility() {
       if ($(".carousel-image").length > 0) {
         $("#editPhotoBtn").fadeIn();
@@ -732,7 +838,7 @@ $(document).ready(function () {
         .find(".carousel-image")
         .filter(function () {
           const src = $(this).attr("src") || "";
-          return src.includes("placeholder.png");
+          return src.includes("placeholder_");
         })
         .remove();
 
@@ -775,8 +881,7 @@ $(document).ready(function () {
         }
       }
       if (totalBuffered === 0 && existingCount === 0) {
-        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
-        updateEditButtonVisibility();
+        addDefaultPlaceholders($carousel);
         return;
       }
 
@@ -791,7 +896,7 @@ $(document).ready(function () {
           const hasActive = $carousel.find(".carousel-image.active").length > 0;
           const activeClass = (!hasActive && index === 0) ? "active" : "";
           const initialOpacity = activeClass ? 1 : 0;
-          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transition: opacity 1s;">`);
+          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transform: translateX(0); transition: transform 0.6s ease, opacity 0.6s ease; will-change: transform, opacity;">`);
           $carousel.append(img);
 
           loadedCount++;
