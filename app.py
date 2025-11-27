@@ -1583,8 +1583,9 @@ def asaas_webhook():
         pass
 
     if event in ["PAYMENT_CREATED", "PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]:
-        # Só processa atualização de pago quando status confirma recebimento
-        if status not in ["RECEIVED", "CONFIRMED"]:
+        # Aceita como pago também quando status é PENDING (solicitação do usuário)
+        # Mantém processamento normal para RECEIVED e CONFIRMED
+        if status not in ["RECEIVED", "CONFIRMED", "PENDING"]:
             return jsonify({"received": True, "ignored": True, "reason": "status_not_confirmed"})
 
         page_url = payment.get("externalReference")
