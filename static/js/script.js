@@ -324,7 +324,7 @@ $(document).ready(function () {
     // Reindexa somente fotos do usuário (não define data-index no placeholder)
     $remaining.filter('[data-index]').each(function(i){ $(this).attr('data-index', i); });
     if ($remaining.length === 0) {
-      $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
+      $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
     } else {
       setActiveIndex(Math.max(0, currentIdx - 1));
     }
@@ -775,7 +775,7 @@ $(document).ready(function () {
         }
       }
       if (totalBuffered === 0 && existingCount === 0) {
-        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">');
+        $carousel.prepend('<img src="https://meueventoespecial.com.br/static/images/placeholder.png" class="carousel-image active" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0;">');
         updateEditButtonVisibility();
         return;
       }
@@ -791,7 +791,7 @@ $(document).ready(function () {
           const hasActive = $carousel.find(".carousel-image.active").length > 0;
           const activeClass = (!hasActive && index === 0) ? "active" : "";
           const initialOpacity = activeClass ? 1 : 0;
-          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transition: opacity 1s;">`);
+          const img = $(`<img src="${e.target.result}" class="carousel-image ${activeClass}" data-index="${dataIndex}" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: ${initialOpacity}; transition: opacity 1s;">`);
           $carousel.append(img);
 
           loadedCount++;
@@ -936,20 +936,7 @@ $(document).ready(function () {
       const $activeImg = $(".carousel-image.active");
       if ($activeImg.length === 0) return;
 
-      // Sincroniza o tamanho do container de ajuste com o frame real
-      try {
-        const $frame = $("#carousel");
-        const frameWidth = $frame.outerWidth();
-        const frameHeight = $frame.outerHeight();
-        if (frameWidth && frameHeight) {
-          $("#adjustmentContainer").css({ width: frameWidth + "px", height: frameHeight + "px" });
-        }
-        // Garante que a imagem no modal usa o mesmo comportamento de preenchimento
-        $("#adjustmentImage").css({ width: "100%", height: "100%", objectFit: "cover", transformOrigin: "center" });
-      } catch (e) {
-        // falha silenciosa caso algo mude na estrutura
-      }
-
+      // Define a imagem e estado inicial de transformação
       activeImageIndex = $activeImg.data("index");
       if (activeImageIndex === undefined) activeImageIndex = 0;
 
@@ -966,7 +953,18 @@ $(document).ready(function () {
       $("#rotateSlider").val(currentRotation);
       updateModalImageTransform();
 
-      $("#photoAdjustmentModal").fadeIn();
+      // Abre o modal primeiro para medir dimensões reais
+      $("#photoAdjustmentModal").fadeIn(0, function () {
+        try {
+          // Mantém o canvas limitado ao conteúdo do modal
+          $("#adjustmentContainer").css({ width: "100%", height: "" });
+          // Garante visibilidade e mostra toda a imagem (contain) dentro do canvas
+          $("#adjustmentImage").css({ width: "100%", height: "100%", objectFit: "contain", transformOrigin: "center", opacity: 1 });
+        } catch (e) {
+          // falha silenciosa caso algo mude na estrutura
+        }
+      });
+
       // Garante que não há estado de arrasto ativo ao abrir
       isDragging = false;
     });

@@ -749,7 +749,7 @@ textarea.form-control {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.85);
-    z-index: 1000;
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -761,7 +761,10 @@ textarea.form-control {
     animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     max-height: 90vh;
     overflow-y: auto;
+    overflow-x: hidden;
     box-sizing: border-box;
+    position: relative;
+    z-index: 10000; /* garante que conteúdo do modal fique acima de qualquer overlay */
 }
 
 /* ============================================
@@ -899,6 +902,14 @@ body.texture_paper .ambient-particles {
 }
 
 /* ============================================
+   CANVAS / FRAME PROPORTION
+   ============================================ */
+:root {
+    /* Proporção única para todos os canvases (modal, carrossel, prévia) */
+    --canvas-aspect: 4 / 3;
+}
+
+/* ============================================
    ADJUSTMENT CONTAINER
    ============================================ */
 
@@ -907,31 +918,50 @@ body.texture_paper .ambient-particles {
     /* Tamanho será sincronizado via JS para espelhar o frame real */
     height: auto !important;
     max-height: none !important;
+    max-width: 100%;
     min-height: 0 !important;
+    aspect-ratio: var(--canvas-aspect);
+    position: relative;
+    z-index: 1; /* acima de pseudo-elementos da glass-card */
     /* Evita que gestos de toque acionem scroll/zoom do navegador durante o arrasto */
     touch-action: none;
 }
 
+/* Garante que a imagem do modal fique sempre visível e acima do fundo */
+#adjustmentContainer #adjustmentImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* mostra toda a imagem dentro do canvas */
+    display: block;
+    opacity: 1 !important;
+    z-index: 1;
+    transform-origin: center;
+}
+
 #carousel {
-    /* Fallback default height when not overridden by mobile.css */
-    height: 400px;
+    /* Usa a mesma proporção e deixa a altura ser derivada pela largura */
+    height: auto;
 }
 
 .carousel-container {
     width: 100%;
     max-width: 400px;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: var(--canvas-aspect);
     margin: 40px auto;
     border-radius: 20px;
     overflow: hidden;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    background: #000;
 }
 
 .carousel-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: none;
     transition: all 0.5s ease;
 }
@@ -939,6 +969,11 @@ body.texture_paper .ambient-particles {
 .carousel-image.active {
     display: block;
     animation: fadeIn 0.5s ease;
+}
+
+/* Overlay de guia deve ficar acima da imagem dentro do container */
+#guideOverlay {
+    z-index: 2;
 }
 
 @keyframes fadeIn {

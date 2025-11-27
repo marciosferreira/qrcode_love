@@ -122,11 +122,11 @@
 
     /* Image Carousel */
     #carousel {
-        height: 300px !important;
+        height: auto !important;
     }
 
     .carousel-container {
-        height: 300px !important;
+        height: auto !important;
     }
 
     /* Navigation Actions */
@@ -173,7 +173,7 @@
 
     #carousel,
     .carousel-container {
-        height: 250px !important;
+        height: auto !important;
     }
 
     .btn {
