@@ -13,94 +13,119 @@
 {% block scripts %}
 <script>
   (function(){
-    var params = new URLSearchParams(location.search);
-    var debug = params.has('debug') || params.has('_dbg') || params.has('debug_mode');
-    // Valor: começa pelo conv_value do servidor; se 0, tenta ?v= da URL
-    var v = Number("{{ conv_value|default(0, true) }}");
-    if (!v || v <= 0) {
-      var vq = params.get('v');
-      if (vq) { v = Number((vq || '').replace(',', '.')); }
+    // 
+    
+    // 1. Tratamento robusto de valores (Onde a maioria dos erros acontece)
+    // Converte explicitamente para String antes de trocar vírgula por ponto
+    var rawServerValue = String("{{ conv_value|default(0, true) }}"); 
+    var urlParams = new URLSearchParams(location.search);
+    var debug = urlParams.has('debug') || urlParams.has('_dbg') || urlParams.has('debug_mode');
+    
+    // Tenta pegar valor do servidor, senão tenta da URL (?v=)
+    var v = parseFloat(rawServerValue.replace(',', '.'));
+    
+    if (isNaN(v) || v <= 0) {
+      var vq = urlParams.get('v');
+      if (vq) {
+        v = parseFloat((vq || '').replace(',', '.'));
+      }
     }
+    
+    // Valor final sanitizado
+    var finalValue = (isFinite(v) && v > 0) ? v : 0;
 
+    // 2. Definição do Payload
     var payload = {
-      value: (isFinite(v) && v > 0) ? v : 0,
+      value: finalValue,
       currency: 'BRL',
       transaction_id: '{{ transaction_id|default(page_url, true) }}',
+      // GA4 exige que 'items' tenha parâmetros específicos
       items: [{
         item_id: '{{ plan_code|default("unknown", true) }}',
         item_name: 'Plano {{ plan_code|default("unknown", true) }}',
-        price: (isFinite(v) && v > 0) ? v : 0,
+        price: finalValue,
         quantity: 1
       }],
-      debug_mode: debug
+      debug_mode: debug // Isso força o evento a aparecer no DebugView do Analytics
     };
 
-    // Chaves de deduplicação por sessão (evita disparos repetidos em recarregamentos)
-    var txnId = payload.transaction_id || '';
-    var ss = window.sessionStorage;
-    var gaKey = 'ga4_purchase_' + txnId;
-    var adsKey = 'ads_conv_' + txnId;
-    var gaAlready = !!(ss && ss.getItem(gaKey) === '1');
-    var adsAlready = !!(ss && ss.getItem(adsKey) === '1');
+    // Controle de deduplicação temporária
+    // Reativado: dedupe só desativa com parâmetros explícitos, não com debug
+    var noDedupe = urlParams.has('no_dedupe') || (urlParams.get('dedupe') === 'off');
+    if (noDedupe) {
+      // Opcional: altera o transaction_id para evitar dedupe por backend
+      payload.transaction_id = payload.transaction_id + '-test-' + Date.now();
+      console.log('🔧 Deduplicação desativada temporariamente. Novo transaction_id:', payload.transaction_id);
+    }
 
-    var sent = false;
+    // Chaves de deduplicação (Session Storage)
+    var txnId = payload.transaction_id;
+    var ss = window.sessionStorage;
+    var gaKey = 'ga4_p_' + txnId; // Encurtei a chave
+    
+    // Verifica se já enviou nesta sessão (desativado se noDedupe)
+    var gaAlready = noDedupe ? false : !!(ss && ss.getItem(gaKey) === '1');
+
     var attempts = 0;
-    function sendPurchase(){
-      if (sent) { return; }
+    var sent = false;
+
+    function sendPurchase() {
+      if (sent) return;
       attempts++;
+
+      // Verifica se o GTAG existe
       if (typeof gtag === 'function') {
-        try {
-          var eventPayload = Object.assign({}, payload, {
-            event_callback: function(){
-              console.log('GA4 purchase callback confirmado');
-            }
-          });
-          if (!gaAlready) {
-            gtag('event', 'purchase', eventPayload);
+        
+        // Envio para o GA4
+        if (!gaAlready) {
+          try {
+            gtag('event', 'purchase', payload);
             sent = true;
-            console.log('GA4 purchase enviado (tentativa ' + attempts + '):', payload);
-            try { if (ss) ss.setItem(gaKey, '1'); } catch(e) {}
-          } else {
-            console.log('GA4 purchase já enviado anteriormente para txn_id:', txnId);
+            console.log('✅ GA4 Purchase enviado:', payload);
+            
+            // Marca como enviado para não repetir no F5 (somente se dedupe ativo)
+            if (!noDedupe && ss) ss.setItem(gaKey, '1');
+            
+          } catch(e) {
+            console.error('❌ Erro no disparo GA4:', e);
           }
-        } catch(e){
-          console.warn('Falha ao enviar GA4 purchase:', e);
+        } else {
+          console.log('ℹ️ Compra já registrada anteriormente (Deduplicação ativa).');
+          sent = true; // Marca como resolvido para parar de tentar
         }
 
-        // Disparo de conversão do Google Ads (se IDs existirem)
+        // --- INTEGRAÇÃO GOOGLE ADS (Opcional se você já importa do GA4) ---
+        // Se você já vinculou GA4 e Ads e importou a conversão "purchase", 
+        // este trecho abaixo pode duplicar seus dados. Use com cautela.
         var awId = '{{ aw_id|default("") }}';
         var awLabel = '{{ aw_label|default("") }}';
-        if (awId && awLabel) {
-          if (!adsAlready) {
+        
+        if (awId && awLabel && (noDedupe || !ss.getItem('ads_' + txnId))) {
             gtag('event', 'conversion', {
-              send_to: awId + '/' + awLabel,
-              value: payload.value,
-              currency: payload.currency,
-              transaction_id: payload.transaction_id
+                'send_to': awId + '/' + awLabel,
+                'value': finalValue,
+                'currency': 'BRL',
+                'transaction_id': txnId
             });
-            console.log('Google Ads conversion enviada:', awId + '/' + awLabel, payload.value);
-            try { if (ss) ss.setItem(adsKey, '1'); } catch(e) {}
-          } else {
-            console.log('Google Ads conversion já enviada anteriormente para txn_id:', txnId);
-          }
-        } else {
-          console.log('AW IDs não configurados; conversão Ads não enviada');
+            if (!noDedupe && ss) ss.setItem('ads_' + txnId, '1');
         }
+        // ----------------------------------------------------------------
+
       } else {
-        if (attempts <= 5) {
-          console.warn('gtag não disponível ainda; tentando novamente... (tentativa ' + attempts + ')');
-          setTimeout(sendPurchase, 400);
+        // Retry logic: Se o gtag ainda não carregou, tenta novamente
+        if (attempts <= 10) {
+          console.warn('⏳ gtag não encontrado, tentando novamente (' + attempts + '/10)...');
+          setTimeout(sendPurchase, 500);
         } else {
-          console.error('Não foi possível enviar GA4 purchase: gtag indisponível após múltiplas tentativas');
+          console.error('❌ Falha crítica: Biblioteca gtag.js não carregou na página.');
         }
       }
     }
 
-    // Aguarda o carregamento e aplica um pequeno atraso para garantir config
+    // Inicia o processo
     window.addEventListener('load', function(){
-      setTimeout(sendPurchase, 300);
-      // Tentativa extra para casos de inicialização lenta
-      setTimeout(function(){ if(!sent) sendPurchase(); }, 1200);
+      // Pequeno delay para garantir que outras libs carregaram
+      setTimeout(sendPurchase, 500);
     });
   })();
 </script>

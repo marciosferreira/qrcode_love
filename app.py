@@ -1390,92 +1390,120 @@ def buscar_pagamento_por_referencia(referencia):
 
 @app.route("/payment_success/<string:page_url>")
 def payment_success(page_url):
+    # Busca pagamento no ASAAS (status precisa ser RECEIVED para confirmação real)
     pagamento = buscar_pagamento_por_referencia(page_url)
+    asaas_confirmed = bool(pagamento) and pagamento.get("status") == "RECEIVED"
+    dbg_param = request.args.get('debug') or request.args.get('debug_mode') or request.args.get('_dbg')
+    debug_flag = dbg_param is not None
 
-    if not pagamento or pagamento["status"] != "RECEIVED":
-        return "Pagamento não confirmado", 400
-
-    # Passo 1: buscar no DynamoDB pelo GSI com page_url
+    # Passo 1: buscar no DynamoDB pelo GSI com page_url (com fallback para scan)
     response = table.query(
         IndexName="page_url-index",
         KeyConditionExpression=Key("page_url").eq(page_url)
     )
     items = response.get("Items", [])
     if not items:
-        return "Página não encontrada", 404
+        try:
+            scan_resp = table.scan(FilterExpression=Key("page_url").eq(page_url))
+            items = scan_resp.get("Items", [])
+        except Exception:
+            items = []
+        if not items:
+            return "Página não encontrada", 404
 
     couple = items[0]
 
-    # Passo 2: marcar pago e estender expires_at conforme plano
-    try:
-        import pytz
-        from datetime import datetime, timedelta
-        timezone = pytz.timezone("America/Manaus")
-        now_dt = datetime.now(timezone)
+    # Se não confirmado no ASAAS, permitir bypass quando já estiver pago no banco ou em modo debug
+    if not asaas_confirmed:
+        if couple.get("paid", False) or debug_flag:
+            # Deriva dados do plano pelos parâmetros da URL ou últimos valores salvos
+            plan_code = request.args.get("plan") or couple.get("last_plan_code") or "30d"
+            v_arg = request.args.get("v")
+            conv_value = None
+            if v_arg:
+                try:
+                    conv_value = float(v_arg.replace(',', '.'))
+                except Exception:
+                    conv_value = None
+            if conv_value is None:
+                try:
+                    conv_value = float(couple.get("last_plan_price") or 0)
+                except Exception:
+                    conv_value = 0.0
+            # Cria um identificador de transação para rastrear no GA (não ASAAS)
+            pagamento = pagamento or {"id": f"bypass-{page_url}", "value": conv_value, "description": f"PLAN={plan_code}"}
+        else:
+            return "Pagamento não confirmado", 400
+    else:
+        # Confirmado no ASAAS: marcar pago e estender expires_at conforme plano
+        try:
+            import pytz
+            from datetime import datetime, timedelta
+            timezone = pytz.timezone("America/Manaus")
+            now_dt = datetime.now(timezone)
 
-        # Determina plano via description (PLAN=code) ou valor
-        desc = pagamento.get("description", "") or ""
-        plan_code = None
-        if "PLAN=" in desc:
-            try:
-                plan_code = desc.split("PLAN=")[-1].split()[0].strip()
-            except Exception:
-                plan_code = None
-        if plan_code not in PLANS:
-            # Fallback por valor
-            val = float(pagamento.get("value", 0) or 0)
-            for code, p in PLANS.items():
-                if abs(p["price"] - val) < 0.01:
-                    plan_code = code
-                    break
-        plan = PLANS.get(plan_code, PLANS["30d"])  # inclui days/price/label
-        plan_days = plan["days"]
+            # Determina plano via description (PLAN=code) ou valor
+            desc = pagamento.get("description", "") or ""
+            plan_code = None
+            if "PLAN=" in desc:
+                try:
+                    plan_code = desc.split("PLAN=")[-1].split()[0].strip()
+                except Exception:
+                    plan_code = None
+            if plan_code not in PLANS:
+                val = float(pagamento.get("value", 0) or 0)
+                for code, p in PLANS.items():
+                    if abs(p["price"] - val) < 0.01:
+                        plan_code = code
+                        break
+            plan = PLANS.get(plan_code, PLANS["30d"])  # inclui days/price/label
+            plan_days = plan["days"]
 
-        # Calcula nova validade: se já tem expires_at futura, soma +plan_days a partir dela; caso contrário, agora +plan_days
-        new_expires_dt = None
-        expires_str = couple.get("expires_at")
-        if expires_str:
-            base = expires_str.replace("Z", "")
-            if "." in base:
-                base = base.split(".")[0]
-            exp_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
-            exp_local = timezone.localize(exp_naive)
-            if now_dt < exp_local:
-                new_expires_dt = exp_local + timedelta(days=plan_days)
+            # Calcula nova validade
+            new_expires_dt = None
+            expires_str = couple.get("expires_at")
+            if expires_str:
+                base = expires_str.replace("Z", "")
+                if "." in base:
+                    base = base.split(".")[0]
+                exp_naive = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S")
+                exp_local = timezone.localize(exp_naive)
+                if now_dt < exp_local:
+                    new_expires_dt = exp_local + timedelta(days=plan_days)
+                else:
+                    new_expires_dt = now_dt + timedelta(days=plan_days)
             else:
                 new_expires_dt = now_dt + timedelta(days=plan_days)
-        else:
-            new_expires_dt = now_dt + timedelta(days=plan_days)
 
-        new_expires_str = new_expires_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        last_payment_at = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            new_expires_str = new_expires_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            last_payment_at = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
-        table.update_item(
-            Key={
-                "email": couple["email"],
-                "page_url": couple["page_url"]
-            },
-            UpdateExpression="SET paid = :v, expires_at = :e, last_plan_code = :p, last_plan_price = :pr, last_payment_at = :t",
-            ExpressionAttributeValues={":v": True, ":e": new_expires_str, ":p": plan_code or "30d", ":pr": plan["price"], ":t": last_payment_at}
-        )
-    except Exception:
-        # Fallback: garante marcação como pago
-        table.update_item(
-            Key={
-                "email": couple["email"],
-                "page_url": couple["page_url"]
-            },
-            UpdateExpression="SET paid = :v",
-            ExpressionAttributeValues={":v": True}
-        )
+            table.update_item(
+                Key={
+                    "email": couple["email"],
+                    "page_url": couple["page_url"]
+                },
+                UpdateExpression="SET paid = :v, expires_at = :e, last_plan_code = :p, last_plan_price = :pr, last_payment_at = :t",
+                ExpressionAttributeValues={":v": True, ":e": new_expires_str, ":p": plan_code or "30d", ":pr": plan["price"], ":t": last_payment_at}
+            )
+        except Exception:
+            # Fallback: garante marcação como pago
+            table.update_item(
+                Key={
+                    "email": couple["email"],
+                    "page_url": couple["page_url"]
+                },
+                UpdateExpression="SET paid = :v",
+                ExpressionAttributeValues={":v": True}
+            )
 
-    # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
-    # Valor de conversão para tag do Google (Ads/GA4 Measurement via gtag)
-    try:
-        conv_value = float(pagamento.get("value", 0) or 0)
-    except Exception:
-        conv_value = float(plan.get("price", 0))
+        # Valor confirmado
+        try:
+            conv_value = float(pagamento.get("value", 0) or 0)
+        except Exception:
+            conv_value = float(PLANS.get(plan_code, PLANS["30d"]).get("price", 0))
 
+    # IDs para tags
     redirect_url = url_for("couple_page", page_url=page_url)
     aw_id = os.getenv("AW_CONVERSION_ID") or ''
     aw_label = os.getenv("AW_CONVERSION_LABEL") or ''
@@ -1485,7 +1513,6 @@ def payment_success(page_url):
     try:
         ga_api_secret = os.getenv("GA_API_SECRET")
         if ga_api_secret and ga4_id:
-            # Extrai client_id do cookie _ga (GA1.1.xxx.yyy) ou gera UUID
             import uuid
             ga_cookie = request.cookies.get('_ga')
             client_id = None
@@ -1500,15 +1527,8 @@ def payment_success(page_url):
                 client_id = str(uuid.uuid4())
 
             mp_url = f"https://www.google-analytics.com/mp/collect?measurement_id={ga4_id}&api_secret={ga_api_secret}"
-            # Ativa modo de depuração para Measurement Protocol quando a URL contém sinalizadores
-            dbg_param = request.args.get('debug') or request.args.get('_dbg') or request.args.get('debug_mode')
-            dbg_flag = True if dbg_param is not None else False
 
-            # Garante um transaction_id válido mesmo quando pagamento não está no contexto
-            try:
-                txn_id = pagamento.get("id")
-            except Exception:
-                txn_id = page_url
+            txn_id = pagamento.get("id") if isinstance(pagamento, dict) else page_url
 
             mp_payload = {
                 "client_id": client_id,
@@ -1519,8 +1539,7 @@ def payment_success(page_url):
                             "currency": "BRL",
                             "value": float(conv_value or 0),
                             "transaction_id": txn_id,
-                            # Inclui debug_mode quando solicitado para aparecer no DebugView
-                            **({"debug_mode": True} if dbg_flag else {}),
+                            **({"debug_mode": True} if debug_flag else {}),
                             "items": [
                                 {
                                     "item_id": plan_code or "unknown",
@@ -1539,7 +1558,6 @@ def payment_success(page_url):
             except Exception as e:
                 print("Falha ao enviar GA4 MP purchase:", e)
     except Exception as e:
-        # Não bloqueia a página em caso de erro de MP
         print("Erro no bloco GA4 Measurement Protocol:", e)
 
     return render_template(
@@ -1549,7 +1567,7 @@ def payment_success(page_url):
         aw_id=aw_id,
         aw_label=aw_label,
         plan_code=plan_code,
-        transaction_id=pagamento.get("id"),
+        transaction_id=pagamento.get("id") if isinstance(pagamento, dict) else page_url,
         page_url=page_url,
         GA_MEASUREMENT_ID=ga4_id,
         GTM_CONTAINER_ID='',  # Desativa GTM nesta página
