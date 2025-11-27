@@ -233,6 +233,23 @@ $(document).ready(function () {
      ========================================= */
   // Ajustes de imagem (zoom/rotação) por índice do carrossel
   let currentAdjustments = {};
+
+  // Inicializa ajustes vindos do backend (couple_page) e normaliza chaves
+  (function initAdjustmentsFromHidden() {
+    try {
+      const el = document.getElementById('imageAdjustmentsData');
+      if (!el) return;
+      const raw = JSON.parse(el.value || '{}');
+      const norm = {};
+      Object.keys(raw || {}).forEach((k) => {
+        const idx = parseInt(k, 10);
+        norm[isNaN(idx) ? k : idx] = raw[k];
+      });
+      currentAdjustments = norm;
+    } catch (e) {
+      console.warn('[initAdjustmentsFromHidden] falha ao carregar ajustes:', e);
+    }
+  })();
   let carouselInterval;
   function startCarousel() {
     if (carouselInterval) clearInterval(carouselInterval);

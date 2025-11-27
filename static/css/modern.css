@@ -948,7 +948,7 @@ body.texture_paper .ambient-particles {
 
 .carousel-container {
     width: 100%;
-    max-width: 400px;
+    max-width: 100%;
     aspect-ratio: var(--canvas-aspect);
     margin: 40px auto;
     border-radius: 20px;

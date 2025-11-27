@@ -261,7 +261,13 @@
       const adj = JSON.parse($('#imageAdjustmentsData').val() || '{}');
       $('.carousel-image').each(function (i) {
         const a = adj[i.toString()];
-        if (a) $(this).css({ 'transform': `translate(${a.x}px, ${a.y}px) scale(${a.scale}) rotate(${(a.rotate || 0)}deg)`, 'transform-origin': 'center' });
+        if (a) $(this).css({
+          '--tx': `${a.x}px`,
+          '--ty': `${a.y}px`,
+          '--scale': a.scale,
+          '--rot': `${(a.rotate || 0)}deg`,
+          'transform-origin': 'center'
+        });
       });
     } catch (e) { }
 
