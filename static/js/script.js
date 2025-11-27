@@ -594,9 +594,9 @@ $(document).ready(function () {
       const n2 = $("#name2").val().trim();
 
       if (!n1 && !n2) {
-        $("#couple_name1").text("Paula");
-        $("#couple_name2").text("Cleber").show();
-        $("#e_comercial").show();
+        $("#couple_name1").text("Carlos Prates");
+        $("#couple_name2").text("").hide();
+        $("#e_comercial").hide();
         return;
       }
 
@@ -620,9 +620,9 @@ $(document).ready(function () {
       const n1 = $("#name1").val().trim();
       const n2 = $("#name2").val().trim();
       if (!n1 && !n2) {
-        $("#couple_name1").text("Paula");
-        $("#couple_name2").text("Cleber").show();
-        $("#e_comercial").show();
+        $("#couple_name1").text("Carlos Prates");
+        $("#couple_name2").text("").hide();
+        $("#e_comercial").hide();
       } else {
         $("#name1, #name2").trigger("input");
       }
@@ -653,24 +653,27 @@ $(document).ready(function () {
         ]
       },
       until: {
-        "Relacionamentos amorosos 💑": [
+        "Relacionamentos amorosos \ud83d\udc91": [
           { value: "se casarem", singular: "se casar", plural: "se casarem" },
           { value: "noivarem", singular: "noivar", plural: "noivarem" },
           { value: "morarem juntos", singular: "morar junto", plural: "morarem juntos" },
           { value: "a lua de mel", singular: "a lua de mel", plural: "a lua de mel" },
           { value: "renovarem os votos", singular: "renovar os votos", plural: "renovarem os votos" }
         ],
-        "Família e Amigos 👨‍👩‍👧‍👦": [
+        "Fam\u00edlia e Amigos \ud83d\udc68\ud83d\udc69\ud83d\udc67\ud83d\udc66": [
           { value: "se reencontrarem", singular: "se reencontrar", plural: "se reencontrarem" },
-          { value: "o nascimento do bebê", singular: "o nascimento do bebê", plural: "o nascimento do bebê" },
+          { value: "o nascimento do beb\u00ea", singular: "o nascimento do beb\u00ea", plural: "o nascimento do beb\u00ea" },
           { value: "a festa de 15 anos", singular: "a festa de 15 anos", plural: "a festa de 15 anos" }
         ],
-        "Conquistas e Planos 🚀": [
+        "Conquistas e Planos \ud83d\ude80": [
           { value: "a formatura", singular: "a formatura", plural: "a formatura" },
           { value: "a viagem dos sonhos", singular: "a viagem dos sonhos", plural: "a viagem dos sonhos" },
           { value: "a aposentadoria", singular: "a aposentadoria", plural: "a aposentadoria" },
-          { value: "a mudança de casa", singular: "a mudança de casa", plural: "a mudança de casa" },
+          { value: "a mudan\u00e7a de casa", singular: "a mudan\u00e7a de casa", plural: "a mudan\u00e7a de casa" },
           { value: "realizar um sonho", singular: "realizar um sonho", plural: "realizarem um sonho" }
+        ],
+        "Celebra\u00e7\u00f5es \ud83c\udf82": [
+          { value: "o anivers\u00e1rio", singular: "o anivers\u00e1rio", plural: "o anivers\u00e1rio" }
         ]
       }
     };
@@ -1295,7 +1298,7 @@ $(document).ready(function () {
 
     // Mensagem opcional padrão na prévia
     (function initDefaultMessage(){
-      const defaultMsgRaw = "💞 Paula e Cleber, dois corações, uma história. 🌙 Promessas, ☀️ alegria; 📸 memórias, 🎵 melodia; 💍 amor que cresce a cada dia.";
+      const defaultMsgRaw = " 🎂 Feliz Aniversário, Carlos Prates! 🥳 \n \n Carlos, hoje o dia é todo seu! \n Espero que você tenha um dia maravilhoso , cheio de alegria , paz  e muitas boas surpresas . Que este novo ciclo traga ainda mais sucesso , saúde  e a realização de todos os seus sonhos . \n Que a felicidade de hoje se estenda por todo o ano que se inicia! \n Parabéns!";
       const $msg = $("#message");
       const $preview = $("#optional_message_text");
       if (!$msg.val()) {
@@ -1371,7 +1374,7 @@ $(document).ready(function () {
     });
     // Inicializa vídeo do YouTube padrão na prévia
     (function initYouTubeDefault(){
-      const defaultUrl = "https://youtu.be/xJNKT9HAXRc?si=ZkNk6Mg536qAAzzc";
+      const defaultUrl = "https://youtu.be/OgSzWo1uUH4?si=eEMGZqtCbOn-t7FU";
       const $yt = $("#youtubeLink");
       if (!$yt.val()) { $yt.val(defaultUrl); }
       $yt.trigger("input");

@@ -103,13 +103,13 @@
         <label class="form-label">Tipo de Contagem</label>
         <div class="custom-radio-group">
           <div class="radio-option">
-            <input type="radio" name="counter_mode" id="mode_since" value="since" checked>
+            <input type="radio" name="counter_mode" id="mode_since" value="since">
             <label class="radio-label" for="mode_since">
               <i class="bi bi-clock-history"></i> Tempo desde...
             </label>
           </div>
           <div class="radio-option">
-            <input type="radio" name="counter_mode" id="mode_until" value="until">
+            <input type="radio" name="counter_mode" id="mode_until" value="until" checked>
             <label class="radio-label" for="mode_until">
               <i class="bi bi-hourglass-split"></i> Contagem para...
             </label>
@@ -120,7 +120,7 @@
       <div class="form-group">
         <label class="form-label">Descrição do Evento</label>
         <div class="d-flex gap-2" style="margin-bottom: 10px;">
-          <input type="checkbox" id="customPhraseToggle">
+          <input type="checkbox" id="customPhraseToggle" checked>
           <label for="customPhraseToggle" style="cursor: pointer; color: var(--text-muted);">Usar frase
             personalizada</label>
         </div>
@@ -139,7 +139,7 @@
           </optgroup>
         </select>
 
-        <input type="text" name="custom_event_description" id="customPhraseInput" class="form-control d-none"
+        <input type="text" name="custom_event_description" id="customPhraseInput" class="form-control d-none" value="seu aniversário"
           placeholder="Ex: vamos viajar para a Disney">
         <input type="hidden" name="description_mode" id="descriptionMode" value="select">
       </div>
@@ -240,14 +240,14 @@
 
       <hr class="section-sep">
 
-      <h3 id="counter_prefix_text">Já se passaram:</h3>
-      <div id="event-data" style="display:none" data-counter-mode="since"></div>
+      <h3 id="counter_prefix_text">Faltam:</h3>
+      <div id="event-data" style="display:none" data-counter-mode="until"></div>
       <div class="counter-wrapper" id="meu-contador">
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Anos</span></div>
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Meses</span></div>
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Dias</span></div>
       </div>
-      <h3 id="event_description_text" class="special-text" style="font-size: 1.6rem; margin-top: 1rem;">desde que...</h3>
+      <h3 id="event_description_text" class="special-text" style="font-size: 1.6rem; margin-top: 1rem;">para seu aniversário</h3>
       <div id="finish-message" style="margin-top:.5rem;"></div>
     </div>
 
