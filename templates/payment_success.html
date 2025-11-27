@@ -22,11 +22,10 @@
       if (vq) { v = Number((vq || '').replace(',', '.')); }
     }
 
-    var txnId = '{{ transaction_id|default(page_url, true) }}';
     var payload = {
       value: (isFinite(v) && v > 0) ? v : 0,
       currency: 'BRL',
-      transaction_id: txnId,
+      transaction_id: '{{ transaction_id|default(page_url, true) }}',
       items: [{
         item_id: '{{ plan_code|default("unknown", true) }}',
         item_name: 'Plano {{ plan_code|default("unknown", true) }}',
@@ -36,62 +35,72 @@
       debug_mode: debug
     };
 
-    // Deduplicação por sessão
+    // Chaves de deduplicação por sessão (evita disparos repetidos em recarregamentos)
+    var txnId = payload.transaction_id || '';
     var ss = window.sessionStorage;
     var gaKey = 'ga4_purchase_' + txnId;
     var adsKey = 'ads_conv_' + txnId;
     var gaAlready = !!(ss && ss.getItem(gaKey) === '1');
     var adsAlready = !!(ss && ss.getItem(adsKey) === '1');
 
-    function sendGa4Purchase(){
-      if (typeof gtag !== 'function') return false;
-      if (!gaAlready) {
+    var sent = false;
+    var attempts = 0;
+    function sendPurchase(){
+      if (sent) { return; }
+      attempts++;
+      if (typeof gtag === 'function') {
         try {
-          gtag('event', 'purchase', Object.assign({}, payload, {
-            event_callback: function(){ console.log('GA4 purchase callback confirmado'); }
-          }));
-          try { if (ss) ss.setItem(gaKey, '1'); } catch(e) {}
-          console.log('GA4 purchase enviado:', payload);
-        } catch(e){ console.warn('Falha ao enviar GA4 purchase:', e); }
-      } else {
-        console.log('GA4 purchase já enviado anteriormente para txn_id:', txnId);
-      }
-      return true;
-    }
-
-    // Snippet de conversão do Google Ads (fixo), com dados dinâmicos
-    var SEND_TO = 'AW-1051093117/kUJBCJnc8scbEP3QmfUD';
-    function sendAdsConversion(){
-      if (typeof gtag !== 'function') return false;
-      if (!adsAlready) {
-        try {
-          gtag('event', 'conversion', {
-            send_to: SEND_TO,
-            value: payload.value,
-            currency: payload.currency,
-            transaction_id: payload.transaction_id
+          var eventPayload = Object.assign({}, payload, {
+            event_callback: function(){
+              console.log('GA4 purchase callback confirmado');
+            }
           });
-          try { if (ss) ss.setItem(adsKey, '1'); } catch(e) {}
-          console.log('Google Ads conversion enviado:', SEND_TO, payload.value);
-        } catch(e){ console.warn('Falha ao enviar Ads conversion:', e); }
+          if (!gaAlready) {
+            gtag('event', 'purchase', eventPayload);
+            sent = true;
+            console.log('GA4 purchase enviado (tentativa ' + attempts + '):', payload);
+            try { if (ss) ss.setItem(gaKey, '1'); } catch(e) {}
+          } else {
+            console.log('GA4 purchase já enviado anteriormente para txn_id:', txnId);
+          }
+        } catch(e){
+          console.warn('Falha ao enviar GA4 purchase:', e);
+        }
+
+        // Disparo de conversão do Google Ads (se IDs existirem)
+        var awId = '{{ aw_id|default("") }}';
+        var awLabel = '{{ aw_label|default("") }}';
+        if (awId && awLabel) {
+          if (!adsAlready) {
+            gtag('event', 'conversion', {
+              send_to: awId + '/' + awLabel,
+              value: payload.value,
+              currency: payload.currency,
+              transaction_id: payload.transaction_id
+            });
+            console.log('Google Ads conversion enviada:', awId + '/' + awLabel, payload.value);
+            try { if (ss) ss.setItem(adsKey, '1'); } catch(e) {}
+          } else {
+            console.log('Google Ads conversion já enviada anteriormente para txn_id:', txnId);
+          }
+        } else {
+          console.log('AW IDs não configurados; conversão Ads não enviada');
+        }
       } else {
-        console.log('Google Ads conversion já enviado anteriormente para txn_id:', txnId);
+        if (attempts <= 5) {
+          console.warn('gtag não disponível ainda; tentando novamente... (tentativa ' + attempts + ')');
+          setTimeout(sendPurchase, 400);
+        } else {
+          console.error('Não foi possível enviar GA4 purchase: gtag indisponível após múltiplas tentativas');
+        }
       }
-      return true;
     }
 
-    // Disparo com pequenas tentativas para garantir gtag pronto
-    var tries = 0;
-    function trySend(){
-      tries++;
-      var ok1 = sendGa4Purchase();
-      var ok2 = sendAdsConversion();
-      if (!(ok1 && ok2) && tries < 6) setTimeout(trySend, 400);
-    }
-
+    // Aguarda o carregamento e aplica um pequeno atraso para garantir config
     window.addEventListener('load', function(){
-      setTimeout(trySend, 300);
-      setTimeout(function(){ trySend(); }, 1200);
+      setTimeout(sendPurchase, 300);
+      // Tentativa extra para casos de inicialização lenta
+      setTimeout(function(){ if(!sent) sendPurchase(); }, 1200);
     });
   })();
 </script>
