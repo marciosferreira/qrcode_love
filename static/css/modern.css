@@ -904,11 +904,52 @@ body.texture_paper .ambient-particles {
 
 #adjustmentContainer {
     cursor: grab;
-    height: 60vh !important;
-    max-height: 500px !important;
-    min-height: 300px !important;
+    /* Tamanho será sincronizado via JS para espelhar o frame real */
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     /* Evita que gestos de toque acionem scroll/zoom do navegador durante o arrasto */
     touch-action: none;
+}
+
+#carousel {
+    /* Fallback default height when not overridden by mobile.css */
+    height: 400px;
+}
+
+.carousel-container {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 3 / 4;
+    margin: 40px auto;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    transition: all 0.5s ease;
+}
+
+.carousel-image.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(1.1);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 #adjustmentContainer:active {

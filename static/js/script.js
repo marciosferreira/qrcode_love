@@ -936,6 +936,20 @@ $(document).ready(function () {
       const $activeImg = $(".carousel-image.active");
       if ($activeImg.length === 0) return;
 
+      // Sincroniza o tamanho do container de ajuste com o frame real
+      try {
+        const $frame = $("#carousel");
+        const frameWidth = $frame.outerWidth();
+        const frameHeight = $frame.outerHeight();
+        if (frameWidth && frameHeight) {
+          $("#adjustmentContainer").css({ width: frameWidth + "px", height: frameHeight + "px" });
+        }
+        // Garante que a imagem no modal usa o mesmo comportamento de preenchimento
+        $("#adjustmentImage").css({ width: "100%", height: "100%", objectFit: "cover", transformOrigin: "center" });
+      } catch (e) {
+        // falha silenciosa caso algo mude na estrutura
+      }
+
       activeImageIndex = $activeImg.data("index");
       if (activeImageIndex === undefined) activeImageIndex = 0;
 

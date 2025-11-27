@@ -106,7 +106,7 @@
     }
 
     #adjustmentContainer {
-        height: 400px !important;
+        height: auto !important;
     }
 
     /* Radio Groups */
