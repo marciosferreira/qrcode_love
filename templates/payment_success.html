@@ -45,9 +45,9 @@
         item_name: 'Plano {{ plan_code|default("unknown", true) }}',
         price: finalValue,
         quantity: 1
-      }],
-      debug_mode: debug // Isso força o evento a aparecer no DebugView do Analytics
+      }]
     };
+    if (debug) { payload.debug_mode = true; }
 
     // Controle de deduplicação — alternância fácil
     // Mude este flag para habilitar/desabilitar rapidamente:
