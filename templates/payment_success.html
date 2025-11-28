@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block scripts %}
+
 <script>
   (function(){
     // 
@@ -84,6 +85,12 @@
 
       // Verifica se o GTAG existe
       if (typeof gtag === 'function') {
+        // Garante consentimento de analytics nesta página (evita supressão em navegadores restritivos)
+        try {
+          gtag('consent', 'default', { 'analytics_storage': 'granted' });
+        } catch(e) {
+          console.warn('Falha ao aplicar consentimento de analytics:', e);
+        }
         
         // Envio para o GA4
         if (!gaAlready) {
