@@ -87,7 +87,7 @@
       if (typeof gtag === 'function') {
         // Garante consentimento de analytics nesta página (evita supressão em navegadores restritivos)
         try {
-          gtag('consent', 'default', { 'analytics_storage': 'granted' });
+          gtag('consent', 'default', { 'analytics_storage': 'granted', 'ad_storage': 'granted' });
         } catch(e) {
           console.warn('Falha ao aplicar consentimento de analytics:', e);
         }
@@ -95,6 +95,8 @@
         // Envio para o GA4
         if (!gaAlready) {
           try {
+            // Sugere usar beacon para maior chance de entrega
+            payload.transport_type = 'beacon';
             gtag('event', 'purchase', payload);
             sent = true;
             console.log('✅ GA4 Purchase enviado:', payload);
@@ -142,6 +144,17 @@
     window.addEventListener('load', function(){
       // Pequeno delay para garantir que outras libs carregaram
       setTimeout(sendPurchase, 500);
+      // Em modo debug, envia também um page_view explícito com beacon
+      try {
+        var urlParams = new URLSearchParams(location.search);
+        var debug = urlParams.has('debug') || urlParams.has('_dbg') || urlParams.has('debug_mode');
+        if (debug && typeof gtag === 'function') {
+          gtag('event', 'page_view', { page_location: location.href, debug_mode: true, transport_type: 'beacon' });
+          console.log('📄 page_view explícito enviado com debug e beacon');
+        }
+      } catch(e) {
+        // não interrompe fluxo
+      }
     });
   })();
 </script>
