@@ -49,9 +49,18 @@
       debug_mode: debug // Isso força o evento a aparecer no DebugView do Analytics
     };
 
-    // Controle de deduplicação temporária
-    // Reativado: dedupe só desativa com parâmetros explícitos, não com debug
-    var noDedupe = urlParams.has('no_dedupe') || (urlParams.get('dedupe') === 'off');
+    // Controle de deduplicação — alternância fácil
+    // Mude este flag para habilitar/desabilitar rapidamente:
+    // true  -> desativa dedupe (sempre envia)
+    // false -> ativa dedupe (evita reenvio na mesma sessão)
+    // null  -> controla via URL (?no_dedupe=1 ou ?dedupe=off)
+    var FORCE_DEDUPE_OFF = true;
+
+    // Determina o estado final de dedupe
+    var noDedupe = (typeof FORCE_DEDUPE_OFF === 'boolean')
+      ? FORCE_DEDUPE_OFF
+      : (urlParams.has('no_dedupe') || (urlParams.get('dedupe') === 'off'));
+    console.log('Dedupe está', noDedupe ? 'desativada' : 'ativada');
     if (noDedupe) {
       // Opcional: altera o transaction_id para evitar dedupe por backend
       payload.transaction_id = payload.transaction_id + '-test-' + Date.now();
