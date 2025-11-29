@@ -101,7 +101,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% if show_copilot_widget %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/copilot.css') }}">
+    {% endif %}
 
     {% block head %}{% endblock %}
 </head>
@@ -176,8 +178,10 @@
             }
         })();
     </script>
+    {% if show_copilot_widget %}
     {% include 'copilot_widget.html' %}
     <script src="{{ url_for('static', filename='js/copilot.js') }}"></script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </body>
 

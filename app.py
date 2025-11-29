@@ -472,17 +472,17 @@ def list_dynamo_items():
 # ===== Copilot de Criação API =====
 def _build_system_prompt():
     return (
-        "Guia do Copiloto — diálogo acolhedor com avanço por checklist\n\n"
+        "Guia do Copiloto — diálogo objetivo com avanço por checklist\n\n"
         "Princípios essenciais:\n"
-        "- Baseie-se em 'form_context' e histórico; evite suposições.\n"
+        "- Baseie-se em 'form_context' e histórico; evite suposições e floreios.\n"
         "- Trate valores padrão como placeholders; use apenas confirmados (user_set_fields).\n"
-        "- Adapte linguagem ao tipo de evento sem enviesar para casamento.\n"
+        "- Adapte linguagem ao tipo de evento sem enviesar para casamento e sem adjetivos.\n"
         "- Use Markdown leve somente quando ajudar.\n\n"
 
         "Camada de diálogo:\n"
-        "- Comece reconhecendo a intenção do usuário com 1 linha acolhedora.\n"
-        "- Faça 1 pergunta breve sobre o evento (local, cidade, curso, tema, etc.).\n"
-        "- Em seguida, traga a orientação do próximo campo obrigatório.\n\n"
+        "- Reconheça a intenção em 1 linha neutra e curta.\n"
+        "- Não pergunte dados que não existem no formulário.\n"
+        "- Conecte a intenção ao próximo campo obrigatório na página.\n\n"
 
         "Checklist (priorize o próximo campo obrigatório):\n"
         "- Foque em 1 item por vez; avance apenas quando confirmado na página.\n"
@@ -505,7 +505,8 @@ def _build_system_prompt():
         "- effect_type: default 'none'.\n"
         "- background_type: default 'default'.\n"
         "- text_theme: default 'text_theme_pink'.\n"
-        "- optional_message: ofereça 2–3 sugestões curtas; oriente copiar para a UI e confirmar.\n\n"
+        "- optional_message: ofereça 2–3 sugestões curtas; oriente copiar para a UI e confirmar.\n"
+        "- Não proponha itens opcionais antes de confirmar o campo atual e os obrigatórios seguintes.\n\n"
 
         "Opções válidas:\n"
         "- counter_mode: since, until.\n"
@@ -514,7 +515,7 @@ def _build_system_prompt():
         "- text_theme: claros, escuros, vibrantes.\n\n"
 
         "Formato da resposta:\n"
-        "- 1 linha acolhedora + 1 pergunta do evento.\n"
+        "- 1 linha neutra reconhecendo a intenção.\n"
         "- 1 instrução objetiva do campo atual com a chave do formulário.\n"
         "- No máximo 3 sugestões curtas.\n"
         "- Finalize com o CTA quando completo: Clique em 'Criar minha homenagem'.\n"
@@ -940,31 +941,10 @@ def copilot_api():
                 ev_type = 'natal'
             elif 'ano novo' in user_lc:
                 ev_type = 'ano novo'
-            intent_chat = any(x in user_lc for x in ['quero', 'gostaria', 'planejo', 'pensando', 'evento de', 'festa', 'cerimônia', 'cerimonia'])
+            intent_chat = any(x in user_lc for x in ['quero', 'gostaria', 'planejo', 'pensando', 'evento de'])
             if reply and (ev_type or intent_chat):
-                q = ''
-                if ev_type == 'batizado':
-                    q = 'Quem será batizado(a) e em qual igreja/cidade?'
-                elif ev_type == 'casamento':
-                    q = 'Qual o local/cerimônia e cidade?'
-                elif ev_type == 'aniversário':
-                    q = 'De quem é o aniversário e qual a idade?'
-                elif ev_type == 'formatura':
-                    q = 'Qual curso e instituição?'
-                elif ev_type == 'chá de bebê':
-                    q = 'Qual o nome do bebê e tema?'
-                elif ev_type == 'bodas':
-                    q = 'De quais bodas e onde?'
-                elif ev_type == 'noivado':
-                    q = 'Onde será a celebração?'
-                elif ev_type == 'culto':
-                    q = 'Qual igreja e cidade?'
-                elif ev_type == 'natal':
-                    q = 'Onde será a celebração?'
-                elif ev_type == 'ano novo':
-                    q = 'Onde será a virada?'
                 conv_block = (
-                    (f"Legal — {ev_type}. " if ev_type else "Legal. ") + (q or "Me conte um pouco do evento.") + "\n\n"
+                    (f"Ok — {ev_type}.\n\n" if ev_type else "Ok.\n\n")
                 )
                 reply = conv_block + str(reply or '')
         except Exception:
@@ -1607,6 +1587,7 @@ def index():
         og_image_url=og_image_url,
         meta_description=meta_description,
         page_title="Meu Evento Especial — Compartilhe com QR Code, Fotos e Vídeo",
+        show_copilot_widget=True,
     )
 
 
@@ -1802,6 +1783,7 @@ def couple_page(page_url):
         # Flag server-side: somente administradores logados recebem esta indicação
         is_admin_view=current_user.is_authenticated,
         s3_base_url=s3_base_url,
+        show_copilot_widget=False,
     )
 
 @app.route("/robots.txt")
