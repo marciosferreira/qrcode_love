@@ -1160,3 +1160,37 @@ body.gradient_gothic_charcoal .ambient-particles .particle { background: rgba(20
   display: inline;
   background-color: transparent !important;
 }
+
+/* ===== Hero (Landing) ===== */
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 .5rem;
+}
+.hero-sub {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-muted);
+  display: grid;
+  gap: .35rem;
+  justify-items: center;
+}
+.hero-sub p { margin: 0; }
+.hero-sub i {
+  color: #ff4b8b; /* rosa vibrante para ícones de coração */
+  margin-right: .4rem;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 153, 102, 0.12); /* sunset suave */
+  border: 1px solid rgba(255, 153, 102, 0.35);
+  color: var(--text-primary);
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  margin-top: .35rem;
+}
+.hero-badge i {
+  color: #ff9966;
+  margin-right: .4rem;
+}
