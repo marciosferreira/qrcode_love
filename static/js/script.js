@@ -864,13 +864,8 @@ $(document).ready(function () {
     }
 
     function hasUserPhotos() {
-      const $imgs = $('#carousel .carousel-image');
-      if ($imgs.length === 0) return false;
-      const count = $imgs.filter(function(){
-        const src = $(this).attr('src') || '';
-        return !src.includes('placeholder_');
-      }).length;
-      return count > 0;
+      const $userImgs = $('#carousel .carousel-image[data-index]');
+      return $userImgs.length > 0;
     }
 
     function updateEditButtonVisibility() {
@@ -999,12 +994,10 @@ $(document).ready(function () {
     // Inicializa dots e contador na carga da página
     $(function(){
       rebuildCarouselDots();
-      const $carousel = $("#carousel");
-      const initialUserCount = $carousel.find('.carousel-image').filter(function(){
-        const src = $(this).attr('src') || '';
-        return !src.includes('placeholder_');
-      }).length;
-      updatePhotosCountInfo(initialUserCount, 3);
+      const hasDTCount = (typeof imagesDT !== 'undefined') && imagesDT && imagesDT.files;
+      const hasAccCount = (typeof accumulatedFiles !== 'undefined') && Array.isArray(accumulatedFiles);
+      const initialCount = hasDTCount ? imagesDT.files.length : (hasAccCount ? accumulatedFiles.length : 0);
+      updatePhotosCountInfo(initialCount, 3);
       updateDeleteButtonVisibility();
       updateCarouselControlsVisibility();
     });

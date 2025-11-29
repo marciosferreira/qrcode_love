@@ -219,6 +219,7 @@
           else if (nm === 'event_description') labelText = 'Descrição do evento';
           else if (nm === 'custom_event_description') labelText = 'Frase personalizada';
           else if (nm === 'email') labelText = 'E-mail';
+          else if (nm === 'optional_message') labelText = 'Mensagem Opcional';
         }
         if (labelText) map[key] = labelText;
       });

@@ -496,6 +496,7 @@ def _build_system_prompt():
         "- Foque em 1 item por vez; avance apenas quando confirmado na página.\n"
         "- Chat não preenche campos: peça para inserir na página e confirmar.\n"
         "- Não afirme que algo foi preenchido se não estiver confirmado na UI.\n"
+        "- Sempre inclua, no início da resposta, um bloco 'Checklist' com os itens obrigatórios: marque [x] para chaves presentes em user_set_fields e [ ] para pendentes.\n"
         "1) name1.\n"
         "2) event_date.\n"
         "3) event_time.\n"
@@ -524,6 +525,7 @@ def _build_system_prompt():
 
         "Formato da resposta:\n"
         "- 1 linha neutra reconhecendo a intenção.\n"
+        "- Checklist persistente (no topo): liste os itens obrigatórios com [x] para confirmados (presentes em user_set_fields) e [ ] para pendentes. Marque o campo atual como [x] quando o usuário confirmar na UI. Mantenha o checklist idêntico entre turnos, atualizando apenas o que mudou.\n"
         "- 1 instrução objetiva do campo atual com a chave do formulário.\n"
         "- No máximo 3 sugestões curtas.\n"
         "- Finalize com o CTA quando completo: Clique em 'Criar minha homenagem'.\n"
@@ -613,6 +615,7 @@ def copilot_api():
                                 'event_description': 'Descrição do evento',
                                 'custom_event_description': 'Frase personalizada',
                                 'email': 'E-mail',
+                                'optional_message': 'Mensagem Opcional',
                                 # Derivados de UI
                                 'photos_count': 'Quantidade de fotos selecionadas',
                                 'has_photos': 'Tem fotos?',

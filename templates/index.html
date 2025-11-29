@@ -446,6 +446,10 @@ Que nosso amor siga crescendo — hoje, amanhã e sempre ♾️💫</p>
   function updateMessageFromEditor() {
     const html = quill.root.innerHTML.trim();
     hiddenMsgField.value = html;
+    try {
+      const evt = new Event('input', { bubbles: true });
+      hiddenMsgField.dispatchEvent(evt);
+    } catch(e) { /* no-op */ }
     previewMsg.innerHTML = html || 'Sua mensagem especial';
   }
   quill.on('text-change', updateMessageFromEditor);
