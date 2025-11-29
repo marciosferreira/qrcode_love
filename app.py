@@ -480,7 +480,6 @@ def _build_system_prompt():
         "- Use Markdown leve somente quando ajudar.\n\n"
 
         "Camada de diálogo:\n"
-        "- Reconheça a intenção em 1 linha neutra e curta.\n"
         "- Não pergunte dados que não existem no formulário.\n"
         "- Conecte a intenção ao próximo campo obrigatório na página.\n\n"
 
@@ -520,107 +519,6 @@ def _build_system_prompt():
         "- No máximo 3 sugestões curtas.\n"
         "- Finalize com o CTA quando completo: Clique em 'Criar minha homenagem'.\n"
     )
-
-
-def _simulate_copilot_reply(user_message: str, ctx: dict) -> str:
-    # Gera uma resposta simples e DIRETA, focada em instruções de preenchimento
-    n1 = (ctx.get("Nomes do Casal / Pessoas") or ctx.get("name1") or ctx.get("Nome 1") or "").strip()
-    n2 = (ctx.get("Nome 2 (opcional)") or ctx.get("name2") or "").strip()
-    ev_desc = (ctx.get("Descrição do Evento") or ctx.get("event_description") or "").strip()
-    ev_date = (ctx.get("Data e Hora do Evento") or ctx.get("event_date") or "").strip()
-    ev_time = (ctx.get("event_time") or "").strip()
-    mode = (ctx.get("Tipo de Contagem") or ctx.get("counter_mode") or "").strip().lower()
-    opt_msg = (ctx.get("Mensagem Opcional") or ctx.get("optional_message") or ctx.get("message") or "").strip()
-    eff = (ctx.get("Efeitos e Fundo") or ctx.get("effect_type") or "").strip()
-    bg = (ctx.get("background_type") or "").strip()
-    txt_theme = (ctx.get("Tema do texto") or ctx.get("text_theme") or "").strip()
-
-    # Foque em UM item por vez, seguindo a ordem obrigatória
-    passos = []
-    if not n1:
-        passos.append("1) Agora preencha o campo 'Nome 1' na página com o nome da pessoa homenageada e confirme.")
-    elif not ev_date:
-        passos.append("1) Agora preencha o campo 'Data do evento' na página e confirme.")
-    elif not ev_time:
-        passos.append("1) Agora preencha o campo 'Hora do evento' na página e confirme.")
-    elif not mode:
-        passos.append("1) Agora escolha o 'Tipo de contagem' na página (desde/até) e confirme.")
-    elif not ev_desc:
-        passos.append("1) Em 'Descrição do evento', escolha uma opção OU ative 'Frase personalizada' e preencha sua frase. Depois confirme na página.")
-    # Itens de estilo (fundo e tema) são opcionais e não entram no checklist obrigatório
-    else:
-        passos.append("1) Revise e confirme 'Data do evento', 'Hora do evento', 'Tipo de contagem' e a descrição ('Descrição do evento' ou 'Frase personalizada') na página.")
-
-    md = [
-        "### Próximos passos",
-        "Eu vou te orientar a preencher os campos na tela para montar a página.",
-        "",
-        "**Checklist para avançar:**",
-        *([f"- {p}" for p in passos[:1]] or ["- Diga o objetivo do evento para eu orientar os campos."]),
-        "",
-        "Obs.: fotos e vídeo são adicionados pela página (upload e 'youtubeLink'); não envio arquivos pelo chat.",
-    ]
-
-    # Pergunta sobre Nome 2 (opcional): fora do checklist, não bloqueia
-    if not n2:
-        md.extend([
-            "",
-            "Pergunta: Há um segundo homenageado? Se sim, preencha 'Nome 2' na página e confirme; se não, pode deixar em branco. Isso não bloqueia o avanço.",
-        ])
-
-    # Efeito nas Fotos (opcional): fora do checklist, não bloqueia
-    if not eff:
-        md.extend([
-            "",
-            "Pergunta (opcional): Quer aplicar um efeito nas fotos? Padrão 'none'. Se quiser, selecione em 'effect_type' (none, hearts, stars, confetti) e confirme. Isso não bloqueia o avanço.",
-        ])
-
-    # Fundo (opcional): fora do checklist, não bloqueia
-    if not bg:
-        const_padrao_bg = 'default'
-        md.extend([
-            "",
-            f"Pergunta (opcional): Quer ajustar o fundo? Padrão '{const_padrao_bg}'. Se quiser, selecione em 'background_type' e confirme. Isso não bloqueia o avanço.",
-        ])
-
-    # Tema do Texto (opcional): fora do checklist, não bloqueia
-    if not txt_theme:
-        const_padrao_theme = 'text_theme_pink'
-        md.extend([
-            "",
-            f"Pergunta (opcional): Quer ajustar o tema do texto? Padrão '{const_padrao_theme}'. Se quiser, selecione em 'text_theme' e confirme. Isso não bloqueia o avanço.",
-        ])
-
-    # Mensagem Opcional: perguntar fora do checklist quando não estiver confirmada
-    if not opt_msg:
-        # Gerar 2–3 sugestões curtas ajustadas ao contexto
-        sugestoes = []
-        if n1 and n2:
-            casal = f"{n1} & {n2}"
-            sugestoes = [
-                f"{casal}, que este momento celebre o carinho de vocês.",
-                f"{casal}, obrigado(a) por tantas memórias lindas ao meu lado.",
-                "Que hoje seja um capítulo inesquecível da nossa história.",
-            ]
-        elif n1:
-            sugestoes = [
-                f"{n1}, que este dia seja cheio de boas memórias.",
-                f"{n1}, você ilumina meus dias — hoje e sempre.",
-                "Que este momento traga leveza, amor e gratidão.",
-            ]
-        else:
-            sugestoes = [
-                "Que este momento traga leveza, amor e gratidão.",
-                "Você ilumina meus dias — hoje e sempre.",
-                "Que hoje seja um capítulo inesquecível da nossa história.",
-            ]
-
-        md.extend([
-            "",
-            "Pergunta: Não vejo mensagem opcional. Quer incluir um recado curto? Copie uma sugestão abaixo para o campo 'Mensagem Opcional' na página e confirme:",
-            *[f"- {s}" for s in sugestoes],
-        ])
-    return "\n".join(md)
 
 
 @app.route('/api/copilot', methods=['POST'])
