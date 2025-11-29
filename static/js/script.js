@@ -737,11 +737,11 @@ $(document).ready(function () {
       if (useCustom) {
         $("#customPhraseInput").removeClass("d-none");
         $("#eventSelect").addClass("d-none");
-        $("#descriptionMode").val("custom");
+        $("#descriptionMode").val("custom").trigger("input");
       } else {
         $("#customPhraseInput").addClass("d-none");
         $("#eventSelect").removeClass("d-none");
-        $("#descriptionMode").val("select");
+        $("#descriptionMode").val("select").trigger("input");
       }
 
       updateCounter();
@@ -1308,69 +1308,48 @@ $(document).ready(function () {
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
+    function renderVideoPreviewById(videoId) {
+      const $videoContainer = $("#videoPreviewContainer");
+      $videoContainer.empty();
+      if (!videoId) { $videoContainer.hide(); return; }
+      const $cover = $(
+        `<div class="video-cover" style="
+            width: 100%; height: 300px; background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; border-radius:16px;">
+           <div style="font-size: 3rem; margin-bottom: 1rem;">🎁</div>
+           <h4 style="color: white; margin-bottom: 0.5rem;">Vídeo Surpresa</h4>
+           <p style="color: #aaa; font-size: 0.9rem;">Clique para assistir (com som) 🔊</p>
+           <div style="position:absolute; inset:0; background: rgba(255,255,255,0.05); opacity:0; transition:opacity .3s; border-radius:16px;"></div>
+         </div>`
+      );
+      $cover.hover(
+        function(){ $(this).find('div:last-child').css('opacity',1); },
+        function(){ $(this).find('div:last-child').css('opacity',0); }
+      );
+      $cover.on('click', function(){
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&playsinline=1`;
+        const iframe = $(`<iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="width: 100%; height: 300px; border: none;"></iframe>`);
+        $videoContainer.empty().append(iframe);
+        const $fallback = $(`<div style="margin-top: 8px; text-align: center;"><a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener" style="color:#0077ff;">Abrir no YouTube</a></div>`);
+        $videoContainer.append($fallback);
+      });
+      $videoContainer.append($cover).show();
+    }
+
     $("#youtubeLink").on("input", function () {
       const url = $(this).val();
       const videoId = extractYouTubeId(url);
-      const $videoContainer = $("#videoPreviewContainer");
-
-      $videoContainer.empty();
-
       if (videoId) {
-        const $cover = $(`
-          <div class="video-cover" style="
-              width: 100%; 
-              height: 300px; 
-              background: linear-gradient(135deg, #1a1a1a, #2c2c2c); 
-              display: flex; 
-              flex-direction: column; 
-              align-items: center; 
-              justify-content: center; 
-              cursor: pointer; 
-              position: relative;
-          ">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🎁</div>
-            <h4 style="color: white; margin-bottom: 0.5rem;">Vídeo Surpresa</h4>
-            <p style="color: #aaa; font-size: 0.9rem;">Clique para assistir (com som) 🔊</p>
-            <div style="
-                position: absolute; 
-                top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(255,255,255,0.05); 
-                opacity: 0; 
-                transition: opacity 0.3s;
-            "></div>
-          </div>
-        `);
-
-        $cover.hover(
-          function () { $(this).find("div:last-child").css("opacity", 1); },
-          function () { $(this).find("div:last-child").css("opacity", 0); }
-        );
-
-        $cover.on("click", function () {
-          const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&playsinline=1`;
-          const iframe = $(`<iframe src="${embedUrl}" 
-                                  frameborder="0" 
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                  referrerpolicy="strict-origin-when-cross-origin"
-                                  allowfullscreen
-                                  style="width: 100%; height: 300px; border: none;"></iframe>`);
-          $videoContainer.empty().append(iframe);
-          // Link de fallback caso o vídeo não permita incorporação
-          const $fallback = $(`<div style="margin-top: 8px; text-align: center;"><a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener" style="color:#0077ff;">Abrir no YouTube</a></div>`);
-          $videoContainer.append($fallback);
-        });
-
-        $videoContainer.append($cover).show();
+        renderVideoPreviewById(videoId);
       } else {
-        $videoContainer.hide();
+        // Se o campo ficar em branco, mostrar apenas o demo padrão na prévia
+        const defaultDemoId = "OgSzWo1uUH4";
+        renderVideoPreviewById(defaultDemoId);
       }
     });
-    // Inicializa vídeo do YouTube padrão na prévia
+    // Inicializa a prévia com vídeo padrão, sem preencher o campo
     (function initYouTubeDefault(){
-      const defaultUrl = "https://youtu.be/OgSzWo1uUH4?si=eEMGZqtCbOn-t7FU";
-      const $yt = $("#youtubeLink");
-      if (!$yt.val()) { $yt.val(defaultUrl); }
-      $yt.trigger("input");
+      renderVideoPreviewById("OgSzWo1uUH4");
     })();
 
     // Inicializa prévia da data selecionada

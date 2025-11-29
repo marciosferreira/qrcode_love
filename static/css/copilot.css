@@ -17,6 +17,18 @@
 .copilot-fab i { font-size: 1.25rem; }
 .copilot-fab:hover { filter: brightness(1.05); }
 
+.copilot-fab-label {
+  font-size: .78rem;
+  color: #fff;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 2px 8px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px) saturate(120%);
+  pointer-events: none;
+  margin-top: 6px;
+}
+
 .copilot-modal { position: fixed; inset: 0; z-index: 9998; display: none; }
 .copilot-modal.open { display: block; }
 .copilot-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); backdrop-filter: blur(2px); }
@@ -80,3 +92,13 @@
 @media (max-width: 640px) {
   .copilot-panel { right: 12px; bottom: 80px; width: 94vw; }
 }
+.copilot-fab-wrap {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  z-index: 9999;
+}
+.copilot-fab-wrap .copilot-fab { position: static; }

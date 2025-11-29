@@ -25,8 +25,12 @@
   const elMsgs = elModal ? document.getElementById('copilotMessages') : null;
   const tplMsg = elModal ? document.getElementById('copilotMsgTemplate') : null;
   let isLoading = false;
-  // Rastreamento de campos tocados pelo usuário
+  const touchedKey = 'copilotTouched:' + copilotSessionId + ':' + (window.location && window.location.pathname ? window.location.pathname : 'root');
   const touched = new Set();
+  try {
+    const rawTouched = JSON.parse(sessionStorage.getItem(touchedKey) || '[]');
+    if (Array.isArray(rawTouched)) rawTouched.forEach(k => touched.add(k));
+  } catch(e) {}
 
   // Util: persistência
   function loadHistory(){
@@ -97,6 +101,12 @@
         body: JSON.stringify({ session_id: copilotSessionId })
       });
     } catch(e) { /* silencioso */ }
+    try {
+      sessionStorage.removeItem(touchedKey);
+    } catch(e) {}
+    try {
+      touched.clear();
+    } catch(e) {}
     // Reaplica saudação inicial
     const greet = 'Vou te orientar a preencher os campos para montar sua página. Me diga o que tem em mente!';
     const histNow = [{ role: 'assistant', content: greet }];
@@ -129,19 +139,22 @@
 
     // Derivados: estado de fotos na UI (independente de toque)
     try {
-      const carousel = document.getElementById('carousel');
       let photosCount = 0;
-      if (carousel) {
-        const imgs = carousel.querySelectorAll('.carousel-image');
-        // Alinha com a lógica do frontend (script.js): conta imagens não-placeholder
-        photosCount = Array.from(imgs).filter(img => {
-          const src = (img.getAttribute('src') || '');
-          return src.startsWith('data:') || !src.includes('placeholder_');
-        }).length;
+      if (typeof accumulatedFiles !== 'undefined' && Array.isArray(accumulatedFiles)) {
+        photosCount = accumulatedFiles.length;
+      } else if (typeof imagesDT !== 'undefined' && imagesDT && imagesDT.files) {
+        photosCount = imagesDT.files.length;
+      } else {
+        const infoEl = document.getElementById('photosLimitInfo');
+        if (infoEl && typeof infoEl.textContent === 'string') {
+          const m = infoEl.textContent.match(/(\d+)\/(\d+)/);
+          if (m) {
+            photosCount = parseInt(m[1], 10);
+          }
+        }
       }
       ctx['photos_count'] = photosCount;
       ctx['has_photos'] = photosCount > 0;
-      // Texto visível "X/3 selecionadas" (se disponível)
       const infoEl = document.getElementById('photosLimitInfo');
       if (infoEl && typeof infoEl.textContent === 'string') {
         const m = infoEl.textContent.match(/(\d+)\/(\d+)/);
@@ -165,6 +178,16 @@
       ctx['video_id'] = videoId;
       ctx['has_video'] = !!videoId;
     } catch(e) { /* silencioso */ }
+    try {
+      const modeEl = document.querySelector("input[name='counter_mode']:checked");
+      ctx['counter_mode'] = modeEl ? (modeEl.value || '') : (document.getElementById('mode_since') ? 'since' : '');
+      const ed = document.getElementById('event_date');
+      const et = document.getElementById('event_time');
+      ctx['event_date'] = ed ? (ed.value || '') : '';
+      ctx['event_time'] = et ? (et.value || '') : '';
+      const dm = document.getElementById('descriptionMode');
+      ctx['description_mode'] = dm ? (dm.value || '') : '';
+    } catch(e) {}
     return ctx;
   }
 
@@ -219,7 +242,8 @@
           else if (nm === 'event_description') labelText = 'Descrição do evento';
           else if (nm === 'custom_event_description') labelText = 'Frase personalizada';
           else if (nm === 'email') labelText = 'E-mail';
-          else if (nm === 'optional_message') labelText = 'Mensagem Opcional';
+          else if (nm === 'description_mode') labelText = 'Modo de descrição';
+          else if (nm === 'optional_message') labelText = 'Mensagem especial';
         }
         if (labelText) map[key] = labelText;
       });
@@ -328,12 +352,50 @@
     const form = document.getElementById('createForm');
     if (!form) return;
     const fields = form.querySelectorAll('input, textarea, select');
+    const lastVals = new Map();
     fields.forEach(el => {
       const key = el.name || el.id || el.getAttribute('data-key') || el.placeholder || el.type || 'campo';
-      const markTouched = () => { if (key) touched.add(key); };
+      let val;
+      if (el.type === 'checkbox') {
+        val = el.checked ? '1' : '0';
+      } else if (el.tagName.toLowerCase() === 'select') {
+        val = el.value || '';
+      } else {
+        val = el.value || '';
+      }
+      lastVals.set(key, val);
+      const markTouched = () => {
+        if (key) {
+          touched.add(key);
+          try { sessionStorage.setItem(touchedKey, JSON.stringify(Array.from(touched))); } catch(e) {}
+        }
+      };
       el.addEventListener('input', markTouched);
       el.addEventListener('change', markTouched);
     });
+    const poll = () => {
+      fields.forEach(el => {
+        const key = el.name || el.id || el.getAttribute('data-key') || el.placeholder || el.type || 'campo';
+        let val;
+        if (el.type === 'checkbox') {
+          val = el.checked ? '1' : '0';
+        } else if (el.tagName.toLowerCase() === 'select') {
+          val = el.value || '';
+        } else {
+          val = el.value || '';
+        }
+        const prev = lastVals.get(key);
+        if (prev !== val) {
+          lastVals.set(key, val);
+          if (key) {
+            touched.add(key);
+            try { sessionStorage.setItem(touchedKey, JSON.stringify(Array.from(touched))); } catch(e) {}
+          }
+        }
+      });
+    };
+    poll();
+    setInterval(poll, 1000);
   })();
 
   // Restaurar histórico ao carregar

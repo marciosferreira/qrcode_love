@@ -136,6 +136,8 @@ import stripe
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
+SESS_OPTS = {}
+
 
 # Configuração do DynamoDB
 # dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
@@ -469,66 +471,85 @@ def list_dynamo_items():
         return redirect(url_for("login"))
 
 
-# ===== Copilot de Criação API =====
 def _build_system_prompt():
     return (
-        "Visão geral do produto:\n"
-        "- Transforme sua história em um presente digital inesquecível.\n"
-        "- Crie uma página personalizada com fotos, vídeo e um contador de tempo.\n"
-        "- Gere um QR Code para compartilhar uma homenagem.\n"
-        "- Funciona para qualquer evento.\n\n"
-        "Papel do agente:\n"
-        "- Auxiliar o usuário a preencher os campos necessários e criar a página.\n"
-        "- Orientar passo a passo, validar conflitos e indicar o próximo campo.\n"
-        "- Não preencher automaticamente via chat; o usuário confirma na página.\n\n"
-        "Guia do Copiloto — diálogo objetivo com avanço por checklist\n\n"
-        "Princípios essenciais:\n"
-        "- Baseie-se em 'form_context' e histórico; evite suposições e floreios.\n"
-        "- Trate valores padrão como placeholders; use apenas confirmados (user_set_fields).\n"
-        "- Adapte linguagem ao tipo de evento sem enviesar para casamento e sem adjetivos.\n"
-        "- Use Markdown leve somente quando ajudar.\n\n"
-
-        "Camada de diálogo:\n"
-        "- Não pergunte dados que não existem no formulário.\n"
-        "- Conecte a intenção ao próximo campo obrigatório na página.\n\n"
-
-        "Checklist (priorize o próximo campo obrigatório):\n"
-        "- Foque em 1 item por vez; avance apenas quando confirmado na página.\n"
-        "- Chat não preenche campos: peça para inserir na página e confirmar.\n"
-        "- Não afirme que algo foi preenchido se não estiver confirmado na UI.\n"
-        "- Sempre inclua, no início da resposta, um bloco 'Checklist' com os itens obrigatórios: marque [x] para chaves presentes em user_set_fields e [ ] para pendentes.\n"
-        "1) name1.\n"
-        "2) event_date.\n"
-        "3) event_time.\n"
-        "4) counter_mode ('since' passado, 'until' futuro).\n"
-        "5) email.\n"
-        "6) event_description OU custom_event_description.\n\n"
-
-        "Perguntas obrigatórias (sem preenchimento automático):\n"
-        "- Fotos: se photos_count=0 e sem negativa, pergunte; explique upload.\n"
-        "- Vídeo: se has_video=false e sem negativa, pergunte; explique 'youtubeLink'.\n"
-        "- Confirme 'youtubeLink' se has_video=true mas link não confirmado.\n\n"
-
-        "Itens opcionais (não bloqueiam avanço):\n"
-        "- name2: pergunte após name1; pode ficar vazio.\n"
-        "- effect_type: default 'none'.\n"
-        "- background_type: default 'default'.\n"
-        "- text_theme: default 'text_theme_pink'.\n"
-        "- optional_message: ofereça 2–3 sugestões curtas; oriente copiar para a UI e confirmar.\n"
-        "- Não proponha itens opcionais antes de confirmar o campo atual e os obrigatórios seguintes.\n\n"
-
-        "Opções válidas:\n"
-        "- counter_mode: since, until.\n"
-        "- effect_type: none, hearts, stars, confetti.\n"
-        "- background_type: gradientes/texturas.\n"
-        "- text_theme: claros, escuros, vibrantes.\n\n"
-
-        "Formato da resposta:\n"
-        "- 1 linha neutra reconhecendo a intenção.\n"
-        "- Checklist persistente (no topo): liste os itens obrigatórios com [x] para confirmados (presentes em user_set_fields) e [ ] para pendentes. Marque o campo atual como [x] quando o usuário confirmar na UI. Mantenha o checklist idêntico entre turnos, atualizando apenas o que mudou.\n"
-        "- 1 instrução objetiva do campo atual com a chave do formulário.\n"
-        "- No máximo 3 sugestões curtas.\n"
-        "- Finalize com o CTA quando completo: Clique em 'Criar minha homenagem'.\n"
+        "# Sistema de Copiloto para Criação de Página Personalizada\n\n"
+        
+        "## Produto\n"
+        "Plataforma para criar páginas personalizadas com:\n"
+        "- Contador de tempo (passado/futuro)\n"
+        "- Fotos (até 3)\n"
+        "- Vídeo do YouTube\n"
+        "- Mensagem especial\n"
+        "- QR Code para compartilhar\n\n"
+        
+        "## Seu Papel\n"
+        "Orientar o preenchimento passo a passo do formulário.\n"
+        "- O usuário preenche na interface; você valida e orienta.\n"
+        "- Você não preenche campos automaticamente pelo chat.\n"
+        "- Adapte a linguagem ao tipo de evento (sem viés para casamento).\n\n"
+        
+        "## Mecânica de Trabalho\n\n"
+        
+        "### Fonte de verdade\n"
+        "- `user_set_fields`: campos confirmados pelo usuário na UI\n"
+        "- `form_context`: estado atual do formulário\n"
+        "- Valores padrão são apenas placeholders (ignore até confirmação)\n\n"
+        
+        "### Estrutura de cada resposta\n"
+        "0. **Checklist**: NÃO GERAR. O backend insere no início da resposta; apenas copie quando ele vier. Se o backend não enviar, NÃO inclua a seção 'Checklist' em nenhum lugar da resposta. Nunca reconstrua ou repita esse bloco.\n\n"
+        
+        "1. **Orientação**: 1 frase reconhecendo a intenção + 1 instrução objetiva\n"
+        "2. **Sugestões**: máximo 3 opções curtas (quando aplicável)\n"
+        "3. **CTA final**: quando tudo estiver [x], mostre \"Clique em 'Criar minha homenagem'\"\n\n"
+        
+        "## Campos Obrigatórios (ordem de prioridade)\n\n"
+        
+        "1. **name1**: Nome principal — é o nome do homenageado; nunca presuma que seja o nome de quem está criando a página.\n"
+        "2. **event_date**: Data do evento\n"
+        "3. **event_time**: Horário\n"
+        "4. **counter_mode**: Escolha entre:\n"
+        "   - `since` → \"contagem desde\" (evento passado)\n"
+        "   - `until` → \"contagem para\" (evento futuro)\n"
+        "5. **event_description** OU **custom_event_description**:\n"
+        "   - Explique: \"Há opções pré-definidas no seletor OU ative 'Usar frase personalizada' para criar a sua\"\n"
+        "   - Instrua: selecionar no dropdown OU marcar checkbox + digitar + confirmar\n"
+        "6. **email**: E-mail para receber o link\n\n"
+        
+        "## Campos Opcionais (não bloqueiam avanço)\n\n"
+        
+        "**Regra geral**: ofereça 1 vez de forma direta; se negar/ignorar, marque [x] e avance.\n\n"
+        
+        "- **name2**: \"Quer adicionar Nome 2? (opcional)\"\n"
+        "- **optional_message**: \"Quer incluir uma mensagem curta? (opcional)\" → ofereça 2-3 sugestões\n"
+        "- **Fotos**: \n"
+        "  - Se `photos_count=0` e sem negativa prévia: explique upload\n"
+        "  - Se `photos_count < photos_max`: \"Você tem X/Y. Quer adicionar mais? (limite Y)\"\n"
+        "  - NUNCA afirme que há fotos quando `photos_count=0`\n"
+        "- **Vídeo YouTube**:\n"
+        "  - Se `has_video=false` e sem negativa: explique campo `youtubeLink`\n"
+        "  - Vídeo padrão na prévia = campo vazio (não considere link incluído)\n"
+        "  - Se `has_video=true` mas link não confirmado: pergunte\n"
+        "- **effect_type**: `none`, `hearts`, `stars`, `confetti` (default: `none`)\n"
+        "- **background_type**: gradientes/texturas (default: `default`)\n"
+        "- **text_theme**: claros/escuros/vibrantes (default: `text_theme_pink`)\n\n"
+        
+        "## Regras Críticas\n\n"
+        
+        "❌ **Nunca**:\n"
+        "- Perguntar dados que não existem no formulário\n"
+        "- Afirmar que algo foi preenchido sem confirmação em `user_set_fields`\n"
+        "- Propor opcionais antes de confirmar o campo atual e obrigatórios seguintes\n"
+        "- Usar adjetivos excessivos ou linguagem floreada\n\n"
+        
+        "✅ **Sempre**:\n"
+        "- Focar em 1 campo por vez\n"
+        "- Conectar a intenção do usuário ao próximo campo obrigatório\n"
+        "- Instruir: \"Preencha na página e confirme aqui\"\n"
+        "- Manter checklist persistente e atualizado\n"
+        "- Se o usuário responder \"não\" a uma oferta opcional, considere o opcional como concluído (marque [x]) e não ofereça novamente; persista essa recusa na sessão.\n"
+        "- Ao oferecer um opcional, oriente explicitamente: \"Se não quiser, responda 'não'\" (sem distinção de maiúsculas/minúsculas).\n"
+        "- Usar Markdown apenas quando ajudar na clareza\n"
     )
 
 
@@ -547,6 +568,44 @@ def copilot_api():
         raw_history = data.get('history') or []
         session_id = (data.get('session_id') or '').strip() or None
 
+        sess_state = SESS_OPTS.get(session_id or '', {'declined': set(), 'pending_optional': None})
+        declined = set(sess_state.get('declined', set()))
+        lc_msg = (user_msg or '').lower()
+        decline_map = {
+            'name2': ['sem nome 2','não adicionar nome 2','nao adicionar nome 2','não quero nome 2','nao quero nome 2','sem segundo nome','não quero segundo nome','nao quero segundo nome'],
+            'optional_message': ['sem mensagem','não quero mensagem','nao quero mensagem','pular mensagem','sem texto especial','manter sem mensagem'],
+            'photos': ['sem foto','sem fotos','não adicionar foto','nao adicionar foto','não adicionar fotos','nao adicionar fotos','pular foto','pular fotos','sem imagens'],
+            'youtube': ['sem vídeo','sem video','não adicionar vídeo','nao adicionar video','sem youtube','sem link do youtube','sem yt','não quero video','nao quero video'],
+            'effect_type': ['sem efeito','efeito nenhum','manter sem efeito','sem efeitos'],
+            'background_type': ['manter fundo padrão','fundo padrão','sem fundo','não mudar fundo','nao mudar fundo'],
+            'text_theme': ['manter tema padrão','tema padrão','não mudar tema','nao mudar tema','sem mudar tema'],
+        }
+        try:
+            for k, pats in decline_map.items():
+                if any(p in lc_msg for p in pats):
+                    declined.add(k)
+        except Exception:
+            pass
+        # Heurística genérica: se usuário respondeu com "não/nao",
+        # considerar recusa apenas do opcional atualmente sugerido na sessão
+        try:
+            last_assistant_msg = ''
+            for m in reversed(raw_history):
+                if (m.get('role') == 'assistant') and isinstance(m.get('content'), str):
+                    last_assistant_msg = m.get('content') or ''
+                    break
+            lam = (last_assistant_msg or '').lower()
+            neg = ('não' in lc_msg) or ('nao' in lc_msg)
+            if neg:
+                pending = sess_state.get('pending_optional')
+                if pending:
+                    declined.add(pending)
+        except Exception:
+            pass
+        if session_id is not None:
+            sess_state['declined'] = declined
+            SESS_OPTS[session_id] = sess_state
+
         # Normaliza e limita histórico (evita entradas inválidas e excesso)
         history = []
         if isinstance(raw_history, list):
@@ -560,6 +619,18 @@ def copilot_api():
                 history = []
 
         system = _build_system_prompt()
+        try:
+            now_dt = datetime.now(timezone)
+            now_text = now_dt.strftime("%Y-%m-%d %H:%M")
+            system = (
+                system
+                + "\n\n"
+                + "Contexto temporal:\n"
+                + f"- Agora: {now_text} (America/Manaus).\n"
+                + "- Regra: 'contagem desde' exige data/hora no passado; 'contagem para' exige data/hora no futuro.\n"
+            )
+        except Exception:
+            pass
         # Decide provedor de IA via variáveis de ambiente
         use_openai = False
         try:
@@ -612,10 +683,11 @@ def copilot_api():
                                 'event_date': 'Data do evento',
                                 'event_time': 'Hora do evento',
                                 'counter_mode': 'Tipo de contagem',
+                                'description_mode': 'Modo de descrição',
                                 'event_description': 'Descrição do evento',
                                 'custom_event_description': 'Frase personalizada',
                                 'email': 'E-mail',
-                                'optional_message': 'Mensagem Opcional',
+                                'optional_message': 'Mensagem especial',
                                 # Derivados de UI
                                 'photos_count': 'Quantidade de fotos selecionadas',
                                 'has_photos': 'Tem fotos?',
@@ -625,6 +697,9 @@ def copilot_api():
                                 'video_id': 'ID do vídeo',
                                 'has_video': 'Tem vídeo?',
                                 'youtube_link_value': 'Link do YouTube',
+                                'effect_type': 'Efeito',
+                                'background_type': 'Tipo de fundo',
+                                'text_theme': 'Tema do texto',
                             }.get(key)
                             return fallback or key
                         except Exception:
@@ -641,51 +716,40 @@ def copilot_api():
                             if user_set_fields and (k not in user_set_fields) and (k not in derived_whitelist):
                                 continue
                             try:
-                                val = v if isinstance(v, str) else (str(v) if v is not None else '')
+                                raw_val = v if isinstance(v, str) else (str(v) if v is not None else '')
                             except Exception:
-                                val = ''
+                                raw_val = ''
+                            val = raw_val
+                            if k == 'counter_mode':
+                                if raw_val == 'since':
+                                    val = 'contagem desde'
+                                elif raw_val == 'until':
+                                    val = 'contagem para'
                             # Usa label humano quando disponível
                             ctx_label = human_label(k)
                             ctx_lines.append(f"- {ctx_label}: {val}")
                     ctx_block = "\n".join(ctx_lines)
                     # dom_state ignorado no modo estrito
                     dom_block = ""
-                    # Campos obrigatórios para completude (ordem não obrigatória)
-                    expected_fields = [
-                        'name1','event_date','event_time','counter_mode','email'
-                    ]
+                    # Campos obrigatórios para completude (ordem desejada)
+                    required_order = ['name1','event_date','event_time','counter_mode','event_description/custom_event_description','email']
                     # Apenas campos realmente confirmados pelo usuário
-                    confirmed_keys = set(k for k in form_ctx.keys() if (not user_set_fields or k in user_set_fields))
-                    # Pendências: trate descrição como grupo (event_description OU custom_event_description)
-                    base_missing = [
-                        k for k in expected_fields
-                        if k not in confirmed_keys and k not in ('event_description','custom_event_description')
-                    ]
+                    confirmed_keys = set(user_set_fields or [])
                     # Considera descrição válida se houver valor não vazio em uma das duas chaves
                     ev_desc_val = str(form_ctx.get('event_description','')).strip() if isinstance(form_ctx, dict) else ''
                     cust_desc_val = str(form_ctx.get('custom_event_description','')).strip() if isinstance(form_ctx, dict) else ''
                     has_desc = bool(ev_desc_val) or bool(cust_desc_val)
-                    missing = base_missing[:]
-                    if not has_desc:
-                        missing.append('event_description/custom_event_description')
-
-                    missing_block = "\n".join([f"- {human_label(k)}" for k in missing])
-                    # Progressão: determine próximo campo obrigatório
-                    required_order = ['name1','event_date','event_time','counter_mode','email']
-                    # já calculado acima
-                    if not has_desc:
-                        required_order.append('event_description/custom_event_description')
-                    # Estilo visual é opcional: fundo (background_type) e tema do texto (text_theme) não bloqueiam avanço.
-                    next_required = None
+                    # Monta lista de pendências respeitando a ordem desejada
+                    missing = []
                     for k in required_order:
                         if k == 'event_description/custom_event_description':
                             if not has_desc:
-                                next_required = k
-                                break
+                                missing.append(k)
                         elif k not in confirmed_keys:
-                            next_required = k
-                            break
-                    # Validação temporal: compatibilidade entre counter_mode e data/hora
+                            missing.append(k)
+
+                    missing_block = "\n".join([f"- {human_label(k)}" for k in missing])
+                    # Validação temporal: compatibilidade entre counter_mode e data/hora (preciso antes do checklist)
                     ev_date_str = str(form_ctx.get('event_date', '') or '').strip()
                     ev_time_str = str(form_ctx.get('event_time', '') or '').strip()
                     mode_str = str(form_ctx.get('counter_mode', '') or '').strip().lower()
@@ -706,6 +770,129 @@ def copilot_api():
                     except Exception:
                         # Não bloquear caso parsing falhe; apenas não emitir inconsistência
                         inconsistency_msg = inconsistency_msg or ''
+                    # Checklist gerado no backend para o modelo copiar
+                    def key_confirmed(k: str) -> bool:
+                        try:
+                            if k == 'event_description/custom_event_description':
+                                desc_touched = ('event_description' in confirmed_keys) or ('custom_event_description' in confirmed_keys)
+                                return bool(has_desc) and desc_touched
+                            val = str(form_ctx.get(k, '') or '').strip()
+                            if not val:
+                                return False
+                            return (k in confirmed_keys) and (not bool(inconsistency_msg))
+                        except Exception:
+                            return False
+                    req_lines = []
+                    for k in required_order:
+                        mark = '[x]' if key_confirmed(k) else '[ ]'
+                        mark_disp = '\\[x]' if mark == '[x]' else '\\[ ]'
+                        req_lines.append(f"- {mark_disp} {human_label(k)}")
+                    # Opcionais
+                    photos_count = 0
+                    photos_max = 3
+                    try:
+                        photos_count = int(str(form_ctx.get('photos_count', '') or '0'))
+                    except Exception:
+                        photos_count = 0
+                    try:
+                        photos_max = int(str(form_ctx.get('photos_max', '') or '3'))
+                    except Exception:
+                        photos_max = 3
+                    opt_items = [
+                        ('name2', human_label('name2'), (key_confirmed('name2') or ('name2' in declined))),
+                        ('optional_message', human_label('optional_message'), (key_confirmed('optional_message') or ('optional_message' in declined))),
+                        ('photos', f"Fotos ({photos_count}/{photos_max})", (photos_count > 0 or ('photos' in declined))),
+                        ('youtube', 'Vídeo YouTube', ((bool(str(form_ctx.get('youtube_link_value','')).strip()) and ('youtubeLink' in confirmed_keys)) or ('youtube' in declined))),
+                        ('effect_type', human_label('effect_type'), (key_confirmed('effect_type') or ('effect_type' in declined))),
+                        ('background_type', human_label('background_type'), (key_confirmed('background_type') or ('background_type' in declined))),
+                        ('text_theme', human_label('text_theme'), (key_confirmed('text_theme') or ('text_theme' in declined))),
+                    ]
+                    opt_pending_count = sum(1 for _, _, ok in opt_items if not ok)
+                    try:
+                        pend_key = sess_state.get('pending_optional')
+                        if pend_key:
+                            # Se o opcional atual foi recusado ou confirmado, limpar estado de pendência
+                            was_ok = any((k == pend_key and ok) for k, _, ok in opt_items)
+                            if (pend_key in declined) or was_ok:
+                                sess_state['pending_optional'] = None
+                                if session_id is not None:
+                                    SESS_OPTS[session_id] = sess_state
+                    except Exception:
+                        pass
+                    opt_lines = [f"- {'\\[x]' if ok else '\\[ ]'} {lbl}" for _, lbl, ok in opt_items]
+                    checklist_block = (
+                        "Checklist:\n" + "\n".join(req_lines) + "\n\n" + "Opcionais:\n" + "\n".join(opt_lines) + "\n\n"
+                    )
+                    def strip_dup_checklist(s: str) -> str:
+                        try:
+                            t = str(s or '')
+                            lines = t.splitlines()
+                            req_labels = [human_label(k) for k in required_order]
+                            opt_labels = [lbl for _, lbl, _ in opt_items]
+                            out = []
+                            i = 0
+                            def is_item(line: str) -> bool:
+                                l = line.strip()
+                                if l == '':
+                                    return True
+                                ll = l.lower()
+                                if ll.startswith('checklist') or ll.startswith('opcionais'):
+                                    return True
+                                if l.startswith('-'):
+                                    return True
+                                if l in req_labels:
+                                    return True
+                                if (l in opt_labels) or l.startswith('Fotos (') or l.startswith('Vídeo YouTube'):
+                                    return True
+                                # linhas como "[x] Nome 1" sem marcador '-'
+                                if l.startswith('['):
+                                    return True
+                                return False
+                            while i < len(lines):
+                                l = lines[i]
+                                if l.strip().lower().startswith('checklist'):
+                                    j = i + 1
+                                    while j < len(lines) and is_item(lines[j]):
+                                        j += 1
+                                    i = j
+                                    continue
+                                out.append(l)
+                                i += 1
+                            return "\n".join(out).lstrip()
+                        except Exception:
+                            return str(s or '')
+                    def strip_optional_when_required(s: str) -> str:
+                        try:
+                            txt = str(s or '')
+                            if next_required:
+                                kw = ['foto','fotos','vídeo','video','youtube','efeito','fundo','tema do texto','tema']
+                                lines = txt.splitlines()
+                                filtered = []
+                                for l in lines:
+                                    ll = l.lower()
+                                    if any(k in ll for k in kw):
+                                        continue
+                                    filtered.append(l)
+                                txt2 = "\n".join(filtered)
+                                hint = f"Agora preencha o campo {human_label(next_required)} na página e confirme."
+                                if 'preencha o campo' not in txt2.lower():
+                                    txt2 = (txt2 + ("\n\n" + hint))
+                                return txt2
+                            return txt
+                        except Exception:
+                            return str(s or '')
+                    # Progressão: determine próximo campo obrigatório (mesma ordem com descrição antes de e-mail)
+                    # já calculado acima
+                    # Estilo visual é opcional: fundo (background_type) e tema do texto (text_theme) não bloqueiam avanço.
+                    next_required = None
+                    for k in required_order:
+                        if k == 'event_description/custom_event_description':
+                            if not has_desc:
+                                next_required = k
+                                break
+                        elif k not in confirmed_keys:
+                            next_required = k
+                            break
 
                     # Se não há próximo obrigatório por pendência mas há inconsistência, force ajuste de counter_mode
                     if not next_required and inconsistency_msg:
@@ -716,14 +903,17 @@ def copilot_api():
                     current_value = ''
                     if next_required:
                         if next_required == 'event_description/custom_event_description':
-                            current_confirmed = has_desc
+                            # Considera confirmado apenas se houver valor E o usuário tocou em uma das chaves
+                            desc_touched = ('event_description' in confirmed_keys) or ('custom_event_description' in confirmed_keys)
+                            current_confirmed = has_desc and desc_touched
                             current_value = cust_desc_val or ev_desc_val or ''
                         else:
                             try:
                                 current_value = str(form_ctx.get(next_required, '')).strip()
                             except Exception:
                                 current_value = ''
-                            current_confirmed = bool(current_value) and not bool(inconsistency_msg)
+                            # Considera confirmado apenas se houver valor, sem inconsistência, e o usuário tocou na chave
+                            current_confirmed = bool(current_value) and (next_required in confirmed_keys) and not bool(inconsistency_msg)
                     # Detecta prontidão a partir da mensagem do usuário
                     ready_keywords = ['pronto', 'finalizar', 'concluir', 'pode criar', 'vamos criar', 'criar minha homenagem', 'pode publicar', 'terminamos', 'fechamos']
                     msg_lc = (user_msg or '').strip().lower()
@@ -731,13 +921,28 @@ def copilot_api():
                     status_line = (
                         f"Status do formulário: "
                         + (
-                            'completo' if (not missing and not inconsistency_msg) else (
+                            ('completo' if opt_pending_count == 0 else f"completo (opcionais pendentes: {opt_pending_count})") if (not missing and not inconsistency_msg) else (
                                 f"incompleto (pendentes: {len(missing)})" if missing else "incompleto (inconsistência temporal: contador vs data/hora)"
                             )
                         )
                     )
                     # Label humano para próximo obrigatório
                     next_label = human_label(next_required) if next_required else ''
+                    current_optional_key = None
+                    if (not next_required) and opt_pending_count > 0:
+                        try:
+                            for k,lbl,ok in opt_items:
+                                if not ok:
+                                    current_optional_key = k
+                                    break
+                        except Exception:
+                            current_optional_key = None
+                        if session_id is not None:
+                            try:
+                                sess_state['pending_optional'] = current_optional_key
+                                SESS_OPTS[session_id] = sess_state
+                            except Exception:
+                                pass
                     user_content = (
                         (
                             (f"Progresso: próximo campo obrigatório: {next_label}\n\n" if next_required else "") +
@@ -750,6 +955,9 @@ def copilot_api():
                             f"Contexto do formulário (confirmado):\n{(ctx_block or '—')}\n\n"
                             + (f"Estado atual da tela (DOM/UI) confirmado:\n{dom_block}\n\n" if dom_block else "")
                             + (f"Campos não confirmados (trate como 'não definido' até o usuário validar):\n{missing_block}\n" if missing else "")
+                            + (f"Diretriz: enquanto houver opcionais pendentes, evite afirmar 'Sua página está completa'; prefira 'Pronta para publicar' e ofereça preencher opcionais.\n\n" if opt_pending_count > 0 else "")
+                            + ((f"Opcional sugerido agora: {human_label(current_optional_key)} (key={current_optional_key}). Instrua: 'Se não quiser, responda \"não\"'.\n\n") if (current_optional_key and (not next_required)) else "")
+                            + ("Opcionais recusados pelo usuário:\n- " + "\n- ".join([lbl for k,lbl,ok in opt_items if (k in declined)]) + "\n\n" if declined else "")
                         ).strip()
                     )
 
@@ -771,6 +979,17 @@ def copilot_api():
                                 },
                             )
                             reply = completion.choices[0].message.content
+                            txt = strip_dup_checklist(reply)
+                            txt = strip_optional_when_required(txt)
+                            if opt_pending_count > 0:
+                                try:
+                                    low = (txt or '').lower()
+                                    if 'página está completa' in low or 'pagina esta completa' in low:
+                                        txt = txt.replace('Sua página está completa', 'Sua página está pronta para publicar')
+                                        txt = txt.replace('sua página está completa', 'Sua página está pronta para publicar')
+                                except Exception:
+                                    pass
+                            reply = (checklist_block + txt)
                         else:
                             # Usa SDK nativo da OpenAI
                             client = OpenAI(api_key=api_key)
@@ -779,6 +998,17 @@ def copilot_api():
                                 messages=messages,
                             )
                             reply = completion.choices[0].message.content
+                            txt = strip_dup_checklist(reply)
+                            txt = strip_optional_when_required(txt)
+                            if opt_pending_count > 0:
+                                try:
+                                    low = (txt or '').lower()
+                                    if 'página está completa' in low or 'pagina esta completa' in low:
+                                        txt = txt.replace('Sua página está completa', 'Sua página está pronta para publicar')
+                                        txt = txt.replace('sua página está completa', 'Sua página está pronta para publicar')
+                                except Exception:
+                                    pass
+                            reply = (checklist_block + txt)
                     except Exception as e:
                         try:
                             fallback_model = 'gpt-4o-mini'
@@ -803,6 +1033,17 @@ def copilot_api():
                                     messages=messages,
                                 )
                             reply = completion.choices[0].message.content
+                            txt = strip_dup_checklist(reply)
+                            txt = strip_optional_when_required(txt)
+                            if opt_pending_count > 0:
+                                try:
+                                    low = (txt or '').lower()
+                                    if 'página está completa' in low or 'pagina esta completa' in low:
+                                        txt = txt.replace('Sua página está completa', 'Sua página está pronta para publicar')
+                                        txt = txt.replace('sua página está completa', 'Sua página está pronta para publicar')
+                                except Exception:
+                                    pass
+                            reply = (checklist_block + txt)
                         except Exception as e2:
                             return jsonify({
                                 'ok': False,
@@ -856,7 +1097,7 @@ def copilot_api():
                 conv_block = (
                     (f"Ok — {ev_type}.\n\n" if ev_type else "Ok.\n\n")
                 )
-                reply = conv_block + str(reply or '')
+                reply = str(reply or '') + conv_block
         except Exception:
             pass
 
@@ -885,12 +1126,13 @@ def copilot_api():
             except Exception:
                 skip_optional = False
             # Injeta pergunta fora do checklist: após confirmação de Nome 1 e antes de avançar, se Nome 2 estiver vazio
-            if reply and n1_val and ('name1' in confirmed_keys) and (not n2_val) and (not already_asked) and (not skip_optional):
+            # Não perguntar se o usuário já recusou 'Nome 2'
+            if reply and n1_val and ('name1' in confirmed_keys) and (not n2_val) and (not already_asked) and (not skip_optional) and ('name2' not in declined):
                 question_block = (
                     "Pergunta: Há um segundo homenageado? Se sim, preencha 'Nome 2' na página e confirme; "
-                    "se não, pode deixar em branco. Isso não bloqueia o avanço.\n\n"
+                    "se não, responda 'não' e pode deixar em branco. Isso não bloqueia o avanço.\n\n"
                 )
-                reply = question_block + str(reply or '')
+                reply = str(reply or '') + question_block
         except Exception:
             # Não bloquear retorno em caso de falha ao injetar pergunta opcional
             pass
@@ -909,8 +1151,11 @@ def copilot_clear():
     try:
         data = request.get_json(force=True) or {}
         session_id = (data.get('session_id') or '').strip() or None
-        # Backend não persiste histórico; esta rota confirma limpeza por sessão
-        # Mantida para compatibilidade e futuras extensões (ex.: persistência server-side)
+        if session_id and (session_id in SESS_OPTS):
+            try:
+                del SESS_OPTS[session_id]
+            except Exception:
+                pass
         return jsonify({'ok': True, 'cleared': True, 'session_id': session_id})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 400
