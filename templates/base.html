@@ -101,6 +101,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/copilot.css') }}">
 
     {% block head %}{% endblock %}
 </head>
@@ -157,6 +158,8 @@
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sweetalert2.min.js') }}"></script>
+    <!-- Markdown renderer for bot responses -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // Detecta suporte a background-clip: text e habilita a classe global
         (function(){
@@ -173,6 +176,8 @@
             }
         })();
     </script>
+    {% include 'copilot_widget.html' %}
+    <script src="{{ url_for('static', filename='js/copilot.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 

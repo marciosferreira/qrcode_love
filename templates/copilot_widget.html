@@ -1,0 +1,39 @@
+<!-- Copilot de Criação: FAB + Modal -->
+<div id="copilotFab" class="copilot-fab" title="Ajuda/IA">
+  <i class="bi bi-robot"></i>
+</div>
+
+<div id="copilotModal" class="copilot-modal" aria-hidden="true">
+  <div class="copilot-overlay"></div>
+  <div class="copilot-panel" role="dialog" aria-labelledby="copilotTitle">
+    <div class="copilot-header">
+      <div class="copilot-title" id="copilotTitle">
+        <i class="bi bi-stars"></i> Assistente de Criação
+      </div>
+      <div class="copilot-actions">
+        <button type="button" class="copilot-btn" id="copilotClear" title="Limpar histórico">
+          <i class="bi bi-trash3"></i>
+        </button>
+        <button type="button" class="copilot-btn" id="copilotMinimize" title="Minimizar">
+          <i class="bi bi-dash-lg"></i>
+        </button>
+        <button type="button" class="copilot-btn" id="copilotClose" title="Fechar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+    <div class="copilot-body" id="copilotMessages" aria-live="polite"></div>
+    <form class="copilot-input" id="copilotForm">
+      <input type="text" id="copilotMessage" placeholder="Digite sua pergunta ou peça sugestões..." autocomplete="off" />
+      <button type="submit" class="copilot-send" title="Enviar"><i class="bi bi-send-fill"></i></button>
+    </form>
+  </div>
+  
+  <!-- Template de mensagem -->
+  <template id="copilotMsgTemplate">
+    <div class="copilot-msg">
+      <div class="copilot-avatar"></div>
+      <div class="copilot-bubble"></div>
+    </div>
+  </template>
+</div>

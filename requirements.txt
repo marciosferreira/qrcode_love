@@ -39,3 +39,5 @@ Werkzeug==3.0.4
 awscli
 dotenv
 stripe
+openai>=1.0.0
+langfuse

@@ -31,6 +31,16 @@ from flask import (
     abort,
 )
 from dotenv import load_dotenv
+# Integração condicional com Langfuse (observabilidade)
+try:
+    from langfuse.openai import openai as LF_OPENAI  # type: ignore
+except Exception:
+    LF_OPENAI = None
+try:
+    # SDK moderno da OpenAI
+    from openai import OpenAI  # type: ignore
+except Exception:
+    OpenAI = None  # será verificado em runtime
 
 load_dotenv()
 from datetime import datetime, timedelta
@@ -457,6 +467,563 @@ def list_dynamo_items():
     except Exception as e:
         flash(f"Erro ao recuperar itens do DynamoDB: {e}")
         return redirect(url_for("login"))
+
+
+# ===== Copilot de Criação API =====
+def _build_system_prompt():
+    return (
+        "Guia do Copiloto — diálogo acolhedor com avanço por checklist\n\n"
+        "Princípios essenciais:\n"
+        "- Baseie-se em 'form_context' e histórico; evite suposições.\n"
+        "- Trate valores padrão como placeholders; use apenas confirmados (user_set_fields).\n"
+        "- Adapte linguagem ao tipo de evento sem enviesar para casamento.\n"
+        "- Use Markdown leve somente quando ajudar.\n\n"
+
+        "Camada de diálogo:\n"
+        "- Comece reconhecendo a intenção do usuário com 1 linha acolhedora.\n"
+        "- Faça 1 pergunta breve sobre o evento (local, cidade, curso, tema, etc.).\n"
+        "- Em seguida, traga a orientação do próximo campo obrigatório.\n\n"
+
+        "Checklist (priorize o próximo campo obrigatório):\n"
+        "- Foque em 1 item por vez; avance apenas quando confirmado na página.\n"
+        "- Chat não preenche campos: peça para inserir na página e confirmar.\n"
+        "- Não afirme que algo foi preenchido se não estiver confirmado na UI.\n"
+        "1) name1.\n"
+        "2) event_date.\n"
+        "3) event_time.\n"
+        "4) counter_mode ('since' passado, 'until' futuro).\n"
+        "5) email.\n"
+        "6) event_description OU custom_event_description.\n\n"
+
+        "Perguntas obrigatórias (sem preenchimento automático):\n"
+        "- Fotos: se photos_count=0 e sem negativa, pergunte; explique upload.\n"
+        "- Vídeo: se has_video=false e sem negativa, pergunte; explique 'youtubeLink'.\n"
+        "- Confirme 'youtubeLink' se has_video=true mas link não confirmado.\n\n"
+
+        "Itens opcionais (não bloqueiam avanço):\n"
+        "- name2: pergunte após name1; pode ficar vazio.\n"
+        "- effect_type: default 'none'.\n"
+        "- background_type: default 'default'.\n"
+        "- text_theme: default 'text_theme_pink'.\n"
+        "- optional_message: ofereça 2–3 sugestões curtas; oriente copiar para a UI e confirmar.\n\n"
+
+        "Opções válidas:\n"
+        "- counter_mode: since, until.\n"
+        "- effect_type: none, hearts, stars, confetti.\n"
+        "- background_type: gradientes/texturas.\n"
+        "- text_theme: claros, escuros, vibrantes.\n\n"
+
+        "Formato da resposta:\n"
+        "- 1 linha acolhedora + 1 pergunta do evento.\n"
+        "- 1 instrução objetiva do campo atual com a chave do formulário.\n"
+        "- No máximo 3 sugestões curtas.\n"
+        "- Finalize com o CTA quando completo: Clique em 'Criar minha homenagem'.\n"
+    )
+
+
+def _simulate_copilot_reply(user_message: str, ctx: dict) -> str:
+    # Gera uma resposta simples e DIRETA, focada em instruções de preenchimento
+    n1 = (ctx.get("Nomes do Casal / Pessoas") or ctx.get("name1") or ctx.get("Nome 1") or "").strip()
+    n2 = (ctx.get("Nome 2 (opcional)") or ctx.get("name2") or "").strip()
+    ev_desc = (ctx.get("Descrição do Evento") or ctx.get("event_description") or "").strip()
+    ev_date = (ctx.get("Data e Hora do Evento") or ctx.get("event_date") or "").strip()
+    ev_time = (ctx.get("event_time") or "").strip()
+    mode = (ctx.get("Tipo de Contagem") or ctx.get("counter_mode") or "").strip().lower()
+    opt_msg = (ctx.get("Mensagem Opcional") or ctx.get("optional_message") or ctx.get("message") or "").strip()
+    eff = (ctx.get("Efeitos e Fundo") or ctx.get("effect_type") or "").strip()
+    bg = (ctx.get("background_type") or "").strip()
+    txt_theme = (ctx.get("Tema do texto") or ctx.get("text_theme") or "").strip()
+
+    # Foque em UM item por vez, seguindo a ordem obrigatória
+    passos = []
+    if not n1:
+        passos.append("1) Agora preencha o campo 'Nome 1' na página com o nome da pessoa homenageada e confirme.")
+    elif not ev_date:
+        passos.append("1) Agora preencha o campo 'Data do evento' na página e confirme.")
+    elif not ev_time:
+        passos.append("1) Agora preencha o campo 'Hora do evento' na página e confirme.")
+    elif not mode:
+        passos.append("1) Agora escolha o 'Tipo de contagem' na página (desde/até) e confirme.")
+    elif not ev_desc:
+        passos.append("1) Em 'Descrição do evento', escolha uma opção OU ative 'Frase personalizada' e preencha sua frase. Depois confirme na página.")
+    # Itens de estilo (fundo e tema) são opcionais e não entram no checklist obrigatório
+    else:
+        passos.append("1) Revise e confirme 'Data do evento', 'Hora do evento', 'Tipo de contagem' e a descrição ('Descrição do evento' ou 'Frase personalizada') na página.")
+
+    md = [
+        "### Próximos passos",
+        "Eu vou te orientar a preencher os campos na tela para montar a página.",
+        "",
+        "**Checklist para avançar:**",
+        *([f"- {p}" for p in passos[:1]] or ["- Diga o objetivo do evento para eu orientar os campos."]),
+        "",
+        "Obs.: fotos e vídeo são adicionados pela página (upload e 'youtubeLink'); não envio arquivos pelo chat.",
+    ]
+
+    # Pergunta sobre Nome 2 (opcional): fora do checklist, não bloqueia
+    if not n2:
+        md.extend([
+            "",
+            "Pergunta: Há um segundo homenageado? Se sim, preencha 'Nome 2' na página e confirme; se não, pode deixar em branco. Isso não bloqueia o avanço.",
+        ])
+
+    # Efeito nas Fotos (opcional): fora do checklist, não bloqueia
+    if not eff:
+        md.extend([
+            "",
+            "Pergunta (opcional): Quer aplicar um efeito nas fotos? Padrão 'none'. Se quiser, selecione em 'effect_type' (none, hearts, stars, confetti) e confirme. Isso não bloqueia o avanço.",
+        ])
+
+    # Fundo (opcional): fora do checklist, não bloqueia
+    if not bg:
+        const_padrao_bg = 'default'
+        md.extend([
+            "",
+            f"Pergunta (opcional): Quer ajustar o fundo? Padrão '{const_padrao_bg}'. Se quiser, selecione em 'background_type' e confirme. Isso não bloqueia o avanço.",
+        ])
+
+    # Tema do Texto (opcional): fora do checklist, não bloqueia
+    if not txt_theme:
+        const_padrao_theme = 'text_theme_pink'
+        md.extend([
+            "",
+            f"Pergunta (opcional): Quer ajustar o tema do texto? Padrão '{const_padrao_theme}'. Se quiser, selecione em 'text_theme' e confirme. Isso não bloqueia o avanço.",
+        ])
+
+    # Mensagem Opcional: perguntar fora do checklist quando não estiver confirmada
+    if not opt_msg:
+        # Gerar 2–3 sugestões curtas ajustadas ao contexto
+        sugestoes = []
+        if n1 and n2:
+            casal = f"{n1} & {n2}"
+            sugestoes = [
+                f"{casal}, que este momento celebre o carinho de vocês.",
+                f"{casal}, obrigado(a) por tantas memórias lindas ao meu lado.",
+                "Que hoje seja um capítulo inesquecível da nossa história.",
+            ]
+        elif n1:
+            sugestoes = [
+                f"{n1}, que este dia seja cheio de boas memórias.",
+                f"{n1}, você ilumina meus dias — hoje e sempre.",
+                "Que este momento traga leveza, amor e gratidão.",
+            ]
+        else:
+            sugestoes = [
+                "Que este momento traga leveza, amor e gratidão.",
+                "Você ilumina meus dias — hoje e sempre.",
+                "Que hoje seja um capítulo inesquecível da nossa história.",
+            ]
+
+        md.extend([
+            "",
+            "Pergunta: Não vejo mensagem opcional. Quer incluir um recado curto? Copie uma sugestão abaixo para o campo 'Mensagem Opcional' na página e confirme:",
+            *[f"- {s}" for s in sugestoes],
+        ])
+    return "\n".join(md)
+
+
+@app.route('/api/copilot', methods=['POST'])
+def copilot_api():
+    try:
+        data = request.get_json(force=True) or {}
+        user_msg = (data.get('message') or '').strip()
+        form_ctx = data.get('form_context') or {}
+        label_map = data.get('label_map') or {}
+        # Estado atual da UI/DOM (opcional), se o frontend enviar
+        # Modo estrito: não considerar estado de UI/DOM enviado pelo frontend
+        dom_state = {}
+        user_set_fields = set(data.get('user_set_fields') or [])
+        # Histórico e sessão (opcionais) enviados pelo frontend
+        raw_history = data.get('history') or []
+        session_id = (data.get('session_id') or '').strip() or None
+
+        # Normaliza e limita histórico (evita entradas inválidas e excesso)
+        history = []
+        if isinstance(raw_history, list):
+            try:
+                for m in raw_history[-20:]:  # limite adicional no backend (ampliado)
+                    role = (m.get('role') or '').strip().lower()
+                    content = m.get('content')
+                    if role in ('user', 'assistant') and isinstance(content, str) and content.strip():
+                        history.append({ 'role': role, 'content': content.strip() })
+            except Exception:
+                history = []
+
+        system = _build_system_prompt()
+        # Decide provedor de IA via variáveis de ambiente
+        use_openai = False
+        try:
+            prov_llm = (os.getenv('LLM_PROVIDER') or '').strip().lower()
+            prov_emb = (os.getenv('EMBEDDING_PROVIDER') or '').strip().lower()
+            use_flag = (os.getenv('USE_OPENAI') or '').strip().lower()
+            use_openai = (
+                prov_llm == 'openai' or prov_emb == 'openai' or use_flag in ('1', 'true', 'yes')
+            )
+        except Exception:
+            use_openai = False
+
+        reply = None
+
+        if use_openai:
+            api_key = os.getenv('OPENAI_API_KEY')
+            model = (os.getenv('OPENAI_MODEL') or '').strip() or 'gpt-4o-mini'
+            # Verifica se Langfuse está disponível e configurado
+            lf_secret = (os.getenv('LANGFUSE_SECRET_KEY') or '').strip()
+            lf_public = (os.getenv('LANGFUSE_PUBLIC_KEY') or '').strip()
+            lf_base = (os.getenv('LANGFUSE_BASE_URL') or '').strip()
+            use_langfuse = LF_OPENAI is not None and lf_secret and lf_public and lf_base
+
+            if api_key:
+                try:
+                    # Helper: label humano para chave técnica (definido antes do uso)
+                    def human_label(key: str) -> str:
+                        try:
+                            if not isinstance(key, str):
+                                return str(key)
+                            # Mapeia combinado de descrição
+                            if key == 'event_description/custom_event_description':
+                                lbl = (
+                                    (isinstance(label_map, dict) and label_map.get(key))
+                                    or (
+                                        ((isinstance(label_map, dict) and label_map.get('event_description')) or 'Descrição do evento')
+                                        + ' ou '
+                                        + ((isinstance(label_map, dict) and label_map.get('custom_event_description')) or 'Frase personalizada')
+                                    )
+                                )
+                                return lbl
+                            if isinstance(label_map, dict):
+                                lbl = label_map.get(key)
+                                if lbl:
+                                    return lbl
+                            # Fallbacks padrão
+                            fallback = {
+                                'name1': 'Nome 1',
+                                'name2': 'Nome 2',
+                                'event_date': 'Data do evento',
+                                'event_time': 'Hora do evento',
+                                'counter_mode': 'Tipo de contagem',
+                                'event_description': 'Descrição do evento',
+                                'custom_event_description': 'Frase personalizada',
+                                'email': 'E-mail',
+                                # Derivados de UI
+                                'photos_count': 'Quantidade de fotos selecionadas',
+                                'has_photos': 'Tem fotos?',
+                                'photos_selected': 'Fotos selecionadas (número visível)',
+                                'photos_max': 'Limite de fotos',
+                                'photos_selected_text': 'Texto exibido de seleção de fotos',
+                                'video_id': 'ID do vídeo',
+                                'has_video': 'Tem vídeo?',
+                                'youtube_link_value': 'Link do YouTube',
+                            }.get(key)
+                            return fallback or key
+                        except Exception:
+                            return str(key)
+                    # Monta conteúdo do usuário com contexto do formulário em Markdown
+                    ctx_lines = []
+                    if isinstance(form_ctx, dict):
+                        derived_whitelist = {
+                            'photos_count','has_photos','photos_selected','photos_max','photos_selected_text',
+                            'video_id','has_video','youtube_link_value'
+                        }
+                        for k, v in form_ctx.items():
+                            # Apenas campos confirmados pelo usuário
+                            if user_set_fields and (k not in user_set_fields) and (k not in derived_whitelist):
+                                continue
+                            try:
+                                val = v if isinstance(v, str) else (str(v) if v is not None else '')
+                            except Exception:
+                                val = ''
+                            # Usa label humano quando disponível
+                            ctx_label = human_label(k)
+                            ctx_lines.append(f"- {ctx_label}: {val}")
+                    ctx_block = "\n".join(ctx_lines)
+                    # dom_state ignorado no modo estrito
+                    dom_block = ""
+                    # Campos obrigatórios para completude (ordem não obrigatória)
+                    expected_fields = [
+                        'name1','event_date','event_time','counter_mode','email'
+                    ]
+                    # Apenas campos realmente confirmados pelo usuário
+                    confirmed_keys = set(k for k in form_ctx.keys() if (not user_set_fields or k in user_set_fields))
+                    # Pendências: trate descrição como grupo (event_description OU custom_event_description)
+                    base_missing = [
+                        k for k in expected_fields
+                        if k not in confirmed_keys and k not in ('event_description','custom_event_description')
+                    ]
+                    # Considera descrição válida se houver valor não vazio em uma das duas chaves
+                    ev_desc_val = str(form_ctx.get('event_description','')).strip() if isinstance(form_ctx, dict) else ''
+                    cust_desc_val = str(form_ctx.get('custom_event_description','')).strip() if isinstance(form_ctx, dict) else ''
+                    has_desc = bool(ev_desc_val) or bool(cust_desc_val)
+                    missing = base_missing[:]
+                    if not has_desc:
+                        missing.append('event_description/custom_event_description')
+
+                    missing_block = "\n".join([f"- {human_label(k)}" for k in missing])
+                    # Progressão: determine próximo campo obrigatório
+                    required_order = ['name1','event_date','event_time','counter_mode','email']
+                    # já calculado acima
+                    if not has_desc:
+                        required_order.append('event_description/custom_event_description')
+                    # Estilo visual é opcional: fundo (background_type) e tema do texto (text_theme) não bloqueiam avanço.
+                    next_required = None
+                    for k in required_order:
+                        if k == 'event_description/custom_event_description':
+                            if not has_desc:
+                                next_required = k
+                                break
+                        elif k not in confirmed_keys:
+                            next_required = k
+                            break
+                    # Validação temporal: compatibilidade entre counter_mode e data/hora
+                    ev_date_str = str(form_ctx.get('event_date', '') or '').strip()
+                    ev_time_str = str(form_ctx.get('event_time', '') or '').strip()
+                    mode_str = str(form_ctx.get('counter_mode', '') or '').strip().lower()
+                    inconsistency_msg = ''
+                    try:
+                        now_dt = datetime.now(timezone)
+                        ev_dt = None
+                        if ev_date_str and ev_time_str:
+                            try:
+                                ev_dt = timezone.localize(datetime.strptime(f"{ev_date_str} {ev_time_str}", "%Y-%m-%d %H:%M"))
+                            except Exception:
+                                ev_dt = None
+                        if ev_dt and mode_str in ('since','until'):
+                            if mode_str == 'since' and ev_dt > now_dt:
+                                inconsistency_msg = "Tipo 'since' exige data/hora no passado; ajuste 'counter_mode' para 'until' ou escolha uma data passada."
+                            elif mode_str == 'until' and ev_dt <= now_dt:
+                                inconsistency_msg = "Tipo 'until' exige data/hora no futuro; ajuste 'counter_mode' para 'since' ou escolha uma data futura."
+                    except Exception:
+                        # Não bloquear caso parsing falhe; apenas não emitir inconsistência
+                        inconsistency_msg = inconsistency_msg or ''
+
+                    # Se não há próximo obrigatório por pendência mas há inconsistência, force ajuste de counter_mode
+                    if not next_required and inconsistency_msg:
+                        next_required = 'counter_mode'
+
+                    # Checagem do campo atual contra o formulário (considerando inconsistências)
+                    current_confirmed = False
+                    current_value = ''
+                    if next_required:
+                        if next_required == 'event_description/custom_event_description':
+                            current_confirmed = has_desc
+                            current_value = cust_desc_val or ev_desc_val or ''
+                        else:
+                            try:
+                                current_value = str(form_ctx.get(next_required, '')).strip()
+                            except Exception:
+                                current_value = ''
+                            current_confirmed = bool(current_value) and not bool(inconsistency_msg)
+                    # Detecta prontidão a partir da mensagem do usuário
+                    ready_keywords = ['pronto', 'finalizar', 'concluir', 'pode criar', 'vamos criar', 'criar minha homenagem', 'pode publicar', 'terminamos', 'fechamos']
+                    msg_lc = (user_msg or '').strip().lower()
+                    ready_signal = any(kw in msg_lc for kw in ready_keywords)
+                    status_line = (
+                        f"Status do formulário: "
+                        + (
+                            'completo' if (not missing and not inconsistency_msg) else (
+                                f"incompleto (pendentes: {len(missing)})" if missing else "incompleto (inconsistência temporal: contador vs data/hora)"
+                            )
+                        )
+                    )
+                    # Label humano para próximo obrigatório
+                    next_label = human_label(next_required) if next_required else ''
+                    user_content = (
+                        (
+                            (f"Progresso: próximo campo obrigatório: {next_label}\n\n" if next_required else "") +
+                            f"{status_line}\n\n"
+                            + (f"Checagem do campo atual: confirmado={'sim' if current_confirmed else 'não'}; valor='{current_value}'\n\n" if next_required else "")
+                            + (f"Diretriz (campo atual não confirmado): Se confirmado=não, NÃO trate mensagens do chat como preenchimento. Instrua claramente: 'Agora preencha o campo {next_label} na página e confirme'.\n\n" if (next_required and not current_confirmed) else "")
+                            + (f"Inconsistências de validação:\n- {inconsistency_msg}\n\n" if inconsistency_msg else "")
+                            + (f"Prontidão (sinal do usuário): {'sim' if ready_signal else 'não'}\n\n")
+                            + f"Mensagem do usuário:\n{user_msg}\n\n"
+                            f"Contexto do formulário (confirmado):\n{(ctx_block or '—')}\n\n"
+                            + (f"Estado atual da tela (DOM/UI) confirmado:\n{dom_block}\n\n" if dom_block else "")
+                            + (f"Campos não confirmados (trate como 'não definido' até o usuário validar):\n{missing_block}\n" if missing else "")
+                        ).strip()
+                    )
+
+                    try:
+                        messages = [{"role": "system", "content": system}]
+                        messages.extend(history)  # mantém a linha de conversa
+                        messages.append({"role": "user", "content": user_content})
+                        if use_langfuse:
+                            # Usa drop-in replacement do OpenAI via Langfuse
+                            completion = LF_OPENAI.chat.completions.create(
+                                name="copilot-chat",
+                                model=model,
+                                messages=messages,
+                                metadata={
+                                    "feature": "copilot",
+                                    "session_id": session_id or "",
+                                    "context_keys": list(form_ctx.keys()) if isinstance(form_ctx, dict) else [],
+                                    "dom_keys": [],
+                                },
+                            )
+                            reply = completion.choices[0].message.content
+                        else:
+                            # Usa SDK nativo da OpenAI
+                            client = OpenAI(api_key=api_key)
+                            completion = client.chat.completions.create(
+                                model=model,
+                                messages=messages,
+                            )
+                            reply = completion.choices[0].message.content
+                    except Exception as e:
+                        try:
+                            fallback_model = 'gpt-4o-mini'
+                            messages = [{"role": "system", "content": system}]
+                            messages.extend(history)
+                            messages.append({"role": "user", "content": user_content})
+                            if use_langfuse:
+                                completion = LF_OPENAI.chat.completions.create(
+                                    name="copilot-chat",
+                                    model=fallback_model,
+                                    messages=messages,
+                                    metadata={
+                                        "feature": "copilot",
+                                        "session_id": session_id or "",
+                                        "context_keys": list(form_ctx.keys()) if isinstance(form_ctx, dict) else [],
+                                    },
+                                )
+                            else:
+                                client = OpenAI(api_key=api_key)
+                                completion = client.chat.completions.create(
+                                    model=fallback_model,
+                                    messages=messages,
+                                )
+                            reply = completion.choices[0].message.content
+                        except Exception as e2:
+                            return jsonify({
+                                'ok': False,
+                                'error': 'Falha ao gerar resposta via IA',
+                                'details': str(e2)
+                            }), 502
+                except Exception as e:
+                    # Erro crítico ao usar provedor de IA: retornar erro com detalhes
+                    return jsonify({
+                        'ok': False,
+                        'error': 'Erro crítico ao usar provedor de IA',
+                        'details': str(e)
+                    }), 500
+            else:
+                return jsonify({
+                    'ok': False,
+                    'error': 'OPENAI_API_KEY ausente; habilite USE_OPENAI e configure a chave'
+                }), 503
+        else:
+            # IA não habilitada: retornar erro explícito
+            return jsonify({
+                'ok': False,
+                'error': 'IA não habilitada; defina USE_OPENAI=true e OPENAI_API_KEY'
+            }), 503
+
+        try:
+            user_lc = (user_msg or '').strip().lower()
+            ev_type = None
+            if 'batizado' in user_lc:
+                ev_type = 'batizado'
+            elif 'casamento' in user_lc:
+                ev_type = 'casamento'
+            elif 'anivers' in user_lc:
+                ev_type = 'aniversário'
+            elif 'formatura' in user_lc:
+                ev_type = 'formatura'
+            elif 'chá de bebê' in user_lc or 'cha de bebe' in user_lc:
+                ev_type = 'chá de bebê'
+            elif 'bodas' in user_lc:
+                ev_type = 'bodas'
+            elif 'noivado' in user_lc:
+                ev_type = 'noivado'
+            elif 'culto' in user_lc:
+                ev_type = 'culto'
+            elif 'natal' in user_lc:
+                ev_type = 'natal'
+            elif 'ano novo' in user_lc:
+                ev_type = 'ano novo'
+            intent_chat = any(x in user_lc for x in ['quero', 'gostaria', 'planejo', 'pensando', 'evento de', 'festa', 'cerimônia', 'cerimonia'])
+            if reply and (ev_type or intent_chat):
+                q = ''
+                if ev_type == 'batizado':
+                    q = 'Quem será batizado(a) e em qual igreja/cidade?'
+                elif ev_type == 'casamento':
+                    q = 'Qual o local/cerimônia e cidade?'
+                elif ev_type == 'aniversário':
+                    q = 'De quem é o aniversário e qual a idade?'
+                elif ev_type == 'formatura':
+                    q = 'Qual curso e instituição?'
+                elif ev_type == 'chá de bebê':
+                    q = 'Qual o nome do bebê e tema?'
+                elif ev_type == 'bodas':
+                    q = 'De quais bodas e onde?'
+                elif ev_type == 'noivado':
+                    q = 'Onde será a celebração?'
+                elif ev_type == 'culto':
+                    q = 'Qual igreja e cidade?'
+                elif ev_type == 'natal':
+                    q = 'Onde será a celebração?'
+                elif ev_type == 'ano novo':
+                    q = 'Onde será a virada?'
+                conv_block = (
+                    (f"Legal — {ev_type}. " if ev_type else "Legal. ") + (q or "Me conte um pouco do evento.") + "\n\n"
+                )
+                reply = conv_block + str(reply or '')
+        except Exception:
+            pass
+
+        # Antes de retornar, garanta a pergunta opcional de Nome 2 quando aplicável
+        try:
+            form_ctx_dict = form_ctx if isinstance(form_ctx, dict) else {}
+            # Considera confirmados apenas os campos tocados pelo usuário, se fornecidos
+            confirmed_keys = set(k for k in form_ctx_dict.keys() if (not user_set_fields or k in user_set_fields))
+            n1_val = str(form_ctx_dict.get('name1', '') or '').strip()
+            n2_val = str(form_ctx_dict.get('name2', '') or '').strip()
+            already_asked = False
+            try:
+                already_asked = any(
+                    (m.get('role') == 'assistant') and (
+                        ('Nome 2' in (m.get('content') or '')) or ('segundo homenageado' in (m.get('content') or ''))
+                    )
+                    for m in (history or [])
+                )
+            except Exception:
+                already_asked = False
+            skip_optional = False
+            try:
+                msg_lc = (user_msg or '').strip().lower()
+                neg_markers = ['sem segundo', 'não há segundo', 'nao ha segundo', 'somente um', 'apenas um', 'só um', 'so um', 'individual', 'apenas uma pessoa', 'somente uma pessoa']
+                skip_optional = any(x in msg_lc for x in neg_markers)
+            except Exception:
+                skip_optional = False
+            # Injeta pergunta fora do checklist: após confirmação de Nome 1 e antes de avançar, se Nome 2 estiver vazio
+            if reply and n1_val and ('name1' in confirmed_keys) and (not n2_val) and (not already_asked) and (not skip_optional):
+                question_block = (
+                    "Pergunta: Há um segundo homenageado? Se sim, preencha 'Nome 2' na página e confirme; "
+                    "se não, pode deixar em branco. Isso não bloqueia o avanço.\n\n"
+                )
+                reply = question_block + str(reply or '')
+        except Exception:
+            # Não bloquear retorno em caso de falha ao injetar pergunta opcional
+            pass
+
+        return jsonify({
+            'ok': True,
+            'system_prompt': system,
+            'reply': reply,
+        })
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 400
+
+
+@app.route('/api/copilot/clear', methods=['POST'])
+def copilot_clear():
+    try:
+        data = request.get_json(force=True) or {}
+        session_id = (data.get('session_id') or '').strip() or None
+        # Backend não persiste histórico; esta rota confirma limpeza por sessão
+        # Mantida para compatibilidade e futuras extensões (ex.: persistência server-side)
+        return jsonify({'ok': True, 'cleared': True, 'session_id': session_id})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 400
 
 
 # Função para enviar e-mail com anexo
