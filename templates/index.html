@@ -94,10 +94,10 @@
 {% block content %}
 <div class="page-wrap">
 <section class="section-card text-center">
-  <h1>Celebre os Melhores Momentos</h1>
-  <p class="lead" style="color: var(--text-muted);">
-    Crie a contagem de tempo (para frente ou para trás) de qualquer evento, presenteie e compartilhe com QR Code, fotos e vídeos exclusivos.
-  </p>
+  <h1>Transforme sua História em um Presente Digital Inesquecível.</h1>
+  <h2 class="lead" style="color: var(--text-muted); font-weight: 500;">
+    Crie uma página personalizada com suas fotos, vídeos e um contador de tempo exclusivo. Gere um QR Code e surpreenda quem você ama com uma homenagem que dura para sempre.
+  </h2>
 </section>
 
 <!-- Abas para alternar entre prévia e criação -->
@@ -133,13 +133,13 @@
         <label class="form-label">Tipo de Contagem</label>
         <div class="custom-radio-group">
           <div class="radio-option">
-            <input type="radio" name="counter_mode" id="mode_since" value="since">
+            <input type="radio" name="counter_mode" id="mode_since" value="since" checked>
             <label class="radio-label" for="mode_since">
               <i class="bi bi-clock-history"></i> Tempo desde...
             </label>
           </div>
           <div class="radio-option">
-            <input type="radio" name="counter_mode" id="mode_until" value="until" checked>
+            <input type="radio" name="counter_mode" id="mode_until" value="until">
             <label class="radio-label" for="mode_until">
               <i class="bi bi-hourglass-split"></i> Contagem para...
             </label>
@@ -150,7 +150,7 @@
       <div class="form-group">
         <label class="form-label">Descrição do Evento</label>
         <div class="d-flex gap-2" style="margin-bottom: 10px;">
-          <input type="checkbox" id="customPhraseToggle" checked>
+          <input type="checkbox" id="customPhraseToggle">
           <label for="customPhraseToggle" style="cursor: pointer; color: var(--text-muted);">Usar frase
             personalizada</label>
         </div>
@@ -159,7 +159,7 @@
           <optgroup label="Relacionamentos amorosos 💑">
             <option value="se casaram">se casaram</option>
             <option value="se conheceram">se conheceram</option>
-            <option value="começaram a namorar">começaram a namorar</option>
+            <option value="começaram a namorar" selected>começaram a namorar</option>
             <option value="noivaram">noivaram</option>
           </optgroup>
           <optgroup label="Outros Momentos 🎉">
@@ -169,7 +169,7 @@
           </optgroup>
         </select>
 
-        <input type="text" name="custom_event_description" id="customPhraseInput" class="form-control d-none" value="seu aniversário"
+        <input type="text" name="custom_event_description" id="customPhraseInput" class="form-control d-none" value="começaram a namorar"
           placeholder="Ex: vamos viajar para a Disney">
         <input type="hidden" name="description_mode" id="descriptionMode" value="select">
       </div>
@@ -253,7 +253,7 @@
         <textarea id="message" name="optional_message" class="d-none"></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary full-width" id="submitBtn">Criar Página Especial</button>
+      <button type="submit" class="btn btn-primary full-width" id="submitBtn">Criar Minha Homenagem</button>
     </form>
   </section>
 
@@ -261,23 +261,23 @@
   <div id="previewPanel" class="tab-content active">
     <!-- Card: Nomes + Contador + Descrição -->
     <div class="section-card text-center">
-      <div class="section-title">Prévia</div>
+      <div class="section-title">Exemplo: Casal comemorando tempo de namoro</div>
       <div id="namesPreview" style="margin: 1rem 0; display:flex; justify-content:center; align-items:center; gap:.5rem;">
-        <h1 id="couple_name1">Nome 1</h1>
-        <span id="e_comercial" class="special-text" style="display: none; font-size: 2rem;">&</span>
-        <h1 id="couple_name2" style="display: none;">Nome 2</h1>
+        <h1 id="couple_name1">Ana</h1>
+        <span id="e_comercial" class="special-text" style="font-size: 2rem;">&</span>
+        <h1 id="couple_name2">João</h1>
       </div>
 
       <hr class="section-sep">
 
-      <h3 id="counter_prefix_text">Faltam:</h3>
-      <div id="event-data" style="display:none" data-counter-mode="until"></div>
+      <h3 id="counter_prefix_text">Já se passaram:</h3>
+      <div id="event-data" style="display:none" data-counter-mode="since"></div>
       <div class="counter-wrapper" id="meu-contador">
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Anos</span></div>
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Meses</span></div>
         <div class="time-box"><span class="time-value">0</span><span class="time-label">Dias</span></div>
       </div>
-      <h3 id="event_description_text" class="special-text" style="font-size: 1.6rem; margin-top: 1rem;">para seu aniversário</h3>
+      <h3 id="event_description_text" class="special-text" style="font-size: 1.6rem; margin-top: 1rem;">desde que começamos a namorar</h3>
       <div id="finish-message" style="margin-top:.5rem;"></div>
     </div>
 
@@ -286,14 +286,14 @@
       <div class="section-title">Fotos</div>
       <div id="carousel" class="carousel-container" tabindex="0"
         style="position: relative; border-radius: 16px; overflow: hidden; background: rgba(0,0,0,0.45);">
-        <img src="/static/images/placeholder_1.png" class="carousel-image active" data-index="0"
-          alt="Preview 1"
+        <img src="/static/images/young-romantic-couple-sitting-on-the-beach-admiring-the-sunset-back-view_h4kowma2_thumbnail-full01.png" class="carousel-image active" data-index="0"
+          alt="Casal fofo comemorando"
           style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: cover; opacity: 1; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); transition: transform 0.5s ease, opacity 0.5s ease; will-change: transform, opacity;">
         <img src="/static/images/placeholder_2.png" class="carousel-image" data-index="1"
-          alt="Preview 2"
+          alt="Casal fofo 2"
           style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: cover; opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); transition: transform 0.5s ease, opacity 0.5s ease; will-change: transform, opacity;">
         <img src="/static/images/placeholder_3.png" class="carousel-image" data-index="2"
-          alt="Preview 3"
+          alt="Casal fofo 3"
           style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: cover; opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); transition: transform 0.5s ease, opacity 0.5s ease; will-change: transform, opacity;">
 
         <button type="button" id="editPhotoBtn" class="btn-glass-icon"
@@ -325,7 +325,9 @@
     <!-- Card: Mensagem especial -->
     <div class="section-card message">
         <div class="section-title">Mensagem especial</div>
-        <p id="optional_message_text" class="special-text" style="font-style: italic; margin-top: .5rem; white-space: pre-wrap;">Sua mensagem especial</p>
+        <p id="optional_message_text" class="special-text" style="font-style: italic; margin-top: .5rem; white-space: pre-wrap;">💖 Cada dia ao seu lado torna nossa história mais linda ✨
+Obrigado por caminhar comigo, por cada sorriso 😊 e por todo o carinho 💞📸
+Que nosso amor siga crescendo — hoje, amanhã e sempre ♾️💫</p>
     </div>
 
     <!-- Card: Vídeo -->

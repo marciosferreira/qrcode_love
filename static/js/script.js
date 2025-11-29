@@ -594,9 +594,9 @@ $(document).ready(function () {
       const n2 = $("#name2").val().trim();
 
       if (!n1 && !n2) {
-        $("#couple_name1").text("Carlos Prates");
-        $("#couple_name2").text("").hide();
-        $("#e_comercial").hide();
+        $("#couple_name1").text("Ana");
+        $("#couple_name2").text("João").show();
+        $("#e_comercial").show();
         return;
       }
 
@@ -620,9 +620,9 @@ $(document).ready(function () {
       const n1 = $("#name1").val().trim();
       const n2 = $("#name2").val().trim();
       if (!n1 && !n2) {
-        $("#couple_name1").text("Carlos Prates");
-        $("#couple_name2").text("").hide();
-        $("#e_comercial").hide();
+        $("#couple_name1").text("Ana");
+        $("#couple_name2").text("João").show();
+        $("#e_comercial").show();
       } else {
         $("#name1, #name2").trigger("input");
       }
@@ -1298,7 +1298,7 @@ $(document).ready(function () {
 
     // Mensagem opcional padrão na prévia
     (function initDefaultMessage(){
-      const defaultMsgRaw = " 🎂 Feliz Aniversário, Carlos Prates! 🥳 \n \n Carlos, hoje o dia é todo seu! \n Espero que você tenha um dia maravilhoso , cheio de alegria , paz  e muitas boas surpresas . Que este novo ciclo traga ainda mais sucesso , saúde  e a realização de todos os seus sonhos . \n Que a felicidade de hoje se estenda por todo o ano que se inicia! \n Parabéns!";
+      const defaultMsgRaw = "💖 Cada dia ao seu lado torna nossa história mais linda ✨\nObrigado por caminhar comigo, por cada sorriso 😊 e por todo o carinho 💞📸\nQue nosso amor siga crescendo — hoje, amanhã e sempre ♾️💫";
       const $msg = $("#message");
       const $preview = $("#optional_message_text");
       if (!$msg.val()) {
