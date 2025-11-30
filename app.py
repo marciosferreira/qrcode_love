@@ -819,7 +819,7 @@ def copilot_api():
                                     SESS_OPTS[session_id] = sess_state
                     except Exception:
                         pass
-                    opt_lines = [f"- {'\\[x]' if ok else '\\[ ]'} {lbl}" for _, lbl, ok in opt_items]
+                    opt_lines = [f"- {'[x]' if ok else '[ ]'} {lbl}" for _, lbl, ok in opt_items]
                     checklist_block = (
                         "Checklist:\n" + "\n".join(req_lines) + "\n\n" + "Opcionais:\n" + "\n".join(opt_lines) + "\n\n"
                     )
